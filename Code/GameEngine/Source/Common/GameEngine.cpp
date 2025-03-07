@@ -170,7 +170,7 @@ void initSubsystem(SUBSYSTEM*& sysref, AsciiString name, SUBSYSTEM* sys, Xfer *p
 
 //-------------------------------------------------------------------------------------------------
 extern HINSTANCE ApplicationHInstance;  ///< our application instance
-extern CComModule _Module;
+CComModule _Module;
 
 //-------------------------------------------------------------------------------------------------
 static void updateTGAtoDDS();
