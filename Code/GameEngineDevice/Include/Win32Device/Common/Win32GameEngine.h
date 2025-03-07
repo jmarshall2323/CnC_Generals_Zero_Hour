@@ -46,7 +46,6 @@
 #include "W3DDevice/Common/W3DModuleFactory.h"
 #include "W3DDevice/GameLogic/W3DGameLogic.h"
 #include "W3DDevice/GameClient/W3DGameClient.h"
-#include "W3DDevice/GameClient/W3DWebBrowser.h"
 #include "W3DDevice/Common/W3DFunctionLexicon.h"
 #include "W3DDevice/Common/W3DRadar.h"
 #include "W3DDevice/Common/W3DFunctionLexicon.h"
@@ -82,7 +81,6 @@ protected:
 	virtual ArchiveFileSystem *createArchiveFileSystem( void );	///< factory for archive file system
 	virtual NetworkInterface *createNetwork( void );				///< Factory for the network
 	virtual Radar *createRadar( void );											///< Factory for radar
-	virtual WebBrowser *createWebBrowser( void );						///< Factory for embedded browser
 	virtual AudioManager *createAudioManager( void );				///< Factory for audio device
 	virtual ParticleSystemManager* createParticleSystemManager( void );
 
@@ -103,6 +101,5 @@ inline ParticleSystemManager* Win32GameEngine::createParticleSystemManager( void
 
 inline NetworkInterface *Win32GameEngine::createNetwork( void ) { return NetworkInterface::createNetwork(); }
 inline Radar *Win32GameEngine::createRadar( void ) { return NEW W3DRadar; }
-inline WebBrowser* Win32GameEngine::createWebBrowser(void) { return nullptr; }
  
 #endif  // end __WIN32GAMEENGINE_H_

@@ -256,7 +256,6 @@
     <ClCompile Include="Source\W3DDevice\GameClient\W3DVideoBuffer.cpp" />
     <ClCompile Include="Source\W3DDevice\GameClient\W3DView.cpp" />
     <ClCompile Include="Source\W3DDevice\GameClient\W3dWaypointBuffer.cpp" />
-    <ClCompile Include="Source\W3DDevice\GameClient\W3DWebBrowser.cpp" />
     <ClCompile Include="Source\W3DDevice\GameClient\Water\W3DWater.cpp" />
     <ClCompile Include="Source\W3DDevice\GameClient\Water\W3DWaterTracks.cpp" />
     <ClCompile Include="Source\W3DDevice\GameClient\WorldHeightMap.cpp" />
@@ -486,7 +485,6 @@ if ERRORLEVEL 7 ECHO Warning: Output File Read Only!
     <ClInclude Include="Include\W3DDevice\GameClient\W3DWater.h" />
     <ClInclude Include="Include\W3DDevice\GameClient\W3DWaterTracks.h" />
     <ClInclude Include="Include\W3DDevice\GameClient\W3DWaypointBuffer.h" />
-    <ClInclude Include="Include\W3DDevice\GameClient\W3DWebBrowser.h" />
     <ClInclude Include="Include\W3DDevice\GameClient\WorldHeightMap.h" />
     <ClInclude Include="Include\W3DDevice\GameLogic\W3DGameLogic.h" />
     <ClInclude Include="Include\W3DDevice\GameLogic\W3DGhostObject.h" />
