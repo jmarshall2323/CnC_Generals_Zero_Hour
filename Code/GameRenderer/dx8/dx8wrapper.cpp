@@ -560,11 +560,36 @@ void DX8Wrapper::Enumerate_Devices()
 			** Enumerate the resolutions
 			*/
 			desc.reset_resolution_list();
-			int mode_count = D3DInterface->GetAdapterModeCount(adapter_index,D3DFMT_A8R8G8B8);
+
+			// List of acceptable video mode formats in order
+			// D3DFMT_A8R8G8B8 and D3DFMT_R8G8B8 should not be on the list but left for compatibility
+			// https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dformat#backbuffer-or-display-formats
+			const D3DFORMAT SUPPORTED_FORMATS [] = {
+				// 32 bits formats
+				D3DFMT_A8R8G8B8, // old default
+				D3DFMT_X8R8G8B8,
+				// 24 bits formats
+				D3DFMT_R8G8B8,
+				// 16 bits formats
+				D3DFMT_R5G6B5,
+				D3DFMT_X1R5G5B5
+			};
+
+			D3DFORMAT d3dformat = D3DFMT_UNKNOWN;
+			int mode_count = 0;
+
+			for (const D3DFORMAT format : SUPPORTED_FORMATS) {
+				mode_count = D3DInterface->GetAdapterModeCount(adapter_index, format);
+				if (mode_count > 0) {
+					d3dformat = format;
+					break;
+				}
+			}
+
 			for (int mode_index=0; mode_index<mode_count; mode_index++) {
 				D3DDISPLAYMODE d3dmode;
 				::ZeroMemory(&d3dmode, sizeof(D3DDISPLAYMODE));
-				HRESULT res = D3DInterface->EnumAdapterModes(adapter_index,D3DFMT_A8R8G8B8,mode_index,&d3dmode);
+				HRESULT res = D3DInterface->EnumAdapterModes(adapter_index,d3dformat,mode_index,&d3dmode);
 				
 				if (res == D3D_OK) {
 					int bits = 0;
