@@ -1,1 +1,13 @@
 **/.vs
+Code/out/
+
+# Ignore all files in Run-folder...
+Run/**/*
+#  ...except a few
+!Run/BrowserEngine.dll
+!Run/Install_Final.bmp
+!Run/WinPixEventRuntime.dll
+!Run/binkw32.dll
+!Run/place_steam_build_here.txt
+!Run/Schaders/*
+!Run/Maps/*
