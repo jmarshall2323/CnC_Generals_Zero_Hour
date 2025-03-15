@@ -1,56 +1,56 @@
 add_library(wwsaveload STATIC
-    definition.cpp
-    definitionfactory.cpp
-    definitionfactorymgr.cpp
-    definitionmgr.cpp
-    parameter.cpp
-    persistfactory.cpp
-    pointerremap.cpp
-    saveload.cpp
-    saveloadstatus.cpp
-    saveloadsubsystem.cpp
-    twiddler.cpp
-    wwsaveload.cpp
+	definition.cpp
+	definitionfactory.cpp
+	definitionfactorymgr.cpp
+	definitionmgr.cpp
+	parameter.cpp
+	persistfactory.cpp
+	pointerremap.cpp
+	saveload.cpp
+	saveloadstatus.cpp
+	saveloadsubsystem.cpp
+	twiddler.cpp
+	wwsaveload.cpp
 
-    # If you want to list headers too, just for IDE visibility:
-    # definition.h
-    # definitionclassids.h
-    # definitionfactory.h
-    # ...
+	# If you want to list headers too, just for IDE visibility:
+	# definition.h
+	# definitionclassids.h
+	# definitionfactory.h
+	# ...
 )
 
 target_include_directories(wwsaveload PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/../wwlib"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../wwdebug"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../wwmath"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../wwlib"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../wwdebug"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../wwmath"
 )
 
 target_compile_definitions(wwsaveload PRIVATE
-    WINVER=0x400
-    _WINDOWS
+	WINVER=0x400
+	_WINDOWS
 
-    $<$<CONFIG:Debug>:_DEBUG>
+	$<$<CONFIG:Debug>:_DEBUG>
 
-    $<$<CONFIG:DebugE>:_DEBUG>
-    $<$<CONFIG:DebugE>:WWDEBUG>
-    $<$<CONFIG:DebugE>:WIN32>
-    $<$<CONFIG:DebugE>:PARAM_EDITING_ON>
+	$<$<CONFIG:DebugE>:_DEBUG>
+	$<$<CONFIG:DebugE>:WWDEBUG>
+	$<$<CONFIG:DebugE>:WIN32>
+	$<$<CONFIG:DebugE>:PARAM_EDITING_ON>
 
-    $<$<CONFIG:Internal>:NDEBUG>
-    $<$<CONFIG:Internal>:_INTERNAL>
+	$<$<CONFIG:Internal>:NDEBUG>
+	$<$<CONFIG:Internal>:_INTERNAL>
 
-    $<$<CONFIG:Profile>:NDEBUG>
-    $<$<CONFIG:Profile>:WWDEBUG>
-    $<$<CONFIG:Profile>:WIN32>
+	$<$<CONFIG:Profile>:NDEBUG>
+	$<$<CONFIG:Profile>:WWDEBUG>
+	$<$<CONFIG:Profile>:WIN32>
 
-    $<$<CONFIG:ProfileE>:NDEBUG>
-    $<$<CONFIG:ProfileE>:WWDEBUG>
-    $<$<CONFIG:ProfileE>:WIN32>
-    $<$<CONFIG:ProfileE>:PARAM_EDITING_ON>
+	$<$<CONFIG:ProfileE>:NDEBUG>
+	$<$<CONFIG:ProfileE>:WWDEBUG>
+	$<$<CONFIG:ProfileE>:WIN32>
+	$<$<CONFIG:ProfileE>:PARAM_EDITING_ON>
 
-    $<$<CONFIG:Release>:NDEBUG>
-    $<$<CONFIG:Release>:WIN32>
-    $<$<CONFIG:Release>:IG_DEBUG_STACKTRACE>
+	$<$<CONFIG:Release>:NDEBUG>
+	$<$<CONFIG:Release>:WIN32>
+	$<$<CONFIG:Release>:IG_DEBUG_STACKTRACE>
 )
 
 #

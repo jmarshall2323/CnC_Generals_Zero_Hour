@@ -1,51 +1,51 @@
 set(SOURCES
-    wwdebug.cpp
-    wwmemlog.cpp
-    wwprofile.cpp
+	wwdebug.cpp
+	wwmemlog.cpp
+	wwprofile.cpp
 )
 
 set(HEADERS
-    wwdebug.h
-    wwhack.h
-    wwmemlog.h
-    wwprofile.h
+	wwdebug.h
+	wwhack.h
+	wwmemlog.h
+	wwprofile.h
 )
 
 add_library(WWDebug STATIC
-    ${SOURCES}
-    ${HEADERS}
+	${SOURCES}
+	${HEADERS}
 )
 
 target_include_directories(WWDebug PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/../wwlib"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../wwlib"
 )
 
 target_link_libraries(WWDebug
-    PRIVATE
-    wwlib
+	PRIVATE
+	wwlib
 )
 
 target_compile_definitions(WWDebug PRIVATE
-    WINVER=0x400
-    _WINDOWS
-    WIN32_LEAN_AND_MEAN
+	WINVER=0x400
+	_WINDOWS
+	WIN32_LEAN_AND_MEAN
 
-    # Debug
-    $<$<CONFIG:Debug>:_DEBUG>
+	# Debug
+	$<$<CONFIG:Debug>:_DEBUG>
 
-    # Internal
-    $<$<CONFIG:Internal>:NDEBUG>
-    $<$<CONFIG:Internal>:_INTERNAL>
+	# Internal
+	$<$<CONFIG:Internal>:NDEBUG>
+	$<$<CONFIG:Internal>:_INTERNAL>
 
-    # Profile
-    $<$<CONFIG:Profile>:NDEBUG>
-    $<$<CONFIG:Profile>:WWDEBUG>
-    $<$<CONFIG:Profile>:WIN32>
+	# Profile
+	$<$<CONFIG:Profile>:NDEBUG>
+	$<$<CONFIG:Profile>:WWDEBUG>
+	$<$<CONFIG:Profile>:WIN32>
 
-    # Release
-    $<$<CONFIG:Release>:NDEBUG>
-    $<$<CONFIG:Release>:WIN32>
-    $<$<CONFIG:Release>:IG_DEBUG_STACKTRACE>
+	# Release
+	$<$<CONFIG:Release>:NDEBUG>
+	$<$<CONFIG:Release>:WIN32>
+	$<$<CONFIG:Release>:IG_DEBUG_STACKTRACE>
 )
 
 #
