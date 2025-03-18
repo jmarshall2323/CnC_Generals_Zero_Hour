@@ -9,5 +9,5 @@ Run/**/*
 !Run/WinPixEventRuntime.dll
 !Run/binkw32.dll
 !Run/place_steam_build_here.txt
-!Run/Schaders/*
+!Run/Shaders/*
 !Run/Maps/*
