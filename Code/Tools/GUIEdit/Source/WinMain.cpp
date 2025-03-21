@@ -66,13 +66,13 @@
 // PRIVATE TYPES //////////////////////////////////////////////////////////////
 
 // PRIVATE DATA ///////////////////////////////////////////////////////////////
-static char *szWindowClass = "GUIEdit";
+static const char *szWindowClass = "GUIEdit";
 
 // PUBLIC DATA ////////////////////////////////////////////////////////////////
 HINSTANCE ApplicationHInstance;				///< main application instance
 HWND ApplicationHWnd;							///< main application HWnd
 Win32Mouse *TheWin32Mouse = NULL;	///< for Win32 mouse
-char *gAppPrefix = "ge_"; /// So GuiEdit can have a different debug log file name if we need it
+const char *gAppPrefix = "ge_"; /// So GuiEdit can have a different debug log file name if we need it
 
 const Char *g_strFile = "data\\Generals.str";
 const Char *g_csfFile = "data\\%s\\Generals.csf";

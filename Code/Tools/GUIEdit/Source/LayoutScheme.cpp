@@ -1537,7 +1537,8 @@ void LayoutScheme::init( void )
 		m_imageAndColorTable[ i ].color = info->color;
 		m_imageAndColorTable[ i ].borderColor = info->borderColor;
 		m_imageAndColorTable[ i ].stateName = new char[strlen( info->stateName ) + 1];
-		strcpy(m_imageAndColorTable[ i ].stateName, info->stateName );
+		// I know this is ugly, but it is safe to cast away const since we just allocated it
+		strcpy(const_cast<char*>(m_imageAndColorTable[ i ].stateName), info->stateName );
 
 	}  // end for i
 

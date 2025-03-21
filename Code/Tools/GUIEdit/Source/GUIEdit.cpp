@@ -112,7 +112,7 @@ GUIEdit *TheEditor = NULL;
 #pragma comment(lib, "dxerr.lib")
 void RestoreMouseClip() {}
 bool IsWorldBuilder() { return true; }
-const char* gAppPrefix = "gui_";
+//const char* gAppPrefix = "gui_";
 
 // PRIVATE PROTOTYPES /////////////////////////////////////////////////////////
 
@@ -213,8 +213,8 @@ char *GUIEdit::openDialog( void )
 void GUIEdit::setUnsaved( Bool unsaved )
 {
 //	char *saveStatus = " *";
-	char *unsavedFilename = "New File";
-	char *filename;
+	const char *unsavedFilename = "New File";
+	const char *filename;
 
 	// which filename to use in title bar
 	if( strlen( m_saveFilename ) == 0 )
@@ -253,9 +253,9 @@ void GUIEdit::setUnsaved( Bool unsaved )
 	* to this method.  We will also extract the filename only from the
 	* full path and save that separately */
 //=============================================================================
-void GUIEdit::setSaveFile( char *fullPathAndFilename )
+void GUIEdit::setSaveFile( const char *fullPathAndFilename )
 {
-  char *ptr;
+	const char *ptr;
 
 	// copy over the full path and filename
 	strcpy( m_savePathAndFilename, fullPathAndFilename );
@@ -753,7 +753,7 @@ void GUIEdit::update( void )
 // GUIEdit::writeConfigFile ===================================================
 /** Write the guiedit config file */
 //=============================================================================
-Bool GUIEdit::writeConfigFile( char *filename )
+Bool GUIEdit::writeConfigFile( const char *filename )
 {
 	FILE *fp;
 
@@ -808,7 +808,7 @@ Bool GUIEdit::writeConfigFile( char *filename )
 // GUIEdit::readConfigFile ====================================================
 /** Read the guiedit config file */
 //=============================================================================
-Bool GUIEdit::readConfigFile( char *filename )
+Bool GUIEdit::readConfigFile( const char *filename )
 {
 	FILE *fp;
 
@@ -873,7 +873,7 @@ Bool GUIEdit::readConfigFile( char *filename )
 // GUIEdit::readFontFile ======================================================
 /** Read the font file defintitions and load them */
 //=============================================================================
-void GUIEdit::readFontFile( char *filename )
+void GUIEdit::readFontFile( const char *filename )
 {
 	FILE *fp;
 
@@ -941,7 +941,7 @@ void GUIEdit::readFontFile( char *filename )
 /** If we can, write a file containing a definition of all the fonts
 	* we have loaded */
 //=============================================================================
-void GUIEdit::writeFontFile( char *filename )
+void GUIEdit::writeFontFile( const char *filename )
 {
 	FILE *fp;
 
@@ -3387,7 +3387,7 @@ void GUIEdit::createStatusBar( void )
 // GUIEdit::statusMessage =====================================================
 /** Set a message in the status bar */
 //=============================================================================
-void GUIEdit::statusMessage( StatusPart part, char *message )
+void GUIEdit::statusMessage( StatusPart part, const char *message )
 {
 
 	// check for out of bounds part
