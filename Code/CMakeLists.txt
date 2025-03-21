@@ -27,6 +27,9 @@ set(GNG_GLOBAL_PROPERTIES
 
 # Default settings here should provide the best end user experince not best developer experince
 
+# Build dependencies as Release
+set(GNG_FORCE_RELEASE_BUILD_DEPENDENCIES ON)
+
 # Enable VTUNE for scripts profiling
 set(GNG_VTUNE_SCRIPT_PROFILING OFF)
 
@@ -149,6 +152,14 @@ endif()
 
 ################################################################################
 message(STATUS "========== GNG External Dependencies ==========")
+
+if(GNG_FORCE_RELEASE_BUILD_DEPENDENCIES)
+    # Save off the current build type
+    set(_OLD_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
+    # Force subdirectory to Release
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
 message(STATUS "---------- OpenAL ----------")
 
 # Disable unused features
@@ -168,16 +179,7 @@ set(ALSOFT_INSTALL_AMBDEC_PRESETS OFF)
 set(ALSOFT_INSTALL_EXAMPLES OFF)
 set(ALSOFT_INSTALL_UTILS OFF)
 
-# Save off the current build type
-set(_OLD_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
-
-# Force subdirectory to Release
-set(CMAKE_BUILD_TYPE "Release")
-
 add_subdirectory(Libraries/OpenAL)
-
-# Restore previous build type
-set(CMAKE_BUILD_TYPE "${_OLD_BUILD_TYPE}")
 
 set_target_properties(OpenAL PROPERTIES
     # OpenAL DLL output path
@@ -193,6 +195,11 @@ add_subdirectory(Libraries/Source/GameSpy)
 set_target_properties(UniSpySDK PROPERTIES
     $<$<BOOL:${GNG_ENABLE_IPO}>:INTERPROCEDURAL_OPTIMIZATION ON>
 )
+
+if(GNG_FORCE_RELEASE_BUILD_DEPENDENCIES)
+    # Restore previous build type
+    set(CMAKE_BUILD_TYPE "${_OLD_BUILD_TYPE}")
+endif()
 
 message(STATUS "========== GNG ==========")
 message(STATUS "Note: \"not found\" things above are required")
