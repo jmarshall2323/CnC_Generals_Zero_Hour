@@ -94,34 +94,8 @@ set(SOURCES
     ww3dformat.cpp
 )
 
-# -- 2. List your header files (from <ClInclude>).
-#    This is optional in CMake but often nice to show in IDEs:
-set(HEADERS
-  
-)
-
-# -- 3. (Optional) Non-compilable files (images, .txt, .ini, etc.)
-#    Typically, you only need to list source files that must be compiled;
-#    but if you want them visible in your IDE, you could do something like:
-#
-# set(RESOURCES
-#   "RequiredAssets/Dazzle.INI"
-#   "RequiredAssets/ShatterAVel.tbl"
-#   "RequiredAssets/ShatterPlanes0.w3d"
-#   "RequiredAssets/ShatterVel.tbl"
-#   "RequiredAssets/AddProjectorGradient.tga"
-#   "RequiredAssets/MultProjectorGradient.tga"
-#   "RequiredAssets/w3d_missing_texture.tga"
-#   "MAPPERS.TXT"
-#   "RenderObjectGuide.txt"
-#   "State Management.txt"
-#   "intersec.inl"
-# )
-
 add_library(ww3d2 STATIC
     ${SOURCES}
-    ${HEADERS}
-    # ${RESOURCES}  # If you want them in the project
 )
 
 set_target_properties(ww3d2 PROPERTIES

@@ -11,6 +11,9 @@ set(GNG_GLOBAL_PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
+
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../Run/"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../Run/"
 )
 
 ##### DEVELOPMENT OPTIONS #####
@@ -167,23 +170,10 @@ add_executable(RTS WIN32
     Libraries/Bink/include/miles.c
     Main/WinMain.cpp
     Main/RTS.rc
-
-    # (Optional) If you want to see these headers in the project tree:
-    # Main/resource.h
-    # Main/WinMain.h
-    # etc.
 )
 
 set_target_properties(RTS PROPERTIES
     ${GNG_GLOBAL_PROPERTIES}
- )
-
-set_target_properties(RTS PROPERTIES
-    # Put all .exe files in a folder called "Run"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../run"
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../run"
-    RUNTIME_OUTPUT_DIRECTORY_INTERNAL "${CMAKE_CURRENT_SOURCE_DIR}/../run"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../run"
 
     # Each config has its own output name:
     OUTPUT_NAME_DEBUG "Generals_debug"

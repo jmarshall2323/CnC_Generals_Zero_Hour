@@ -17,28 +17,24 @@ add_library(ParticleEditor SHARED
     VelocityTypePanels.cpp
 )
 
-#------------------------------------------------------------------------------
-# 2) MFC usage = Static => set MFC_FLAG=1
-#   Also define _MBCS for MultiByte char set usage.
-#------------------------------------------------------------------------------
-set_property(TARGET ParticleEditor PROPERTY MFC_FLAG 2)
-
 target_compile_definitions(ParticleEditor PRIVATE
+    ${GNG_COMPILE_DEFINITIONS}
+
     _MBCS
+    _AFXDLL # Requiered for Dynamic Runtime
+    WIN32_LEAN_AND_MEAN
+)
+target_compile_options(ParticleEditor PRIVATE
+    ${GNG_COMPILE_OPTIONS}
+)
+target_link_options(ParticleEditor PRIVATE
+    ${GNG_LINK_OPTIONS}
 )
 
 set_target_properties(ParticleEditor PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../../../run/"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../../../run/"
-)
+    ${GNG_GLOBAL_PROPERTIES}
 
-target_compile_definitions(ParticleEditor PRIVATE
-  WIN32
-  _WINDOWS
-  _USRDLL
-  _AFXDLL 
-  $<$<CONFIG:Debug>:_DEBUG>
-  $<$<CONFIG:Release>:NDEBUG>
+    MFC_FLAG 2
 )
 
 target_include_directories(ParticleEditor PRIVATE
@@ -53,10 +49,4 @@ target_include_directories(ParticleEditor PRIVATE
     ../../libraries/source/wwvegas/wwlib
     ../../libraries/source/wwvegas/wwmath
     ../../libraries/source/wwvegas/wwsaveload
-)
-
-target_link_options(ParticleEditor PRIVATE
-  /SUBSYSTEM:WINDOWS
-  /DYNAMICBASE:NO
-  /MAP
 )

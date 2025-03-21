@@ -63,12 +63,8 @@ target_link_libraries(wwmath PRIVATE
 
 target_compile_definitions(wwmath PRIVATE
     ${GNG_COMPILE_DEFINITIONS}
+
     WIN32_LEAN_AND_MEAN
-
-    # Debug:
-    $<$<CONFIG:Debug>:G_CODE_BASE>
-    $<$<CONFIG:Debug>:DIRECTX>
-
 )
 
 target_compile_options(wwmath PRIVATE
