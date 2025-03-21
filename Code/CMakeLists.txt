@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.15)
 
 project(RTS LANGUAGES C CXX)
 
-set(CMAKE_CONFIGURATION_TYPES "Debug;Internal;Release" CACHE STRING "Configs" FORCE)
-
 ################################################################################
 # SETUP
 ################################################################################
@@ -23,15 +21,16 @@ set(GNG_COMPILE_DEFINITIONS "")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(GNG_DEBUG TRUE)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Internal")
-    set(GNG_INTERNAL TRUE)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(GNG_RELEASE TRUE)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(GNG_RELEASE TRUE)
+elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
     set(GNG_RELEASE TRUE)
 endif()
+
+endif()
+
 
 ##### Compiler & Linker Settings #####
 
@@ -70,23 +69,6 @@ if(MSVC)
         )
         list(APPEND GNG_COMPILE_DEFINITIONS
             _DEBUG
-        )
-
-    ##### Internal #####
-
-    elseif(GNG_INTERNAL)
-        list(APPEND GNG_COMPILE_OPTIONS
-            /O2 # Favor speed over size
-            /MD # MultiThreaded DLL Runtime
-            /Zi # Generate Debug Database (.pdb)
-            /Gy # Enable Function level linking
-        )
-        list(APPEND GNG_LINK_OPTIONS
-            /DEBUG
-        )
-        list(APPEND GNG_COMPILE_DEFINITIONS
-            _INTERNAL
-            NDEBUG
         )
 
     ##### Release #####
