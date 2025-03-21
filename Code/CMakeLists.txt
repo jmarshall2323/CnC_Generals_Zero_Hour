@@ -99,14 +99,11 @@ if(MSVC)
     ##### Common #####
 
     list(APPEND GNG_COMPILE_OPTIONS
-        /nologo # Hide compiler copyright notice
         /W1     # Warnings level 1 (TODO Increase it as we fix such warnnings)
     )
     list(APPEND GNG_LINK_OPTIONS
-        /NOLOGO # Hide linker copyright notice
     )
     list(APPEND GNG_COMPILE_DEFINITIONS
-        _WINDOWS
         WINVER=0x0A00              # Windows 10 is the minimum as we use DX12
         _WIN32_WINNT=0x0A00        # Windows 10 is the minimum as we use DX12
 
@@ -118,13 +115,13 @@ if(MSVC)
 
     if(GNG_DEBUG)
         list(APPEND GNG_COMPILE_OPTIONS
-            /Od   # Disable optimizations
-            /MDd  # MultiThreaded Debug DLL Runtime
-            /Zi   # Generate Debug Database (.pdb)
-            /RTC1 # Runtime Error Checking
+            #/Od   # Disable optimizations [Removal Candidate: CMake default]
+            #/MDd  # MultiThreaded Debug DLL Runtime [Removal Candidate: CMake default]
+            #/Zi   # Generate Debug Database (.pdb) [Removal Candidate: CMake default]
+            #/RTC1 # Runtime Error Checking [Removal Candidate: CMake default]
         )
         list(APPEND GNG_LINK_OPTIONS
-            /DEBUG
+            #/DEBUG [Removal Candidate: CMake default]
         )
         list(APPEND GNG_COMPILE_DEFINITIONS
             _DEBUG
@@ -134,9 +131,9 @@ if(MSVC)
 
     elseif(GNG_RELEASE)
         list(APPEND GNG_COMPILE_OPTIONS
-            /O2 # Favor speed over size
-            /MD # MultiThreaded DLL Runtime
-            /Gy # Enable Function level linking
+            #/O2 # Favor speed over size [Removal Candidate: CMake default]
+            #/MD # MultiThreaded DLL Runtime [Removal Candidate: CMake default]
+            #/Gy # Enable Function level linking [Removal Candidate: Does not seem to have any effect on the final binary]
         )
         list(APPEND GNG_LINK_OPTIONS
 
