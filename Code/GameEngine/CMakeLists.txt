@@ -583,23 +583,9 @@ target_link_options(GameEngine PRIVATE
     ${GNG_LINK_OPTIONS}
 )
 
-#
-# 4) Precompiled header usage
-#    The vcxproj uses "PrecompiledHeader=Use" for all .cpp's except for PreRTS.cpp, which sets "Create".
-#    CMake’s built-in PCH feature is different from Visual Studio’s old "pch .obj" approach. If you want
-#    to replicate it precisely, you'd do something like:
-#
-# target_precompile_headers(GameEngine PRIVATE
-#   $<$<COMPILE_LANGUAGE:CXX>:PreRTS.h>
-# )
-#
-#   By default, that will cause CMake to generate a PCH .pch for C++ sources, and automatically use it.
-#   If you need the exact old-style .pch file name, there are advanced MSVC-specific properties, but
-#   usually the above is sufficient for practical usage.
-#
-#   For truly perfect fidelity, one might have to set source properties on PreRTS.cpp so it "creates"
-#   the PCH and everything else "uses" it, but the above is the simpler modern route in CMake.
-#
+target_precompile_headers(GameEngine PRIVATE
+    Source/Precompiled/PreRTS.h
+)
 
 # DO NOT TOUCH THIS, CODE RELAYS ON IT BEING LIKE THIS
 set_target_properties(GameEngine PROPERTIES

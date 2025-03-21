@@ -15,6 +15,7 @@ target_compile_definitions(DebugWindow PRIVATE
     ${GNG_COMPILE_DEFINITIONS}
 
     _AFXDLL # Requiered for Dynamic Runtime
+    WIN32_LEAN_AND_MEAN
 )
 target_compile_options(DebugWindow PRIVATE
     ${GNG_COMPILE_OPTIONS}

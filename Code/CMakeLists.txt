@@ -6,11 +6,13 @@ project(RTS LANGUAGES C CXX)
 # SETUP
 ################################################################################
 
-
 set(GNG_GLOBAL_PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
+
+    # Disable C++20 modules as we don't use them
+    CXX_SCAN_FOR_MODULES OFF
 
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../Run/"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../Run/"
@@ -33,6 +35,24 @@ set(GNG_PARAM_EDITING OFF)
 
 ##### AUTOMATED #####
 
+# Interprocedural Optimization (LTO/WPO)
+message(CHECK_START "Interprocedural Optimization")
+
+include(CMakeDependentOption)
+include(CheckIPOSupported)
+
+check_ipo_supported(RESULT GNG_IPO_SUPPORTED OUTPUT error)
+cmake_dependent_option(GNG_ENABLE_IPO "Enable Interprocedural Optimization (LTO/WPO)" ON "${GNG_IPO_SUPPORTED}" OFF)
+
+if(GNG_IPO_SUPPORTED)
+    if (GNG_ENABLE_IPO)
+        message(CHECK_PASS " Supported and Enabled")
+    else()
+        message(CHECK_PASS " Supported but Disabled")
+    endif()
+else()
+    message(CHECK_FAIL " Not Supported")
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(GNG_DEBUG TRUE)
@@ -44,8 +64,14 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
     set(GNG_RELEASE TRUE)
 endif()
 
+if(GNG_DEBUG)
+    set(GNG_ENABLE_IPO OFF)
+    message(STATUS "Interprocedural Optimization disabled for debug build to reduce compile time.")
 endif()
 
+list(APPEND GNG_GLOBAL_PROPERTIES
+    $<$<BOOL:${GNG_ENABLE_IPO}>:INTERPROCEDURAL_OPTIMIZATION ON>
+)
 
 ##### Compiler & Linker Settings #####
 
@@ -122,29 +148,22 @@ if(MSVC)
 endif()
 
 ################################################################################
+message(STATUS "========== GNG External Dependencies ==========")
+message(STATUS "---------- OpenAL ----------")
 
-add_subdirectory(GameEngine)
-add_subdirectory(GameEngineDevice)
-add_subdirectory(GameRenderer)
-add_subdirectory(Tools/WorldBuilder)
-add_subdirectory(Tools/DebugWindow)
-add_subdirectory(Tools/ParticleEditor)
-add_subdirectory(Tools/GUIEdit)
-add_subdirectory(Libraries/Source/Compression)
-add_subdirectory(Libraries/Source/WWVegas/ww3d2)
-add_subdirectory(Libraries/Source/WWVegas/WWDebug)
-add_subdirectory(Libraries/Source/WWVegas/WWDownload)
-add_subdirectory(Libraries/Source/WWVegas/WWLib)
-add_subdirectory(Libraries/Source/WWVegas/WWMath)
-add_subdirectory(Libraries/Source/WWVegas/WWSaveLoad)
+# Disable unused features
+set(ALSOFT_BACKEND_WAVE OFF)
+set(ALSOFT_EAX OFF)
 
+# Disable extras
 set(ALSOFT_UTILS OFF)
 set(ALSOFT_NO_CONFIG_UTIL OFF)
 set(ALSOFT_EXAMPLES OFF)
+
+# Disable all installs
 set(ALSOFT_INSTALL OFF)
 set(ALSOFT_INSTALL_CONFIG OFF)
 set(ALSOFT_INSTALL_HRTF_DATA OFF)
-
 set(ALSOFT_INSTALL_AMBDEC_PRESETS OFF)
 set(ALSOFT_INSTALL_EXAMPLES OFF)
 set(ALSOFT_INSTALL_UTILS OFF)
@@ -160,8 +179,41 @@ add_subdirectory(Libraries/OpenAL)
 # Restore previous build type
 set(CMAKE_BUILD_TYPE "${_OLD_BUILD_TYPE}")
 
+set_target_properties(OpenAL PROPERTIES
+    # OpenAL DLL output path
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../Run"
+
+    $<$<BOOL:${GNG_ENABLE_IPO}>:INTERPROCEDURAL_OPTIMIZATION ON>
+)
+
+message(STATUS "---------- UniSpySDK ----------")
+
 add_subdirectory(Libraries/Source/GameSpy)
  
+set_target_properties(UniSpySDK PROPERTIES
+    $<$<BOOL:${GNG_ENABLE_IPO}>:INTERPROCEDURAL_OPTIMIZATION ON>
+)
+
+message(STATUS "========== GNG ==========")
+message(STATUS "Note: \"not found\" things above are required")
+
+add_subdirectory(Libraries/Source/Compression)
+add_subdirectory(Libraries/Source/WWVegas/ww3d2)
+add_subdirectory(Libraries/Source/WWVegas/WWDebug)
+add_subdirectory(Libraries/Source/WWVegas/WWDownload)
+add_subdirectory(Libraries/Source/WWVegas/WWLib)
+add_subdirectory(Libraries/Source/WWVegas/WWMath)
+add_subdirectory(Libraries/Source/WWVegas/WWSaveLoad)
+
+add_subdirectory(GameEngineDevice)
+add_subdirectory(GameRenderer)
+add_subdirectory(GameEngine)
+
+add_subdirectory(Tools/WorldBuilder)
+add_subdirectory(Tools/DebugWindow)
+add_subdirectory(Tools/ParticleEditor)
+add_subdirectory(Tools/GUIEdit)
+
 # Add the main executable; WIN32 for the Windows subsystem (no console).
 add_executable(RTS WIN32
     # Source files

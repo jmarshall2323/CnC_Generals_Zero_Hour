@@ -32,6 +32,7 @@ target_include_directories(wwsaveload PRIVATE
 target_compile_definitions(wwsaveload PRIVATE
     ${GNG_COMPILE_DEFINITIONS}
 
+    WIN32_LEAN_AND_MEAN
 )
 
 target_compile_options(wwsaveload PRIVATE
