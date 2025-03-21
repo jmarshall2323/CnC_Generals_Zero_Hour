@@ -32,19 +32,6 @@ target_include_directories(wwsaveload PRIVATE
 target_compile_definitions(wwsaveload PRIVATE
     ${GNG_COMPILE_DEFINITIONS}
 
-    $<$<CONFIG:DebugE>:_DEBUG>
-    $<$<CONFIG:DebugE>:WWDEBUG>
-    $<$<CONFIG:DebugE>:WIN32>
-    $<$<CONFIG:DebugE>:PARAM_EDITING_ON>
-
-    $<$<CONFIG:Profile>:NDEBUG>
-    $<$<CONFIG:Profile>:WWDEBUG>
-    $<$<CONFIG:Profile>:WIN32>
-
-    $<$<CONFIG:ProfileE>:NDEBUG>
-    $<$<CONFIG:ProfileE>:WWDEBUG>
-    $<$<CONFIG:ProfileE>:WIN32>
-    $<$<CONFIG:ProfileE>:PARAM_EDITING_ON>
 )
 
 target_compile_options(wwsaveload PRIVATE

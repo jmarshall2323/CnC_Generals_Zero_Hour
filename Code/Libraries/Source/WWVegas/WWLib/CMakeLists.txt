@@ -96,11 +96,6 @@ target_compile_definitions(wwlib PRIVATE
     WIN32_LEAN_AND_MEAN
     REGEX_MALLOC
     STDC_HEADERS
-
-    # Profile:
-    $<$<CONFIG:Profile>:NDEBUG>
-    $<$<CONFIG:Profile>:WWDEBUG>
-    $<$<CONFIG:Profile>:WIN32>
 )
 
 target_compile_options(wwlib PRIVATE

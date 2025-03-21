@@ -13,11 +13,23 @@ set(GNG_GLOBAL_PROPERTIES
     CXX_EXTENSIONS OFF
 )
 
+##### DEVELOPMENT OPTIONS #####
+
+# Options used for development purporses only
+
+# Development options are not meant to be used by packagers or users,
+# so we avoid exposing them by using 'set' instead of 'option'
+
+# Default settings here should provide the best end user experince not best developer experince
+
+# Enable VTUNE for scripts profiling
+set(GNG_VTUNE_SCRIPT_PROFILING OFF)
+
+# Defines "PARAM_EDITING_ON" no clue what it does but probably allows run time editing of somethings - Andrew-2E128
+set(GNG_PARAM_EDITING OFF)
+
 ##### AUTOMATED #####
 
-set(GNG_COMPILE_OPTIONS "")
-set(GNG_LINK_OPTIONS "")
-set(GNG_COMPILE_DEFINITIONS "")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(GNG_DEBUG TRUE)
@@ -34,19 +46,34 @@ endif()
 
 ##### Compiler & Linker Settings #####
 
+# Compiler Independent options
+
+set(GNG_COMPILE_OPTIONS
+)
+set(GNG_LINK_OPTIONS
+)
+set(GNG_COMPILE_DEFINITIONS
+    $<$<BOOL:${GNG_VTUNE_SCRIPT_PROFILING}>:
+        DO_VTUNE_STUFF
+        SPECIAL_SCRIPT_PROFILING
+    >
+
+    $<$<BOOL:${GNG_PARAM_EDITING}>:PARAM_EDITING_ON>
+)
+
 # Microsoft Visual C/C++ Compiler
 if(MSVC)
 
     ##### Common #####
 
-    set(GNG_COMPILE_OPTIONS
+    list(APPEND GNG_COMPILE_OPTIONS
         /nologo # Hide compiler copyright notice
         /W1     # Warnings level 1 (TODO Increase it as we fix such warnnings)
     )
-    set(GNG_LINK_OPTIONS
+    list(APPEND GNG_LINK_OPTIONS
         /NOLOGO # Hide linker copyright notice
     )
-    set(GNG_COMPILE_DEFINITIONS
+    list(APPEND GNG_COMPILE_DEFINITIONS
         _WINDOWS
         WINVER=0x0A00              # Windows 10 is the minimum as we use DX12
         _WIN32_WINNT=0x0A00        # Windows 10 is the minimum as we use DX12

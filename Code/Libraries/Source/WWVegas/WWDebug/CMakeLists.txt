@@ -31,11 +31,6 @@ target_link_libraries(WWDebug PRIVATE
 target_compile_definitions(WWDebug PRIVATE
     ${GNG_COMPILE_DEFINITIONS}
     WIN32_LEAN_AND_MEAN
-
-    # Profile
-    $<$<CONFIG:Profile>:NDEBUG>
-    $<$<CONFIG:Profile>:WWDEBUG>
-    $<$<CONFIG:Profile>:WIN32>
 )
 
 target_compile_options(WWDebug PRIVATE

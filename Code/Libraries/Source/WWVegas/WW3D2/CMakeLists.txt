@@ -150,13 +150,6 @@ target_compile_definitions(ww3d2 PRIVATE
     ${GNG_COMPILE_DEFINITIONS}
     WINDOWS_IGNORE_PACKING_MISMATCH
     WIN32_LEAN_AND_MEAN # Exclude some headers to speed up the build process
-
-    # Profile
-    $<$<CONFIG:Profile>:NDEBUG;WWDEBUG;WIN32>
-    # DebugE
-    $<$<CONFIG:DebugE>:_DEBUG;WWDEBUG;WIN32;PARAM_EDITING_ON>
-    # ProfileE
-    $<$<CONFIG:ProfileE>:NDEBUG;WWDEBUG;WIN32;PARAM_EDITING_ON>
 )
 
 target_compile_options(ww3d2 PRIVATE
