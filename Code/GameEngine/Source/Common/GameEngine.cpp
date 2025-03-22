@@ -142,8 +142,7 @@ void DeepCRCSanityCheck::reset(void)
 	static Int timesThrough = 0;
 	static UnsignedInt lastCRC = 0;
 
-	AsciiString fname;
-	fname.format("%sCRCAfter%dMaps.dat", TheGlobalData->getPath_UserData().str(), timesThrough);
+	std::string fname = std::format("{}CRCAfter{}Maps.dat", TheGlobalData->getPath_UserData().str(), timesThrough);
 	UnsignedInt thisCRC = TheGameLogic->getCRC( CRC_RECALC, fname );
 
 	DEBUG_LOG(("DeepCRCSanityCheck: CRC is %X\n", thisCRC));
@@ -165,7 +164,7 @@ SubsystemInterfaceList* TheSubsystemList = NULL;
 
 //-------------------------------------------------------------------------------------------------
 template<class SUBSYSTEM>
-void initSubsystem(SUBSYSTEM*& sysref, AsciiString name, SUBSYSTEM* sys, Xfer *pXfer,  const char* path1 = NULL, 
+void initSubsystem(SUBSYSTEM*& sysref, std::string name, SUBSYSTEM* sys, Xfer *pXfer,  const char* path1 = NULL,
 									 const char* path2 = NULL, const char* dirpath = NULL)
 {
 	sysref = sys;
@@ -310,7 +309,7 @@ void GameEngine::init( int argc, char *argv[] )
 
 	#if defined(_DEBUG) || defined(_INTERNAL)
 		// If we're in Debug or Internal, load the Debug info as well.
-		ini.load( AsciiString( "Data\\INI\\GameDataDebug.ini" ), INI_LOAD_OVERWRITE, NULL );
+		ini.load( "Data\\INI\\GameDataDebug.ini", INI_LOAD_OVERWRITE, NULL );
 	#endif
 		
 		// special-case: parse command-line parameters after loading global data
@@ -335,8 +334,8 @@ void GameEngine::init( int argc, char *argv[] )
 	#endif
 
 		// read the water settings from INI (must do prior to initing GameClient, apparently)
-		ini.load( AsciiString( "Data\\INI\\Default\\Water.ini" ), INI_LOAD_OVERWRITE, &xferCRC );
-		ini.load( AsciiString( "Data\\INI\\Water.ini" ), INI_LOAD_OVERWRITE, &xferCRC );
+		ini.load( "Data\\INI\\Default\\Water.ini", INI_LOAD_OVERWRITE, &xferCRC );
+		ini.load( "Data\\INI\\Water.ini", INI_LOAD_OVERWRITE, &xferCRC );
 
 #ifdef DEBUG_CRC
 		initSubsystem(TheDeepCRCSanityCheck, "TheDeepCRCSanityCheck", MSGNEW("GameEngineSubystem") DeepCRCSanityCheck, NULL, NULL, NULL, NULL);
@@ -379,9 +378,8 @@ void GameEngine::init( int argc, char *argv[] )
 		initSubsystem(TheRadar,"TheRadar", createRadar(), NULL);
 		initSubsystem(TheVictoryConditions,"TheVictoryConditions", createVictoryConditions(), NULL);
 
-		AsciiString fname;
-		fname.format("Data\\%s\\CommandMap.ini", GetRegistryLanguage().str());
-		initSubsystem(TheMetaMap,"TheMetaMap", MSGNEW("GameEngineSubsystem") MetaMap(), NULL, fname.str(), "Data\\INI\\CommandMap.ini");
+		std::string fname = std::format("Data\\{}\\CommandMap.ini", GetRegistryLanguage().str());
+		initSubsystem(TheMetaMap, "TheMetaMap", MSGNEW("GameEngineSubsystem") MetaMap(), NULL, fname.c_str(), "Data\\INI\\CommandMap.ini");
 
 #if defined(_DEBUG) || defined(_INTERNAL)
 		ini.load("Data\\INI\\CommandMapDebug.ini", INI_LOAD_MULTIFILE, NULL);
@@ -455,16 +453,16 @@ void GameEngine::init( int argc, char *argv[] )
 		}
 		
 		// load the initial shell screen
-		//TheShell->push( AsciiString("Menus/MainMenu.wnd") );
+		//TheShell->push( "Menus/MainMenu.wnd" );
 		
 #if !defined(_PLAYTEST)
 		// This allows us to run a map/reply from the command line
 		if (TheGlobalData->m_initialFile.isEmpty() == FALSE)
 		{
-			AsciiString fname = TheGlobalData->m_initialFile;
-			fname.toLower();
+			std::string fname = TheGlobalData->m_initialFile.str();
+			std::transform(fname.begin(), fname.end(), fname.begin(), ::tolower);
 
-			if (fname.endsWithNoCase(".map"))
+			if (fname.ends_with(".map"))
 			{
 				TheWritableGlobalData->m_shellMapOn = FALSE;
 				TheWritableGlobalData->m_playIntro = FALSE;
@@ -480,7 +478,7 @@ void GameEngine::init( int argc, char *argv[] )
 				msg->appendIntegerArgument(0);
 				InitRandom(0);
 			}
-			else if (fname.endsWithNoCase(".rep"))
+			else if (fname.ends_with(".rep"))
 			{
 				TheRecorder->playbackFile(fname);
 			}
@@ -490,8 +488,8 @@ void GameEngine::init( int argc, char *argv[] )
 		// 
 		if (TheMapCache && TheGlobalData->m_shellMapOn)
 		{
-			AsciiString lowerName = TheGlobalData->m_shellMapName;
-			lowerName.toLower();
+			std::string lowerName = TheGlobalData->m_shellMapName.str();
+			std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
 
 			MapCache::const_iterator it = TheMapCache->find(lowerName);
 			if (it == TheMapCache->end())
@@ -767,9 +765,8 @@ void GameEngine::checkAbnormalQuitting(void)
 		req.lastHouse = ptIdx;
 
 		UserPreferences pref;
-		AsciiString userPrefFilename;
-		userPrefFilename.format("GeneralsOnline\\MiscPref%d.ini", stats.id);
-		DEBUG_LOG(("using the file %s\n", userPrefFilename.str()));
+		std::string userPrefFilename = std::format("GeneralsOnline\\MiscPref{}.ini", stats.id);
+		DEBUG_LOG(("using the file %s\n", userPrefFilename));
 		pref.load(userPrefFilename);
 
 		Int addedInDesyncs2 = pref.getInt("0", 0);
@@ -803,30 +800,30 @@ void GameEngine::checkAbnormalQuitting(void)
 
 		if (req.addDesync || req.addDiscon)
 		{
-			AsciiString val;
+			std::string val;
 			if (req.lastHouse == 2)
 			{
-				val.format("%d", addedInDesyncs2 + req.addDesync);
+				val = std::format("{}", addedInDesyncs2 + req.addDesync);
 				pref["0"] = val;
-				val.format("%d", addedInDiscons2 + req.addDiscon);
+				val = std::format("{}", addedInDiscons2 + req.addDiscon);
 				pref["3"] = val;
 				DEBUG_LOG(("house 2 req.addDesync || req.addDiscon: %d %d\n",
 					addedInDesyncs2 + req.addDesync, addedInDiscons2 + req.addDiscon));
 			}
 			else if (req.lastHouse == 3)
 			{
-				val.format("%d", addedInDesyncs3 + req.addDesync);
+				val = std::format("{}", addedInDesyncs3 + req.addDesync);
 				pref["1"] = val;
-				val.format("%d", addedInDiscons3 + req.addDiscon);
+				val = std::format("{}", addedInDiscons3 + req.addDiscon);
 				pref["4"] = val;
 				DEBUG_LOG(("house 3 req.addDesync || req.addDiscon: %d %d\n",
 					addedInDesyncs3 + req.addDesync, addedInDiscons3 + req.addDiscon));
 			}
 			else
 			{
-				val.format("%d", addedInDesyncs4 + req.addDesync);
+				val = std::format("{}", addedInDesyncs4 + req.addDesync);
 				pref["2"] = val;
-				val.format("%d", addedInDiscons4 + req.addDiscon);
+				val = std::format("{}", addedInDiscons4 + req.addDiscon);
 				pref["5"] = val;
 				DEBUG_LOG(("house 4 req.addDesync || req.addDiscon: %d %d\n",
 					addedInDesyncs4 + req.addDesync, addedInDiscons4 + req.addDiscon));
