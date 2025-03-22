@@ -198,6 +198,17 @@ AsciiString::AsciiString(const char* s) : m_data(0)
 }
 
 // -----------------------------------------------------
+AsciiString::AsciiString(const std::string& s) : m_data(0)
+{
+	int len = s.length();
+	if (len)
+	{
+		ensureUniqueBufferOfSize(len + 1, false, s.c_str(), NULL);
+	}
+	validate();
+}
+
+// -----------------------------------------------------
 void AsciiString::set(const AsciiString& stringSrc)
 {
 	ScopedCriticalSection scopedCriticalSection(TheAsciiStringCriticalSection);
