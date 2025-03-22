@@ -554,7 +554,7 @@ the Win32 version of the mouse (by preloading resources before D3D device is cre
 void Mouse::parseIni(void)
 {
 	INI ini;
-	ini.load( AsciiString( "Data\\INI\\Mouse.ini" ), INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\Mouse.ini", INI_LOAD_OVERWRITE, NULL );
 }
 
 //-------------------------------------------------------------------------------------------------

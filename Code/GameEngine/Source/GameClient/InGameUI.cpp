@@ -1027,7 +1027,7 @@ InGameUI::~InGameUI()
 void InGameUI::init( void )
 {
 	INI ini;
-	ini.load( AsciiString( "Data\\INI\\InGameUI.ini" ), INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\InGameUI.ini", INI_LOAD_OVERWRITE, NULL );
 
 	//override INI values with language localized values:
 	if (TheGlobalLanguageData)

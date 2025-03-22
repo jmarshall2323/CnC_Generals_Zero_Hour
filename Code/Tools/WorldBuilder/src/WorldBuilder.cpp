@@ -351,7 +351,7 @@ BOOL CWorldBuilderApp::InitInstance()
 	initSubsystem(TheWritableGlobalData, new GlobalData(), "Data\\INI\\Default\\GameData.ini", "Data\\INI\\GameData.ini");
 	
 #if defined(_DEBUG) || defined(_INTERNAL)
-	ini.load( AsciiString( "Data\\INI\\GameDataDebug.ini" ), INI_LOAD_MULTIFILE, NULL );
+	ini.load( "Data\\INI\\GameDataDebug.ini", INI_LOAD_MULTIFILE, NULL );
 #endif
 
 #if defined(_DEBUG) || defined(_INTERNAL)
@@ -376,8 +376,8 @@ BOOL CWorldBuilderApp::InitInstance()
 	CreateDirectory(buf, NULL);
 
 	// read the water settings from INI (must do prior to initing GameClient, apparently)
-	ini.load( AsciiString( "Data\\INI\\Default\\Water.ini" ), INI_LOAD_OVERWRITE, NULL );
-	ini.load( AsciiString( "Data\\INI\\Water.ini" ), INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\Default\\Water.ini", INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\Water.ini", INI_LOAD_OVERWRITE, NULL );
 
 	initSubsystem(TheGameText, CreateGameTextInterface());
 	initSubsystem(TheScienceStore, new ScienceStore(), "Data\\INI\\Default\\Science.ini", "Data\\INI\\Science.ini");

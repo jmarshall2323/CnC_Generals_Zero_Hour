@@ -187,7 +187,7 @@ void Eva::init()
 {
 	// parse the INI here, etc.
 	INI ini;
-	ini.load( AsciiString( "Data\\INI\\Eva.ini" ), INI_LOAD_OVERWRITE, NULL);
+	ini.load( "Data\\INI\\Eva.ini", INI_LOAD_OVERWRITE, NULL);
 }
 
 //-------------------------------------------------------------------------------------------------
