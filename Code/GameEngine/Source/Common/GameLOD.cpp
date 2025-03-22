@@ -180,12 +180,8 @@ void INI::parseBenchProfile( INI* ini)
 /**Parse a description of all the LOD settings for a given detail level*/
 void INI::parseLODPreset( INI* ini )
 {
-	const char *c;
-	AsciiString name;
-
 	// read the name
-	c = ini->getNextToken();
-	name.set( c );	//name of detail level - low, medium, high
+	std::string name = ini->getNextToken();	//name of detail level - low, medium, high
 
 	if( TheGameLODManager )
 	{
@@ -267,10 +263,10 @@ void GameLODManager::init(void)
 {
 	INI ini;
 	//Get Presets for each LOD level.
-	ini.load( AsciiString( "Data\\INI\\GameLOD.ini" ), INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\GameLOD.ini", INI_LOAD_OVERWRITE, NULL );
 
 	//Get presets for each known hardware configuration
-	ini.load( AsciiString( "Data\\INI\\GameLODPresets.ini"), INI_LOAD_OVERWRITE, NULL);
+	ini.load( "Data\\INI\\GameLODPresets.ini", INI_LOAD_OVERWRITE, NULL);
 
 	//Get Presets for custom LOD level by pulling them out of initial globaldata (which should
 	//have all settings already applied).
@@ -399,12 +395,8 @@ Int GameLODManager::getStaticGameLODIndex(AsciiString name)
 /**Parse a description of all the LOD settings for a given detail level*/
 void INI::parseStaticGameLODDefinition( INI* ini )
 {
-	const char *c;
-	AsciiString name;
-
 	// read the name
-	c = ini->getNextToken();
-	name.set( c );	
+	std::string name = ini->getNextToken();
 
 	if( TheGameLODManager )
 	{
@@ -591,12 +583,8 @@ void GameLODManager::applyStaticLODLevel(StaticGameLODLevel level)
 /**Parse a description of all the LOD settings for a given detail level*/
 void INI::parseDynamicGameLODDefinition( INI* ini )
 {
-	const char *c;
-	AsciiString name;
-
 	// read the name
-	c = ini->getNextToken();
-	name.set( c );	
+	std::string name = ini->getNextToken();
 
 	if( TheGameLODManager )
 	{

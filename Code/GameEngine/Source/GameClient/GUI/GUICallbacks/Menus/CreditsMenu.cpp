@@ -91,7 +91,7 @@ void CreditsMenuInit( WindowLayout *layout, void *userData )
 	TheCredits->load();
 	TheCredits->init();
 	
-	parentMainMenuID = TheNameKeyGenerator->nameToKey( AsciiString("CreditsMenu.wnd:ParentCreditsWindow") );
+	parentMainMenuID = TheNameKeyGenerator->nameToKey( "CreditsMenu.wnd:ParentCreditsWindow" );
 	parentMainMenu = TheWindowManager->winGetWindowFromId( NULL, parentMainMenuID );
 
 

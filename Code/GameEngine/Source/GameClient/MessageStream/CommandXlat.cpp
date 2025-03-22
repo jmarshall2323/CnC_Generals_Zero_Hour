@@ -3012,7 +3012,7 @@ GameMessageDisposition CommandTranslator::translateGameMessage(const GameMessage
 					Bool hide = false;
 					if (TheWindowManager)
 					{
-						Int id = (Int)TheNameKeyGenerator->nameToKey(AsciiString("ControlBar.wnd:ControlBarParent"));
+						Int id = (Int)TheNameKeyGenerator->nameToKey("ControlBar.wnd:ControlBarParent");
 						GameWindow *window = TheWindowManager->winGetWindowFromId(NULL, id);
 
 						if (window)
@@ -3504,7 +3504,7 @@ GameMessageDisposition CommandTranslator::translateGameMessage(const GameMessage
 /*
 			if (TheWindowManager && TheNameKeyGenerator)
 			{
-				GameWindow *motd = TheWindowManager->winGetWindowFromId(NULL, (Int)TheNameKeyGenerator->nameToKey(AsciiString("MOTD.wnd:MOTD")));
+				GameWindow *motd = TheWindowManager->winGetWindowFromId(NULL, (Int)TheNameKeyGenerator->nameToKey("MOTD.wnd:MOTD"));
 				if (motd)
 					motd->winHide(!motd->winIsHidden());
 			}*/
@@ -3553,7 +3553,7 @@ GameMessageDisposition CommandTranslator::translateGameMessage(const GameMessage
 				Bool hide = false;
 				if (TheWindowManager)
 				{
-					Int id = (Int)TheNameKeyGenerator->nameToKey(AsciiString("ControlBar.wnd:ControlBarParent"));
+					Int id = (Int)TheNameKeyGenerator->nameToKey("ControlBar.wnd:ControlBarParent");
 					GameWindow *window = TheWindowManager->winGetWindowFromId(NULL, id);
 
 					if (window)

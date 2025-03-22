@@ -704,7 +704,7 @@ void CommandSet::parseCommandButton( INI* ini, void *instance, void *store, cons
 	const char *token = ini->getNextToken();
 
 	// get find the command button from this name
-	const CommandButton *commandButton = TheControlBar->findCommandButton( AsciiString( token ) );
+	const CommandButton *commandButton = TheControlBar->findCommandButton( token );
 	if( commandButton == NULL )
 	{
 
@@ -951,11 +951,11 @@ void ControlBar::init( void )
 	INI ini;
 	m_sideSelectAnimateDown = FALSE;
 	// load the command buttons
-	ini.load( AsciiString( "Data\\INI\\Default\\CommandButton.ini" ), INI_LOAD_OVERWRITE, NULL );
-	ini.load( AsciiString( "Data\\INI\\CommandButton.ini" ), INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\Default\\CommandButton.ini", INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\CommandButton.ini", INI_LOAD_OVERWRITE, NULL );
 
 	// load the command sets
-	ini.load( AsciiString( "Data\\INI\\CommandSet.ini" ), INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\CommandSet.ini", INI_LOAD_OVERWRITE, NULL );
 
 	// post process step after loading the command buttons and command sets
 	postProcessCommands();
@@ -1139,9 +1139,9 @@ void ControlBar::init( void )
 		m_radarAttackGlowWindow = TheWindowManager->winGetWindowFromId(NULL, TheNameKeyGenerator->nameToKey("ControlBar.wnd:WinUAttack"));
 
 
-		win = TheWindowManager->winGetWindowFromId(NULL,TheNameKeyGenerator->nameToKey( AsciiString( "ControlBar.wnd:BackgroundMarker" ) ));
+		win = TheWindowManager->winGetWindowFromId(NULL,TheNameKeyGenerator->nameToKey( "ControlBar.wnd:BackgroundMarker" ));
 		win->winGetScreenPosition(&m_controlBarForegroundMarkerPos.x, &m_controlBarForegroundMarkerPos.y);
-		win = TheWindowManager->winGetWindowFromId(NULL,TheNameKeyGenerator->nameToKey( AsciiString( "ControlBar.wnd:BackgroundMarker" ) ));
+		win = TheWindowManager->winGetWindowFromId(NULL,TheNameKeyGenerator->nameToKey( "ControlBar.wnd:BackgroundMarker" ));
 		win->winGetScreenPosition(&m_controlBarBackgroundMarkerPos.x,&m_controlBarBackgroundMarkerPos.y);
 
 		if(!m_videoManager)
@@ -1294,7 +1294,7 @@ void ControlBar::update( void )
 		{
 			if (m_animateWindowManager->isFinished() && m_animateWindowManager->isReversed())
 			{
-				Int id = (Int)TheNameKeyGenerator->nameToKey(AsciiString("ControlBar.wnd:ControlBarParent"));
+				Int id = (Int)TheNameKeyGenerator->nameToKey("ControlBar.wnd:ControlBarParent");
 				GameWindow *window = TheWindowManager->winGetWindowFromId(NULL, id);
 				if (window && !window->winIsHidden())
 					window->winHide(TRUE);
