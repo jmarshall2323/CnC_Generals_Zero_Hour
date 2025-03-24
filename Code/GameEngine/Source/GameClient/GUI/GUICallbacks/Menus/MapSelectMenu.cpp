@@ -110,7 +110,7 @@ static void shutdownComplete( WindowLayout *layout )
 
 void SetDifficultyRadioButton( void )
 {
-	std::string parentName = "MapSelectMenu.wnd:MapSelectMenuParent";
+	const char* parentName = "MapSelectMenu.wnd:MapSelectMenuParent";
 	NameKeyType parentID = TheNameKeyGenerator->nameToKey( parentName );
 	GameWindow *parent = TheWindowManager->winGetWindowFromId( NULL, parentID );
 
@@ -173,7 +173,7 @@ void MapSelectMenuInit( WindowLayout *layout, void *userData )
 	Bool usesSystemMapDir = pref.usesSystemMapDir();
 
 	// get the listbox window
-	std::string listString = "MapSelectMenu.wnd:ListboxMap";
+	const char* listString = "MapSelectMenu.wnd:ListboxMap";
 	NameKeyType mapListID = TheNameKeyGenerator->nameToKey( listString );
 	mapList = TheWindowManager->winGetWindowFromId( NULL, mapListID );
 	if( mapList )
@@ -185,7 +185,7 @@ void MapSelectMenuInit( WindowLayout *layout, void *userData )
 
 	
 	// set keyboard focus to main parent
-	std::string parentName = "MapSelectMenu.wnd:MapSelectMenuParent";
+	const char* parentName = "MapSelectMenu.wnd:MapSelectMenuParent";
 	NameKeyType parentID = TheNameKeyGenerator->nameToKey( parentName );
 	GameWindow *parent = TheWindowManager->winGetWindowFromId( NULL, parentID );
 	TheWindowManager->winSetFocus( parent );
@@ -282,7 +282,7 @@ WindowMsgHandledType MapSelectMenuInput( GameWindow *window, UnsignedInt msg,
 					//
 					if( BitTestEA( state, KEY_STATE_UP ) )
 					{
-						std::string buttonName = "MapSelectMenu.wnd:ButtonBack";
+						const char* buttonName = "MapSelectMenu.wnd:ButtonBack";
 						NameKeyType buttonID = TheNameKeyGenerator->nameToKey( buttonName );
 						GameWindow *button = TheWindowManager->winGetWindowFromId( window, buttonID );
 

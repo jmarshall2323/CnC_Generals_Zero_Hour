@@ -94,7 +94,6 @@ void Handicap::readFromDict(const Dict* d)
 	{
 		for (Int j = 0; j < THING_TYPE_COUNT; ++j)
 		{
-			c.clear();
 			c = "HANDICAP_";
 			c += htNames[i];
 			c += "_";

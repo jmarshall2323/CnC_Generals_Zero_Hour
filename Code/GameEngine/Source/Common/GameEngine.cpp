@@ -164,7 +164,7 @@ SubsystemInterfaceList* TheSubsystemList = NULL;
 
 //-------------------------------------------------------------------------------------------------
 template<class SUBSYSTEM>
-void initSubsystem(SUBSYSTEM*& sysref, std::string name, SUBSYSTEM* sys, Xfer *pXfer,  const char* path1 = NULL,
+void initSubsystem(SUBSYSTEM*& sysref, const char* name, SUBSYSTEM* sys, Xfer *pXfer,  const char* path1 = NULL,
 									 const char* path2 = NULL, const char* dirpath = NULL)
 {
 	sysref = sys;
