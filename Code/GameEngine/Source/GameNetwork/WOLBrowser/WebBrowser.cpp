@@ -172,7 +172,7 @@ void WebBrowser::init()
 {
 	m_urlList = NULL;
 	INI ini;
-	ini.load( AsciiString( "Data\\INI\\Webpages.ini" ), INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\Webpages.ini", INI_LOAD_OVERWRITE, NULL );
 }
 
 /******************************************************************************

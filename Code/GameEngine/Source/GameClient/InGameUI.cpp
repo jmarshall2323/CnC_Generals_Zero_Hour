@@ -1027,7 +1027,7 @@ InGameUI::~InGameUI()
 void InGameUI::init( void )
 {
 	INI ini;
-	ini.load( AsciiString( "Data\\INI\\InGameUI.ini" ), INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\InGameUI.ini", INI_LOAD_OVERWRITE, NULL );
 
 	//override INI values with language localized values:
 	if (TheGlobalLanguageData)
@@ -3773,7 +3773,7 @@ void InGameUI::playCameoMovie( const AsciiString& movieName )
 		stopCameoMovie();
 		return;
 	}
-	GameWindow *window = TheWindowManager->winGetWindowFromId(NULL,TheNameKeyGenerator->nameToKey( AsciiString("ControlBar.wnd:RightHUD") ));
+	GameWindow *window = TheWindowManager->winGetWindowFromId(NULL,TheNameKeyGenerator->nameToKey( "ControlBar.wnd:RightHUD" ));
 	WinInstanceData *winData = window->winGetInstanceData();
 	winData->setVideoBuffer(m_cameoVideoBuffer);
 //	window->winHide(FALSE);
@@ -3784,8 +3784,8 @@ void InGameUI::playCameoMovie( const AsciiString& movieName )
 void InGameUI::stopCameoMovie( void )
 {
 //RightHUD
-	//GameWindow *window = TheWindowManager->winGetWindowFromId(NULL,TheNameKeyGenerator->nameToKey( AsciiString("ControlBar.wnd:CameoMovieWindow") ));
-	GameWindow *window = TheWindowManager->winGetWindowFromId(NULL,TheNameKeyGenerator->nameToKey( AsciiString("ControlBar.wnd:RightHUD") ));
+	//GameWindow *window = TheWindowManager->winGetWindowFromId(NULL,TheNameKeyGenerator->nameToKey( "ControlBar.wnd:CameoMovieWindow" ));
+	GameWindow *window = TheWindowManager->winGetWindowFromId(NULL,TheNameKeyGenerator->nameToKey( "ControlBar.wnd:RightHUD" ));
 //	window->winHide(FALSE);
 	WinInstanceData *winData = window->winGetInstanceData();
 	winData->setVideoBuffer(NULL);
@@ -5424,7 +5424,7 @@ void InGameUI::resetIdleWorker( void )
 
 void InGameUI::recreateControlBar( void )
 {
-	GameWindow *win = TheWindowManager->winGetWindowFromId(NULL, TheNameKeyGenerator->nameToKey(AsciiString("ControlBar.wnd")));
+	GameWindow *win = TheWindowManager->winGetWindowFromId(NULL, TheNameKeyGenerator->nameToKey("ControlBar.wnd"));
 	if(win)
 		win->deleteInstance();
 	

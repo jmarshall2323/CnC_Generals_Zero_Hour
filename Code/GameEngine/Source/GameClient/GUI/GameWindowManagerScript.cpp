@@ -1666,7 +1666,7 @@ static GameWindow *createGadget( char *type,
 			*c = 0;  // terminate after filename (format is filename:gadgetname)
 		assert( TheNameKeyGenerator );
 		if( TheNameKeyGenerator )
-			rData->screen = (Int)(TheNameKeyGenerator->nameToKey( AsciiString(filename) ));
+			rData->screen = (Int)(TheNameKeyGenerator->nameToKey( filename ));
 
     instData->m_style |= GWS_RADIO_BUTTON;
     window = TheWindowManager->gogoGadgetRadioButton( parent, status, x, y, 

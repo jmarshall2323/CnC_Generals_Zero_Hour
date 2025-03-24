@@ -1134,8 +1134,8 @@ void ControlBarSchemeManager::init( void )
 
 	INI ini;
 	// Read from INI all the ControlBarSchemes
-	ini.load( AsciiString( "Data\\INI\\Default\\ControlBarScheme.ini" ), INI_LOAD_OVERWRITE, NULL );
-	ini.load( AsciiString( "Data\\INI\\ControlBarScheme.ini" ), INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\Default\\ControlBarScheme.ini", INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\ControlBarScheme.ini", INI_LOAD_OVERWRITE, NULL );
 
 //	//Load the user modified control bar schemes
 //	WIN32_FIND_DATA findData;

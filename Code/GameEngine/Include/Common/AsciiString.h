@@ -148,6 +148,8 @@ public:
 	*/
 	AsciiString(const char* s);
 
+	AsciiString(const std::string& s);
+
 	/**
 		Destructor. Not too exciting... clean up the works and such.
 	*/

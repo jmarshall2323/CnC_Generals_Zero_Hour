@@ -89,16 +89,15 @@ void Handicap::readFromDict(const Dict* d)
 // no, you should NOT call init() here.
 //init();
 
-	AsciiString c;
+	std::string c;
 	for (Int i = 0; i < HANDICAP_TYPE_COUNT; ++i)
 	{
 		for (Int j = 0; j < THING_TYPE_COUNT; ++j)
 		{
-			c.clear();
-			c.set("HANDICAP_");
-			c.concat(htNames[i]);
-			c.concat("_");
-			c.concat(ttNames[j]);
+			c = "HANDICAP_";
+			c += htNames[i];
+			c += "_";
+			c += ttNames[j];
 			NameKeyType k = TheNameKeyGenerator->nameToKey(c);
 			Bool exists;
 			Real r = d->getReal(k, &exists);

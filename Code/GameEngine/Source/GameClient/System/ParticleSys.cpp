@@ -2965,7 +2965,7 @@ void ParticleSystemManager::init( void )
 {
 	/// Read INI data and build templates
 	INI ini;
-	ini.load( AsciiString( "Data\\INI\\ParticleSystem.ini" ), INI_LOAD_OVERWRITE, NULL );
+	ini.load( "Data\\INI\\ParticleSystem.ini", INI_LOAD_OVERWRITE, NULL );
 
 	// sanity, our lists must be empty!!
 	for( Int i = 0; i < NUM_PARTICLE_PRIORITIES; ++i )

@@ -344,7 +344,7 @@ WindowMsgHandledType InGameChatSystem( GameWindow *window, UnsignedInt msg,
 		case GBM_SELECTED:
 		{
 			GameWindow *control = (GameWindow *)mData1;
-			static NameKeyType buttonClearID = TheNameKeyGenerator->nameToKey( AsciiString( "InGameChat.wnd:ButtonClear" ) );
+			static NameKeyType buttonClearID = TheNameKeyGenerator->nameToKey( "InGameChat.wnd:ButtonClear" );
 			if (control && control->winGetWindowId() == buttonClearID)
 			{
 				if (chatTextEntry)
