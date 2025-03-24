@@ -421,9 +421,7 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message,
 
 				if (AllowMouseClip())
 				{
-					RECT rect;
-					GetClientRect(hWnd, &rect);
-					ClipCursor(&rect);
+					RestoreMouseClip();
 				}
 
 				break;
@@ -435,9 +433,7 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message,
 				{
 					if(AllowMouseClip())
 					{
-						RECT rect;
-						GetClientRect(hWnd, &rect);
-						ClipCursor(&rect);
+						RestoreMouseClip();
 					}
 					
 					int width = LOWORD(lParam);
@@ -478,9 +474,7 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message,
 
 				if (AllowMouseClip())
 				{
-					RECT rect;
-					GetClientRect(hWnd, &rect);
-					ClipCursor(&rect);
+					RestoreMouseClip();
 				}
 
 				if (isWinMainActive)
