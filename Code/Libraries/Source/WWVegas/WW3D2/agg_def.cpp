@@ -136,8 +136,6 @@ AggregateDefClass::~AggregateDefClass (void)
 const AggregateDefClass &
 AggregateDefClass::operator= (const AggregateDefClass &src)
 {
-	int index;
-
 	// Free the name buffer if necessary
 	if (m_pName != NULL) {		
 		::free (m_pName);
@@ -154,16 +152,16 @@ AggregateDefClass::operator= (const AggregateDefClass &src)
 	m_Version = src.m_Version;
 
 	// Loop through all the entries in the src object's subobj list
-	for (index = 0; index < src.m_SubobjectList.Count (); index ++) {
-		W3dAggregateSubobjectStruct *pinfo = src.m_SubobjectList[index];
-		if (pinfo != NULL) {
-
+	for (const auto& sub_obj : src.m_SubobjectList)
+	{
+		if (sub_obj)
+		{
 			// Copy the src object's info for this subobj
 			W3dAggregateSubobjectStruct *new_info = W3DNEW W3dAggregateSubobjectStruct;
-			::memcpy (new_info, pinfo, sizeof (W3dAggregateSubobjectStruct));
+			::memcpy (new_info, sub_obj, sizeof (W3dAggregateSubobjectStruct));
 
 			// Add this subobj to our list
-			m_SubobjectList.Add (new_info);
+			m_SubobjectList.push_back(new_info);
 		}
 	}
 
@@ -180,15 +178,16 @@ void
 AggregateDefClass::Free_Subobject_List (void)
 {
 	// Delete all the stucture pointers contained in the subobject list
-	for (int index = 0; index < m_SubobjectList.Count (); index ++) {
-		W3dAggregateSubobjectStruct *pinfo = m_SubobjectList[index];
-		if (pinfo) {
-			delete pinfo;
+	for (const auto& sub_object : m_SubobjectList)
+	{
+		if (sub_object)
+		{
+			delete sub_object;
 		}
 	}
 
 	// Reset the lists contents
-	m_SubobjectList.Delete_All ();
+	m_SubobjectList.clear();
 	return ;
 }
 
@@ -283,23 +282,24 @@ void
 AggregateDefClass::Attach_Subobjects (RenderObjClass &base_model)
 {
 	// Now loop through all the subobjects and attach them to the appropriate bone
-	for (int index = 0; index < m_SubobjectList.Count (); index ++) {
-		W3dAggregateSubobjectStruct *psubobj_info = m_SubobjectList[index];
-		if (psubobj_info != NULL) {
+	for (const auto& sub_object : m_SubobjectList)
+	{
+		if (sub_object) {
 			
 			// Now create this subobject and attach it to its bone.
-			RenderObjClass *prender_obj = Create_Render_Object (psubobj_info->SubobjectName);
-			if (prender_obj != NULL) {
-
+			RenderObjClass *prender_obj = Create_Render_Object (sub_object->SubobjectName);
+			if (prender_obj)
+			{
 				// Attach this object to the requested bone
-				if (base_model.Add_Sub_Object_To_Bone (prender_obj, psubobj_info->BoneName) == false) {
-					WWDEBUG_SAY (("Unable to attach %s to %s.\r\n", psubobj_info->SubobjectName, psubobj_info->BoneName));
+				if (base_model.Add_Sub_Object_To_Bone (prender_obj, sub_object->BoneName) == false)
+				{
+					WWDEBUG_SAY (("Unable to attach %s to %s.\r\n", sub_object->SubobjectName, sub_object->BoneName));
 				}
 
 				// Release our hold on this pointer
 				prender_obj->Release_Ref ();
 			} else {
-				WWDEBUG_SAY (("Unable to load aggregate subobject %s.\r\n", psubobj_info->SubobjectName));
+				WWDEBUG_SAY (("Unable to load aggregate subobject %s.\r\n", sub_object->SubobjectName));
 			}
 		}
 	}
@@ -426,33 +426,35 @@ AggregateDefClass::Build_Subobject_List
 	int index;
 
 	// Loop through all the bones in this render obj
-	int bone_count = model.Get_Num_Bones ();
+	size_t bone_count = model.Get_Num_Bones();
+
+	std::vector<RenderObjClass*> orig_node_list;
+	std::vector<RenderObjClass*> node_list;
+
 	for (int bone_index = 0; bone_index < bone_count; bone_index ++) {			
 		const char *pbone_name = model.Get_Bone_Name (bone_index);
 		
 		// Build a list of nodes that are contained in the vanilla model
-		DynamicVectorClass <RenderObjClass *> orig_node_list;
 		for (index = 0;
 			  index < original_model.Get_Num_Sub_Objects_On_Bone (bone_index);
 			  index ++) {
 			RenderObjClass *psubobj = original_model.Get_Sub_Object_On_Bone (index, bone_index);
 			if (psubobj != NULL) {
-				orig_node_list.Add (psubobj);
+				orig_node_list.push_back(psubobj);
 			}
 		}
 
 		// Build a list of nodes that are contained in this bone
-		DynamicVectorClass <RenderObjClass *> node_list;
 		for (index = 0;
 			  index < model.Get_Num_Sub_Objects_On_Bone (bone_index);
 			  index ++) {
 			RenderObjClass *psubobj = model.Get_Sub_Object_On_Bone (index, bone_index);
 			if (psubobj != NULL) {
-				node_list.Add (psubobj);
+				node_list.push_back(psubobj);
 			}
 		}
 
-		int node_count = node_list.Count ();
+		const size_t node_count = node_list.size();
 		if (node_count > 0) {
 			
 			// Loop through the subobjects and add each one to our internal list
@@ -482,16 +484,18 @@ AggregateDefClass::Build_Subobject_List
 		}
 
 		// Free our hold on the render objs in the original node list
-		for (index = 0; index < orig_node_list.Count (); index ++) {
-			REF_PTR_RELEASE (orig_node_list[index]);
+		for (auto& node : orig_node_list)
+		{
+			REF_PTR_RELEASE(node);
 		}
-		orig_node_list.Delete_All ();
+		orig_node_list.clear();
 
 		// Free our hold on the render objs in the node list
-		for (index = 0; index < node_list.Count (); index ++) {
-			REF_PTR_RELEASE (node_list[index]);
+		for (auto& node : node_list)
+		{
+			REF_PTR_RELEASE(node);
 		}
-		node_list.Delete_All ();
+		node_list.clear();
 	}
 
 	return ;
@@ -506,26 +510,20 @@ bool
 AggregateDefClass::Is_Object_In_List
 (
 	const char *passet_name,
-	DynamicVectorClass <RenderObjClass *> &node_list
+	const std::vector<RenderObjClass*>& node_list
 )
 {
-	// Assume failure
-	bool retval = false;
-
 	// Loop through the nodes in the list until we've found the one
 	// were are looking for.
-	for (int node_index = 0; (node_index < node_list.Count ()) && (retval == false); node_index ++) {
-		RenderObjClass *prender_obj = node_list[node_index];
-		
+	for (const auto& node : node_list)
+	{
 		// Is this the render object we were looking for?
-		if (prender_obj != NULL &&
-		    ::lstrcmpi (prender_obj->Get_Name (), passet_name) == 0) {
-			retval = true;
+		if (node && ::lstrcmpi(node->Get_Name(), passet_name) == 0)
+		{
+			return true;
 		}
 	}	
-
-	// Return the true/false result code
-	return retval;
+	return false;
 }
 
 
@@ -676,7 +674,7 @@ AggregateDefClass::Add_Subobject (const W3dAggregateSubobjectStruct &subobj_info
 	::lstrcpy (pnew_entry->BoneName, subobj_info.BoneName);
 
 	// Add this new entry to the list
-	m_SubobjectList.Add (pnew_entry);
+	m_SubobjectList.push_back(pnew_entry);
 	return ;
 }
 
@@ -788,12 +786,14 @@ AggregateDefClass::Save_Info (ChunkSaveClass &chunk_save)
 			ret_val = WW3D_ERROR_OK;
 
 			// Write all the subobjects to the file
-			for (int isubobject = 0;
-			     (isubobject < m_SubobjectList.Count ()) && (ret_val == WW3D_ERROR_OK);
-				  isubobject ++) {
-
+			for (const auto& sub_object : m_SubobjectList)
+			{
 				// Write this object to the file
-				ret_val = Save_Subobject (chunk_save, m_SubobjectList[isubobject]);
+				ret_val = Save_Subobject (chunk_save, sub_object);
+				if (ret_val != WW3D_ERROR_OK)
+				{
+					break;
+				}
 			}
 		}
 

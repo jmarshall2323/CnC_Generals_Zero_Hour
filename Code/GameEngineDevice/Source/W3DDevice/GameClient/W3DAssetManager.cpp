@@ -1235,13 +1235,11 @@ void W3DAssetManager::Make_Mesh_Unique(RenderObjClass *robj, Bool geometry, Bool
 equal to 1*/
 void W3DAssetManager::Report_Used_Prototypes(void)
 {
-	int count = Prototypes.Count();
-	while (count-- > 0) {
-
-		PrototypeClass * proto = Prototypes[count];
-		if (proto->Get_Class_ID() == RenderObjClass::CLASSID_HLOD || proto->Get_Class_ID() == RenderObjClass::CLASSID_MESH)
+	for (const auto& prototype : Prototypes)
+	{
+		if (prototype->Get_Class_ID() == RenderObjClass::CLASSID_HLOD || prototype->Get_Class_ID() == RenderObjClass::CLASSID_MESH)
 		{
-			DEBUG_LOG(("**Unfreed Prototype On Map Reset: %s\n",proto->Get_Name()));
+			DEBUG_LOG(("**Unfreed Prototype On Map Reset: %s\n", prototype->Get_Name()));
 		}
 	}
 }
@@ -1265,7 +1263,7 @@ void W3DAssetManager::Report_Used_Assets(void)
 //---------------------------------------------------------------------
 void W3DAssetManager::Report_Used_FontChars(void)
 {
-	Int count=FontCharsList.Count();
+	size_t count = FontCharsList.size();
 
 	while (count-- > 0)
 	{

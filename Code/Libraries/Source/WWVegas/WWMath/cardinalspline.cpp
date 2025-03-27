@@ -72,26 +72,26 @@ int CardinalSpline3DClass::Add_Key(const Vector3 & point,float t)
 {
 	int index = HermiteSpline3DClass::Add_Key(point,t);
 	float tightness = 0.5f;
-	Tightness.Insert(index,tightness);
+	Tightness.insert(Tightness.begin() + index, tightness);
 	return index;
 }
 
 void CardinalSpline3DClass::Remove_Key(int i)
 {
-	Tightness.Delete(i);
+	Tightness.erase(Tightness.begin() + i);
 	HermiteSpline3DClass::Remove_Key(i);
 }
 
 void CardinalSpline3DClass::Clear_Keys(void)
 {
-	Tightness.Clear();
+	Tightness.clear();
 	HermiteSpline3DClass::Clear_Keys();
 }
 
 void CardinalSpline3DClass::Set_Tightness(int i,float tightness)
 {
 	WWASSERT(i >= 0);
-	WWASSERT(i < Tightness.Count());
+	WWASSERT(i < Tightness.size());
 	Tightness[i] = tightness;
 	TangentsDirty = true;
 }
@@ -103,8 +103,10 @@ float CardinalSpline3DClass::Get_Tightness(int i)
 
 void CardinalSpline3DClass::Update_Tangents(void)
 {
-	if (Keys.Count() < 2) {
-		for (int i=0; i<Keys.Count(); i++) {
+	if (Keys.size() < 2)
+	{
+		for (size_t i = 0; i < Keys.size(); i++)
+		{
 			Tangents[0].InTangent.Set(0,0,0);
 			Tangents[0].OutTangent.Set(0,0,0);
 		}
@@ -112,7 +114,7 @@ void CardinalSpline3DClass::Update_Tangents(void)
 
 	// First and Last Key: 
 	// Only need to compute the OutTangent for key[0] and the InTangent for key[end]
-	int end = Keys.Count() - 1;
+	const size_t end = Keys.size() - 1;
 	Tangents[0].InTangent.Set(0,0,0);
 	Tangents[end].OutTangent.Set(0,0,0);
 
@@ -144,7 +146,8 @@ void CardinalSpline3DClass::Update_Tangents(void)
 
 
 	// inner knots
-	for (int i=1; i<Keys.Count()-1; i++) {
+	for (size_t i = 1; i < Keys.size() - 1; i++)
+	{
 		Tangents[i].InTangent.X = (1.0f - Tightness[i])*(Keys[i+1].Point.X - Keys[i-1].Point.X);
 		Tangents[i].InTangent.Y = (1.0f - Tightness[i])*(Keys[i+1].Point.Y - Keys[i-1].Point.Y);
 		Tangents[i].InTangent.Z = (1.0f - Tightness[i])*(Keys[i+1].Point.Z - Keys[i-1].Point.Z);
@@ -171,7 +174,8 @@ bool CardinalSpline3DClass::Save(ChunkSaveClass &csave)
 	csave.End_Chunk();
 	
 	csave.Begin_Chunk(CARDINAL3D_CHUNK_TIGHTNESSKEYS);
-	for (int i=0; i<Tightness.Count(); i++) {
+	for (size_t i = 0; i < Tightness.size(); i++)
+	{
 		float tightness = Tightness[i];
 		csave.Write(&(tightness),sizeof(tightness));
 	}
@@ -181,11 +185,10 @@ bool CardinalSpline3DClass::Save(ChunkSaveClass &csave)
 
 bool CardinalSpline3DClass::Load(ChunkLoadClass &cload)
 {
-	int i;
 	float tightness;
 
 	// reset the array of tightness keys
-	Tightness.Delete_All();
+	Tightness.clear();
 
 	// read in the chunks
 	while (cload.Open_Chunk()) {
@@ -197,9 +200,10 @@ bool CardinalSpline3DClass::Load(ChunkLoadClass &cload)
 				break;
 
 			case CARDINAL3D_CHUNK_TIGHTNESSKEYS:
-				for (i=0; i<Keys.Count(); i++) {
+				for (size_t i = 0; i < Keys.size(); i++)
+				{
 					cload.Read(&(tightness),sizeof(tightness));
-					Tightness.Add(tightness);
+					Tightness.push_back(tightness);
 				}
 				break;
 
@@ -221,26 +225,26 @@ int CardinalSpline1DClass::Add_Key(float point,float t)
 {
 	int index = HermiteSpline1DClass::Add_Key(point,t);
 	float tightness = 0.5f;
-	Tightness.Insert(index,tightness);
+	Tightness.insert(Tightness.begin() + index,tightness);
 	return index;
 }
 
 void CardinalSpline1DClass::Remove_Key(int i)
 {
-	Tightness.Delete(i);
+	Tightness.erase(Tightness.begin() + i);
 	HermiteSpline1DClass::Remove_Key(i);
 }
 
 void CardinalSpline1DClass::Clear_Keys(void)
 {
-	Tightness.Clear();
+	Tightness.clear();
 	HermiteSpline1DClass::Clear_Keys();
 }
 
 void CardinalSpline1DClass::Set_Tightness(int i,float tightness)
 {
 	WWASSERT(i >= 0);
-	WWASSERT(i < Tightness.Count());
+	WWASSERT(i < Tightness.size());
 	Tightness[i] = tightness;
 	TangentsDirty = true;
 }
@@ -252,8 +256,10 @@ float CardinalSpline1DClass::Get_Tightness(int i)
 
 void CardinalSpline1DClass::Update_Tangents(void)
 {
-	if (Keys.Count() < 2) {
-		for (int i=0; i<Keys.Count(); i++) {
+	if (Keys.size() < 2)
+	{
+		for (size_t i = 0; i < Keys.size(); i++)
+		{
 			Tangents[0].InTangent = 0;
 			Tangents[0].OutTangent = 0;
 		}
@@ -261,7 +267,7 @@ void CardinalSpline1DClass::Update_Tangents(void)
 
 	// First and Last Key: 
 	// Only need to compute the OutTangent for key[0] and the InTangent for key[end]
-	int end = Keys.Count() - 1;
+	size_t end = Keys.size() - 1;
 	Tangents[0].InTangent = 0;
 	Tangents[end].OutTangent = 0;
 
@@ -285,7 +291,8 @@ void CardinalSpline1DClass::Update_Tangents(void)
 
 
 	// inner knots
-	for (int i=1; i<Keys.Count()-1; i++) {
+	for (size_t i = 1; i < Keys.size() - 1; i++)
+	{
 		Tangents[i].InTangent = (1.0f - Tightness[i])*(Keys[i+1].Point - Keys[i-1].Point);
 		Tangents[i].OutTangent = Tangents[i].InTangent;
 
@@ -310,7 +317,8 @@ bool CardinalSpline1DClass::Save(ChunkSaveClass &csave)
 	csave.End_Chunk();
 	
 	csave.Begin_Chunk(CARDINAL1D_CHUNK_TIGHTNESSKEYS);
-	for (int i=0; i<Tightness.Count(); i++) {
+	for (size_t i = 0; i < Tightness.size(); i++)
+	{
 		float tightness = Tightness[i];
 		csave.Write(&(tightness),sizeof(tightness));
 	}
@@ -320,11 +328,10 @@ bool CardinalSpline1DClass::Save(ChunkSaveClass &csave)
 
 bool CardinalSpline1DClass::Load(ChunkLoadClass &cload)
 {
-	int i;
 	float tightness;
 
 	// reset the array of tangents
-	Tightness.Delete_All();
+	Tightness.clear();
 
 	// read in the chunks
 	while (cload.Open_Chunk()) {
@@ -336,9 +343,10 @@ bool CardinalSpline1DClass::Load(ChunkLoadClass &cload)
 				break;
 
 			case CARDINAL1D_CHUNK_TIGHTNESSKEYS:
-				for (i=0; i<Keys.Count(); i++) {
+				for (size_t i = 0; i < Keys.size(); i++)
+				{
 					cload.Read(&(tightness),sizeof(tightness));
-					Tightness.Add(tightness);
+					Tightness.push_back(tightness);
 				}
 				break;
 

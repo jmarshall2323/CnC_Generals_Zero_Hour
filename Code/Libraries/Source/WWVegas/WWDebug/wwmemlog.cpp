@@ -38,10 +38,12 @@
  *   WWMemoryLogClass::Release_Memory -- frees memory                                          *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
+#include "always.h"
+
+#include <vector>
 
 #include "wwmemlog.h"
 #include "wwdebug.h"
-#include "vector.h"
 #include <windows.h>
 
 #if (STEVES_NEW_CATCHER || PARAM_EDITING_ON)
@@ -110,11 +112,12 @@ protected:
 ** one ActiveCategoryStack per thread that is encountered in the program.
 */
 const int MAX_CATEGORY_STACK_DEPTH = 1024;
-class ActiveCategoryStackClass : public VectorClass<int>
+
+class ActiveCategoryStackClass : public std::vector<int>
 {
 public:
 	ActiveCategoryStackClass(void) :
-		VectorClass<int>(MAX_CATEGORY_STACK_DEPTH),
+		std::vector<int>(MAX_CATEGORY_STACK_DEPTH),
 		ThreadID(-1),
 		Count(0)
 	{ }
@@ -150,11 +153,11 @@ protected:
 */
 const int MAX_CATEGORY_STACKS = 256;		// maximum number of threads we expect to encounter...
 
-class ActiveCategoryClass : public VectorClass<ActiveCategoryStackClass>
+class ActiveCategoryClass : public std::vector<ActiveCategoryStackClass>
 {
 public:
 
-	ActiveCategoryClass(void) : VectorClass<ActiveCategoryStackClass>(MAX_CATEGORY_STACKS), Count(0) { }
+	ActiveCategoryClass(void) : std::vector<ActiveCategoryStackClass>(MAX_CATEGORY_STACKS), Count(0) { }
 
 	void		Push(int active_category)	{ Get_Active_Stack().Push(active_category); }
 	void		Pop(void)						{ Get_Active_Stack().Pop(); }
@@ -261,7 +264,7 @@ ActiveCategoryStackClass &
 ActiveCategoryStackClass::operator = (const ActiveCategoryStackClass & that)
 {
 	if (this != &that) {
-		VectorClass<int>::operator == (that);
+		std::vector<int>::operator = (that);
 		ThreadID = that.ThreadID;
 		Count = that.Count;
 	}

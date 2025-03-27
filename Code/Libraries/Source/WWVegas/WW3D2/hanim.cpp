@@ -75,7 +75,7 @@ void NamedPivotMapClass::Add(const char *Name, float Weight)
 	WeightInfoStruct info;
 	info.Name = (char *) Name;
 	info.Weight = Weight;
-	WeightInfo.Add(info);	
+	WeightInfo.push_back(info);
 	info.Name = 0;
 }
 
@@ -85,17 +85,12 @@ void NamedPivotMapClass::Update_Pivot_Map(const HTreeClass *Tree)
 	// first, resize the base pivot map to fit the tree
 	int numPivots = Tree->Num_Pivots();
 
-	Resize(numPivots);
-	ActiveCount = numPivots;
-
 	// first, reset all weights to 1 (the default)
-	while(numPivots--) {
-		(*this)[numPivots] = 1.0f;
-	}
+	assign(numPivots, 1.0f);
 
 	// for each named pivot, find the correct index and set the weight if the indicated bone is present
 	// note: there is no check for redundant names
-	int count = WeightInfo.Count();
+	size_t count = WeightInfo.size();
 	while(count--) {
 		int actualPivot = Tree->Get_Bone_Index(WeightInfo[count].Name);
 		if(actualPivot != -1) {
@@ -202,19 +197,15 @@ void HAnimComboDataClass::Build_Active_Pivot_Map(void)
 		return;
 	}
 
-	int numpivots = HAnim->Get_Num_Pivots();
 	PivotMap = NEW_REF( PivotMapClass, ());
-	PivotMap->Resize(numpivots);
 
-	int count = 0;
-	while(count < numpivots) {
-		if(HAnim->Is_Node_Motion_Present(count)) {
-			PivotMap->Add(1);
+	const size_t numpivots = HAnim->Get_Num_Pivots();
+	PivotMap->reserve(numpivots);
 
-		} else {
-			PivotMap->Add(0);
-		}
-		count++;
+	for (size_t i = 0; i < numpivots; i++)
+	{
+		const float value = HAnim->Is_Node_Motion_Present(i) ? 1.0f : 0.0f;
+		PivotMap->push_back(value);
 	}
 }
 
@@ -229,10 +220,10 @@ HAnimComboClass::HAnimComboClass(void)
 
 HAnimComboClass::HAnimComboClass( int num_animations )
 {
-	HAnimComboData.Resize(num_animations);
+	HAnimComboData.reserve(num_animations);
 
 	while(num_animations--) {
-		HAnimComboData.Add(new HAnimComboDataClass());
+		HAnimComboData.push_back(new HAnimComboDataClass());
 	}
 }
 
@@ -243,26 +234,27 @@ HAnimComboClass::~HAnimComboClass(void)
 }
 
 
-void	HAnimComboClass::Clear( void )
+void HAnimComboClass::Clear( void )
 {
-	int numAnimations = HAnimComboData.Count();
-	while ( numAnimations-- ) {
-		HAnimComboDataClass *data = HAnimComboData[numAnimations];
+	for (const auto& data : HAnimComboData)
+	{
 		if(data && (! data->Is_Shared()))
+		{
 			data->Clear();
+		}
 	}
 }
 
-void	HAnimComboClass::Reset( void )
+void HAnimComboClass::Reset( void )
 {
-	int numAnimations = HAnimComboData.Count();
-	while ( numAnimations-- ) {
-		HAnimComboDataClass *data = HAnimComboData[numAnimations];
-		if(data && (! data->Is_Shared())) {
+	for (const auto& data : HAnimComboData)
+	{
+		if(data && (! data->Is_Shared()))
+		{
 			delete data; 
 		}
 	}
-	HAnimComboData.Reset_Active();
+	HAnimComboData.clear();
 }
 
 bool	HAnimComboClass::Normalize_Weights(void)
@@ -437,12 +429,12 @@ PivotMapClass	*HAnimComboClass::Peek_Pivot_Weight_Map( int index )
 
 void HAnimComboClass::Append_Anim_Combo_Data(HAnimComboDataClass * Data)
 {
-	HAnimComboData.Add(Data);
+	HAnimComboData.push_back(Data);
 }
 
 void HAnimComboClass::Remove_Anim_Combo_Data(HAnimComboDataClass * Data)
 {
-	HAnimComboData.Delete(Data);
+	std::erase(HAnimComboData, Data);
 }
 
 

@@ -40,9 +40,11 @@
 #define MESHGEOMETRY_H
 
 #include "always.h"
+
+#include <vector>
+
 #include "refcount.h"
 #include "bittype.h"
-#include "simplevec.h"
 #include "sharebuf.h"
 #include "w3derr.h"
 #include "vector3.h"
@@ -150,11 +152,11 @@ public:
 	// exposed culling support
 	bool							Has_Cull_Tree(void)											{ return CullTree != NULL; }
 	
-	void							Generate_Rigid_APT(const Vector3 & view_dir, SimpleDynVecClass<uint32> & apt);
-	void							Generate_Rigid_APT(const OBBoxClass & local_box, SimpleDynVecClass<uint32> & apt);
-	void							Generate_Rigid_APT(const OBBoxClass & local_box, const Vector3 & view_dir, SimpleDynVecClass<uint32> & apt);
+	void Generate_Rigid_APT(const Vector3& view_dir, std::vector<uint32>& apt);
+	void Generate_Rigid_APT(const OBBoxClass& local_box, std::vector<uint32>& apt);
+	void Generate_Rigid_APT(const OBBoxClass& local_box, const Vector3& view_dir, std::vector<uint32>& apt);
 
-	void							Generate_Skin_APT(const OBBoxClass & world_box, SimpleDynVecClass<uint32> & apt, const Vector3 *world_vertex_locs);
+	void Generate_Skin_APT(const OBBoxClass& world_box, std::vector<uint32>& apt, const Vector3* world_vertex_locs);
 
 	// containment
 	bool							Contains(const Vector3 &point);

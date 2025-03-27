@@ -77,7 +77,7 @@ enum
 DefinitionClass **	DefinitionMgrClass::_SortedDefinitionArray	= NULL;
 int						DefinitionMgrClass::_DefinitionCount			= 0;
 int						DefinitionMgrClass::_MaxDefinitionCount		= 0;
-HashTemplateClass<StringClass, DynamicVectorClass<DefinitionClass*>*>* DefinitionMgrClass::DefinitionHash;
+HashTemplateClass<StringClass, std::vector<DefinitionClass*>*>* DefinitionMgrClass::DefinitionHash;
 
 //////////////////////////////////////////////////////////////////////////////////
 //
@@ -242,20 +242,27 @@ DefinitionMgrClass::Find_Typed_Definition (const char *name, uint32 class_id, bo
 	WWASSERT(DefinitionHash != NULL);
 
 	StringClass name_string(name,true);
-	DynamicVectorClass<DefinitionClass*>* defs = DefinitionHash->Get(name_string);
-	if (defs) {
-		for (int i=0;i<defs->Length();++i) {
-			DefinitionClass* curr_def=(*defs)[i];
-			WWASSERT(curr_def);
-			uint32 curr_class_id = curr_def->Get_Class_ID ();
-			if (	(curr_class_id == class_id) ||
-					(::SuperClassID_From_ClassID (curr_class_id) == class_id) ||
-					(twiddle && (curr_def->Get_Class_ID () == CLASSID_TWIDDLERS)))
+	std::vector<DefinitionClass*>* defs = DefinitionHash->Get(name_string);
+	if (defs)
+	{
+		const auto result = std::find_if(defs->begin(), defs->end(), [&](const auto& def)
 			{
-				definition = curr_def;
-				break;
-			}
-		}
+				WWASSERT(def);
+
+				if (def == nullptr)
+					return false;
+
+				const uint32 def_class_id = def->Get_Class_ID();
+
+				const bool a = class_id == def_class_id;
+				const bool b = ::SuperClassID_From_ClassID(def_class_id) == class_id;
+				const bool c = twiddle && (def->Get_Class_ID() == CLASSID_TWIDDLERS);
+
+				return a || b || c;
+			});
+
+		if (result != defs->end())
+			definition = *result;
 	}
 
 	//
@@ -282,10 +289,10 @@ DefinitionMgrClass::Find_Typed_Definition (const char *name, uint32 class_id, bo
 						definition = curr_def;
 						// Add the definition to the hash table, so that it can be quickly accessed the next time it is needed.
 						if (!defs) {
-							defs=W3DNEW DynamicVectorClass<DefinitionClass*>;
+							defs=W3DNEW std::vector<DefinitionClass*>;
 							DefinitionHash->Insert(name_string,defs);
 						}
-						defs->Add(definition);
+						defs->push_back(definition);
 						break;
 					}
 				}
@@ -466,9 +473,9 @@ DefinitionMgrClass::Free_Definitions (void)
 {
 	// Clear the hash table
 	if (DefinitionHash) {
-		HashTemplateIterator<StringClass,DynamicVectorClass<DefinitionClass*>*> ite(*DefinitionHash);
+		HashTemplateIterator<StringClass,std::vector<DefinitionClass*>*> ite(*DefinitionHash);
 		for (ite.First();!ite.Is_Done();ite.Next()) {
-			DynamicVectorClass<DefinitionClass*>* defs=ite.Peek_Value();
+			std::vector<DefinitionClass*>* defs=ite.Peek_Value();
 //			delete ite.Peek_Value();
 			delete defs;
 		}
@@ -531,7 +538,7 @@ DefinitionMgrClass::Prepare_Definition_Array (void)
 		_SortedDefinitionArray	= new_array;
 		_MaxDefinitionCount		= new_size;		
 	}
-	if (!DefinitionHash) DefinitionHash=W3DNEW HashTemplateClass<StringClass, DynamicVectorClass<DefinitionClass*>*>;
+	if (!DefinitionHash) DefinitionHash=W3DNEW HashTemplateClass<StringClass, std::vector<DefinitionClass*>*>;
 
 	return ;
 }

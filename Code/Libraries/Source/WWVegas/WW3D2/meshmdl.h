@@ -42,6 +42,8 @@
 #ifndef MESHMDL_H
 #define MESHMDL_H
 
+#include "always.h"
+
 #include "vector2.h"
 #include "vector3.h"
 #include "vector4.h"
@@ -52,7 +54,6 @@
 #include "vertmaterial.h"
 #include "bittype.h"
 #include "colmath.h"
-#include "simplevec.h"
 #include "wwstring.h"
 #include "rinfo.h"
 #include "meshgeometry.h"

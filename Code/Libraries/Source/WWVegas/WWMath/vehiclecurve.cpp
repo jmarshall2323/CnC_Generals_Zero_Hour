@@ -287,7 +287,7 @@ void
 VehicleCurveClass::Update_Arc_List (void)
 {
 	WWMEMLOG(MEM_PATHFIND);
-	m_ArcList.Delete_All ();
+	m_ArcList.clear();
 	
 	//
 	//	Bail out if there is nothing to do
@@ -308,7 +308,7 @@ VehicleCurveClass::Update_Arc_List (void)
 	arc_start.radius				= 0;
 	arc_start.angle_in_delta	= 0;
 	arc_start.angle_out_delta	= 0;
-	m_ArcList.Add (arc_start);
+	m_ArcList.push_back(arc_start);
 	
 	//
 	//	Loop over each 'interior' point and generate arc information
@@ -406,7 +406,7 @@ VehicleCurveClass::Update_Arc_List (void)
 			arc_info.radius				= 0;
 			arc_info.angle_in_delta		= 0;
 			arc_info.angle_out_delta	= 0;
-			m_ArcList.Add (arc_info);
+			m_ArcList.push_back(arc_info);
 
 		} else {
 
@@ -421,7 +421,7 @@ VehicleCurveClass::Update_Arc_List (void)
 			arc_info.radius				= m_Radius;
 			arc_info.angle_in_delta		= angle_in_delta;
 			arc_info.angle_out_delta	= angle_out_delta;
-			m_ArcList.Add (arc_info);
+			m_ArcList.push_back(arc_info);
 		}
 	}
 
@@ -437,7 +437,7 @@ VehicleCurveClass::Update_Arc_List (void)
 		arc_end.radius					= 0;
 		arc_end.angle_in_delta		= 0;
 		arc_end.angle_out_delta		= 0;
-		m_ArcList.Add (arc_end);
+		m_ArcList.push_back(arc_end);
 	}
 
 	m_IsDirty = false;
@@ -453,18 +453,19 @@ VehicleCurveClass::Update_Arc_List (void)
 void
 VehicleCurveClass::Evaluate (float time, Vector3 *set_val)
 {
-	int count = Keys.Count ();
 	m_Sharpness = 0;
 
-	if (time < Keys[0].Time) {
-		*set_val		= Keys[0].Point;
-		m_LastTime	= Keys[0].Time;
+	if (time < Keys[0].Time)
+	{
+		*set_val = Keys[0].Point;
+		m_LastTime = Keys[0].Time;
 		return;
 	}
 
-	if (time >= Keys[count - 1].Time) {
-		*set_val		= Keys[count - 1].Point;
-		m_LastTime	= Keys[count - 1].Time;
+	if (time >= Keys.back().Time)
+	{
+		*set_val = Keys.back().Point;
+		m_LastTime = Keys.back().Time;
 		return;
 	}
 
@@ -614,9 +615,8 @@ VehicleCurveClass::Save (ChunkSaveClass &csave)
 	//
 	//	Save each arc info struct to its own chunk
 	//
-	for (int index = 0; index < m_ArcList.Count (); index ++) {
-		ArcInfoStruct &arc_info = m_ArcList[index];
-
+	for (const auto& arc_info : m_ArcList)
+	{
 		csave.Begin_Chunk (CHUNKID_ARC_INFO);
 			csave.Write (&arc_info, sizeof (arc_info));
 		csave.End_Chunk ();
@@ -645,7 +645,7 @@ VehicleCurveClass::Load (ChunkLoadClass &cload)
 			{
 				ArcInfoStruct arc_info;
 				cload.Read (&arc_info, sizeof (arc_info));
-				m_ArcList.Add (arc_info);
+				m_ArcList.push_back(arc_info);
 			}
 			break;
 

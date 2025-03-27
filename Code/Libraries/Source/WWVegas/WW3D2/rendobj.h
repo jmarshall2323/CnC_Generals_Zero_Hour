@@ -43,6 +43,9 @@
 #define RENDOBJ_H
 
 #include "always.h"
+
+#include <vector>
+
 #include "refcount.h"
 #include "sphere.h"
 #include "coltype.h"
@@ -76,7 +79,6 @@ class	IntersectionResultClass;
 class DecalGeneratorClass;
 class RenderObjProxyClass;
 class StringClass;
-template<class T> class DynamicVectorClass;
 
 // "unreferenced formal parameter" 
 #pragma warning(disable : 4100)
@@ -403,8 +405,8 @@ public:
 	//
 	//	Be aware, these lists WILL contain duplicate entries.
 	//
-	virtual bool					Build_Dependency_List (DynamicVectorClass<StringClass> &file_list, bool recursive=true);
-	virtual bool					Build_Texture_List (DynamicVectorClass<StringClass> &texture_file_list, bool recursive=true);
+	virtual bool Build_Dependency_List(std::vector<StringClass>& file_list, bool recursive = true);
+	virtual bool Build_Texture_List(std::vector<StringClass>& texture_file_list, bool recursive = true);
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Render Object Interface - Decals
@@ -475,7 +477,7 @@ public:
 
 protected:
 
-	virtual void					Add_Dependencies_To_List (DynamicVectorClass<StringClass> &file_list, bool textures_only = false);
+	virtual void Add_Dependencies_To_List(std::vector<StringClass>& file_list, bool textures_only = false);
 
 	virtual void					Update_Cached_Bounding_Volumes(void) const;
 	virtual void					Update_Sub_Object_Bits(void);

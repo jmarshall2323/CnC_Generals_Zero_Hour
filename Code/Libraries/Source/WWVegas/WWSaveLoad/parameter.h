@@ -43,10 +43,12 @@
 #define __PARAMETER_H
 
 #include "always.h"
+
+#include <vector>
+
 #include <string.h>
 #include <stdlib.h>
 #include "parametertypes.h"
-#include "vector.h"
 #include "wwstring.h"
 #include "bittype.h"
 #include "obbox.h"
@@ -411,7 +413,7 @@ public:
 	// Data manipulation
 	virtual void __cdecl		Add_Values (const char *first_name, int first_value, ...);
 	virtual void				Add_Value (const char *display_name, int value);
-	virtual int					Get_Count (void) const					{ return m_List.Count (); }
+	virtual int Get_Count(void) const { return m_List.size(); }
 	virtual const char *		Get_Entry_Name (int index) const		{ return m_List[index].name; }
 	virtual int					Get_Entry_Value (int index) const	{ return m_List[index].value; }
 	
@@ -439,7 +441,7 @@ protected:
 	//////////////////////////////////////////////////////////////////////////////
 	//	Private member data
 	//////////////////////////////////////////////////////////////////////////////
-	DynamicVectorClass<ENUM_VALUE>		m_List;
+	std::vector<ENUM_VALUE> m_List;
 	int *											m_Value;
 };
 
@@ -888,7 +890,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////
 	//	Public constructors/destructors
 	//////////////////////////////////////////////////////////////////////////////
-	DefIDListParameterClass (DynamicVectorClass<int> *list);
+	DefIDListParameterClass(std::vector<int>* list);
 	DefIDListParameterClass (const DefIDListParameterClass &src);
 	virtual ~DefIDListParameterClass (void) {}
 
@@ -913,7 +915,7 @@ public:
 	virtual void				Set_Class_ID (uint32 id)				{ m_ClassID = id; }
 	virtual uint32 			Get_Class_ID (void) const				{ return m_ClassID; }
 
-	virtual DynamicVectorClass<int> &Get_List (void) const	{ return (*m_IDList); }
+	virtual std::vector<int>& Get_List(void) const { return (*m_IDList); }
 
 	// Copy methods
 	virtual void				Copy_Value (const ParameterClass &src);
@@ -923,7 +925,7 @@ protected:
 	//////////////////////////////////////////////////////////////////////////////
 	//	Private member data
 	//////////////////////////////////////////////////////////////////////////////
-	DynamicVectorClass<int> *	m_IDList;
+	std::vector<int> *	m_IDList;
 	uint32							m_ClassID;
 	uint32 *							m_SelectedClassID;
 };
@@ -989,7 +991,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////
 	//	Public constructors/destructors
 	//////////////////////////////////////////////////////////////////////////////
-	FilenameListParameterClass (DynamicVectorClass<StringClass> *list);
+	FilenameListParameterClass(std::vector<StringClass>* list);
 	FilenameListParameterClass (const FilenameListParameterClass &src);
 	virtual ~FilenameListParameterClass (void) {}
 
@@ -1009,7 +1011,7 @@ public:
 	virtual bool				Is_Type (Type type) const			{ return (type == TYPE_FILENAMELIST) || ParameterClass::Is_Type (type); }
 
 	// Data manipulation
-	virtual DynamicVectorClass<StringClass> &Get_List (void) const	{ return (*m_FilenameList); }
+	virtual std::vector<StringClass>& Get_List (void) const { return (*m_FilenameList); }
 
 	// Copy methods
 	virtual void				Copy_Value (const ParameterClass &src);
@@ -1019,7 +1021,7 @@ protected:
 	//////////////////////////////////////////////////////////////////////////////
 	//	Private member data
 	//////////////////////////////////////////////////////////////////////////////
-	DynamicVectorClass<StringClass> *	m_FilenameList;
+	std::vector<StringClass>* m_FilenameList;
 };
 
 
@@ -1036,7 +1038,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////
 	//	Public constructors/destructors
 	//////////////////////////////////////////////////////////////////////////////
-	ScriptListParameterClass (DynamicVectorClass<StringClass> *name_list, DynamicVectorClass<StringClass> *param_list);
+	ScriptListParameterClass(std::vector<StringClass>* name_list, std::vector<StringClass>* param_list);
 	ScriptListParameterClass (const ScriptListParameterClass &src);
 	virtual ~ScriptListParameterClass (void) {}
 
@@ -1056,8 +1058,8 @@ public:
 	virtual bool				Is_Type (Type type) const			{ return (type == TYPE_SCRIPTLIST) || ParameterClass::Is_Type (type); }
 
 	// Data manipulation
-	virtual DynamicVectorClass<StringClass> &Get_Name_List (void) const	{ return (*m_NameList); }
-	virtual DynamicVectorClass<StringClass> &Get_Param_List (void) const	{ return (*m_ParamList); }
+	virtual std::vector<StringClass>& Get_Name_List (void) const { return (*m_NameList); }
+	virtual std::vector<StringClass>& Get_Param_List (void) const { return (*m_ParamList); }
 
 	// Copy methods
 	virtual void				Copy_Value (const ParameterClass &src);
@@ -1067,13 +1069,13 @@ protected:
 	//////////////////////////////////////////////////////////////////////////////
 	//	Protected members
 	//////////////////////////////////////////////////////////////////////////////
-	bool							Are_Lists_Identical (DynamicVectorClass<StringClass> &list1, DynamicVectorClass<StringClass> &list2);
+	bool Are_Lists_Identical (std::vector<StringClass>& list1, std::vector<StringClass>& list2);
 
 	//////////////////////////////////////////////////////////////////////////////
 	//	Private member data
 	//////////////////////////////////////////////////////////////////////////////
-	DynamicVectorClass<StringClass> *	m_NameList;
-	DynamicVectorClass<StringClass> *	m_ParamList;
+	std::vector<StringClass>* m_NameList;
+	std::vector<StringClass>* m_ParamList;
 };
 
 

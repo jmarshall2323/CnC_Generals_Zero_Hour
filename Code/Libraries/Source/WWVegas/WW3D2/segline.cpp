@@ -103,10 +103,7 @@ void SegmentedLineClass::Set_Points(unsigned int num_points, Vector3 *locs)
 		return;
 	}
 
-	PointLocations.Delete_All();
-	for (unsigned int i=0; i<num_points; i++) {
-		PointLocations.Add(locs[i],num_points);
-	}
+	PointLocations.assign(locs, locs + num_points);
 
 	Invalidate_Cached_Bounding_Volumes();
 }
@@ -115,14 +112,14 @@ void SegmentedLineClass::Set_Points(unsigned int num_points, Vector3 *locs)
 // entire line. Therefore there must be at least two.
 int SegmentedLineClass::Get_Num_Points(void)
 {
-	return PointLocations.Count();
+	return PointLocations.size();
 }
 
 // Set object-space location for a given point.
 // NOTE: If given position beyond end of point list, do nothing.
 void SegmentedLineClass::Set_Point_Location(unsigned int point_idx, const Vector3 &location)
 {
-	if (point_idx < (unsigned int)PointLocations.Count()) {
+	if (point_idx < (unsigned int)PointLocations.size()) {
 		PointLocations[point_idx] = location;
 	}
 	Invalidate_Cached_Bounding_Volumes();
@@ -132,7 +129,7 @@ void SegmentedLineClass::Set_Point_Location(unsigned int point_idx, const Vector
 // point list, will return 0,0,0).
 void SegmentedLineClass::Get_Point_Location(unsigned int point_idx, Vector3 &loc)
 {
-	if (point_idx < (unsigned int)PointLocations.Count()) {
+	if (point_idx < (unsigned int)PointLocations.size()) {
 		loc.Set(PointLocations[point_idx]);
 	} else {
 		loc.Set(0, 0, 0);
@@ -141,13 +138,13 @@ void SegmentedLineClass::Get_Point_Location(unsigned int point_idx, Vector3 &loc
 
 void SegmentedLineClass::Add_Point(const Vector3 & location)
 {
-	PointLocations.Add(location);
+	PointLocations.push_back(location);
 }
 
 void SegmentedLineClass::Delete_Point(unsigned int point_idx)
 {
-	if (point_idx < (unsigned int)PointLocations.Count()) {
-		PointLocations.Delete(point_idx);
+	if (point_idx < (unsigned int)PointLocations.size()) {
+		PointLocations.erase(PointLocations.begin() + point_idx);
 	}
 }
 
@@ -323,7 +320,7 @@ RenderObjClass * SegmentedLineClass::Clone(void) const
 int SegmentedLineClass::Get_Num_Polys(void) const
 {
 	int subdivision_factor = 1 << LineRenderer.Get_Current_Subdivision_Level();
-	return 2 * (PointLocations.Count() - 1) * subdivision_factor;
+	return 2 * (PointLocations.size() - 1) * subdivision_factor;
 }
 
 void SegmentedLineClass::Render(RenderInfoClass & rinfo)
@@ -361,7 +358,7 @@ void SegmentedLineClass::Get_Obj_Space_Bounding_Sphere(SphereClass & sphere) con
 
 void SegmentedLineClass::Get_Obj_Space_Bounding_Box(AABoxClass & box) const
 {
-	unsigned int num_points = PointLocations.Count();
+	const size_t num_points = PointLocations.size();
 	
 	// Line must have at least two points to be valid
 	
@@ -370,7 +367,6 @@ void SegmentedLineClass::Get_Obj_Space_Bounding_Box(AABoxClass & box) const
 		// Find object-space axis-aligned bounding box
 		Vector3 max_coords;
 		Vector3 min_coords;
-		unsigned int i;
 
 		// We create two bounding boxes; one from the points, and if we have random noise
 		// subdivision we create another one from the midpoints and factor the noise amplitude
@@ -379,7 +375,7 @@ void SegmentedLineClass::Get_Obj_Space_Bounding_Box(AABoxClass & box) const
 		// First bounding box:
 		max_coords = PointLocations[0];
 		min_coords = PointLocations[0];
-		for (i = 1; i < num_points; i++) {
+		for (size_t i = 1; i < num_points; i++) {
 			max_coords.Update_Max(PointLocations[i]);
 			min_coords.Update_Min(PointLocations[i]);
 		}
@@ -397,7 +393,7 @@ void SegmentedLineClass::Get_Obj_Space_Bounding_Box(AABoxClass & box) const
 			Vector3 midpoint = (PointLocations[0] + PointLocations[1]) * 0.5f;
 			max_coords2 = midpoint;
 			min_coords2 = midpoint;
-			for (i = 1; i < num_points - 1; i++) {
+			for (size_t i = 1; i < num_points - 1; i++) {
 				midpoint = (PointLocations[i] + PointLocations[i + 1]) * 0.5f;
 				max_coords2.Update_Max(midpoint);
 				min_coords2.Update_Min(midpoint);
@@ -522,7 +518,7 @@ void SegmentedLineClass::Set_Texture_Reduction_Factor(float trf)
 void SegmentedLineClass::Render_Seg_Line(RenderInfoClass & rinfo)
 {
 	// Line must have at least two points to be valid
-	if (PointLocations.Count() < 2) return;
+	if (PointLocations.size() < 2) return;
 
 	SphereClass bounding_sphere;
 	Get_Obj_Space_Bounding_Sphere(bounding_sphere);			
@@ -530,7 +526,7 @@ void SegmentedLineClass::Render_Seg_Line(RenderInfoClass & rinfo)
 	LineRenderer.Render(
 		rinfo,
 		Transform,
-		PointLocations.Count(),
+		PointLocations.size(),
 		&(PointLocations[0]),
 		bounding_sphere
 		);
@@ -547,7 +543,7 @@ bool SegmentedLineClass::Cast_Ray(RayCollisionTestClass & raytest)
 	//	Check each line segment against the ray
 	//
 	float fraction = 1.0F;
-	for (uint32 index = 1; index < (unsigned int)PointLocations.Count(); index ++) 
+	for (uint32 index = 1; index < (unsigned int)PointLocations.size(); index ++)
 	{
 #ifdef ALLOW_TEMPORARIES
 		Vector3 curr_start	= Transform * PointLocations[index-1];

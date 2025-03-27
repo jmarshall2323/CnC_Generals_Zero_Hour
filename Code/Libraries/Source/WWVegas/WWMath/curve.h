@@ -46,9 +46,7 @@
 #include "always.h"
 #endif
 
-#ifndef VECTOR_H
-#include "vector.h"
-#endif
+#include <vector>
 
 #ifndef VECTOR3_H
 #include "vector3.h"
@@ -101,7 +99,7 @@ protected:
 	};
 	
 	bool									IsLooping;
-	DynamicVectorClass<KeyClass>	Keys;
+	std::vector<KeyClass> Keys;
 };
 
 
@@ -160,7 +158,7 @@ protected:
 	};
 
 	bool							IsLooping;
-	DynamicVectorClass<KeyClass>	Keys;
+	std::vector<KeyClass> Keys;
 };
 
 

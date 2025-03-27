@@ -41,7 +41,9 @@
 #define LOOKUPTABLE_H
 
 #include "always.h"
-#include "simplevec.h"
+
+#include <vector>
+
 #include "wwstring.h"
 #include "refcount.h"
 #include "multilist.h"
@@ -75,7 +77,7 @@ protected:
 	float								MinInputValue; 
 	float								MaxInputValue;
 	float								OOMaxMinusMin;
-	SimpleVecClass<float>		OutputSamples;
+	std::vector<float> OutputSamples;
 
 };
 
@@ -85,10 +87,10 @@ inline float LookupTableClass::Get_Value(float input)
 		return OutputSamples[0];
 	}
 	if (input >= MaxInputValue) {
-		return OutputSamples[OutputSamples.Length()-1];
+		return OutputSamples.back();
 	}
 	
-	float normalized_input = (float)(OutputSamples.Length()-1) * (input - MinInputValue) * OOMaxMinusMin;
+	float normalized_input = (float)(OutputSamples.size() - 1) * (input - MinInputValue) * OOMaxMinusMin;
 	float input0 = WWMath::Floor(normalized_input);
 	
 	int index0 = WWMath::Float_To_Long(input0);
@@ -104,10 +106,10 @@ inline float LookupTableClass::Get_Value_Quick(float input)
 		return OutputSamples[0];
 	}
 	if (input >= MaxInputValue) {
-		return OutputSamples[OutputSamples.Length()-1];
+		return OutputSamples.back();
 	}
 	
-	int index = (OutputSamples.Length()-1) * WWMath::Float_To_Long((input - MinInputValue) * OOMaxMinusMin);
+	const size_t index = (OutputSamples.size() - 1) * WWMath::Float_To_Long((input - MinInputValue) * OOMaxMinusMin);
 	return OutputSamples[index];
 }
 

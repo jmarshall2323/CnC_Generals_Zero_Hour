@@ -374,7 +374,7 @@ void HAnimManagerClass::Free_All_Anims_With_Exclusion_List(const W3DExclusionLis
  * HISTORY:                                                                                    * 
  *   12/12/2002 GH  : Created.                                                                 * 
  *=============================================================================================*/
-void HAnimManagerClass::Create_Asset_List(DynamicVectorClass<StringClass> & exclusion_list)
+void HAnimManagerClass::Create_Asset_List(std::vector<StringClass>& exclusion_list)
 {
 	HAnimManagerIterator it( *this );
 	for( it.First(); !it.Is_Done(); it.Next() ) {
@@ -385,7 +385,7 @@ void HAnimManagerClass::Create_Asset_List(DynamicVectorClass<StringClass> & excl
 		const char * anim_name = anim->Get_Name();
 		const char * filename = strchr(anim_name,'.');
 		if (filename != NULL) {	
-			exclusion_list.Add(StringClass(filename+1));
+			exclusion_list.push_back(StringClass(filename+1));
 		}
 	}
 }

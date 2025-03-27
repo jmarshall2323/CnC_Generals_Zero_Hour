@@ -53,18 +53,18 @@ public:
 	void Add_Vertex(const Vector3 & point);
 	void Clip(const PlaneClass & plane,VisPolyClass & dest) const;
 
-	SimpleDynVecClass<Vector3> Verts;
+	std::vector<Vector3> Verts;
 };
 
 
 void VisPolyClass::Reset(void)
 {
-	Verts.Delete_All(false);
+	Verts.clear();
 }
 
 void VisPolyClass::Add_Vertex(const Vector3 & point)
 {
-	Verts.Add(point);
+	Verts.push_back(point);
 }
 
 void VisPolyClass::Clip(const PlaneClass & plane,VisPolyClass & dest) const
@@ -73,7 +73,7 @@ void VisPolyClass::Clip(const PlaneClass & plane,VisPolyClass & dest) const
 
 	// temporary variables used in clipping
 	int i = 0;
-	int vcount = Verts.Count();
+	int vcount = Verts.size();
 	int iprev = vcount - 1;
 	bool cur_point_in_front;
 	bool prev_point_in_front;
@@ -214,8 +214,8 @@ Update_MV_Transform();  // the user can and does mess with the camera directly!
 
 Vector3 * VisRasterizerClass::Get_Temp_Vertex_Buffer(int count)
 {
-	TempVertexBuffer.Uninitialised_Grow(count);
-	return &(TempVertexBuffer[0]);
+	TempVertexBuffer.assign(count, Vector3());
+	return TempVertexBuffer.data();
 }
 
 
@@ -330,22 +330,20 @@ bool VisRasterizerClass::Render_Triangles_Clip
 		/*
 		** Project the vertices
 		*/
-		int final_vcount = _VisPoly0.Verts.Count();
+		auto& final_verts = _VisPoly0.Verts;
 
-		if (final_vcount >= 3) {
-	
-			Vector3 * final_verts = &(_VisPoly0.Verts[0]);
-
-			int i;
-			for (i=0; i<final_vcount; i++) {
-				Camera->Project_Camera_Space_Point(final_verts[i],final_verts[i]);
+		if (final_verts.size() >= 3)
+		{
+			for (auto& vertex : final_verts)
+			{
+				Camera->Project_Camera_Space_Point(vertex, vertex);
 			}
 		
 			/*
 			** Pass the resulting triangle fan to the IDBuffer
 			*/
-			for (i=1; i<final_vcount - 1; i++) {
-
+			for (size_t i = 1; i < final_verts.size() - 1; i++)
+			{
 				pixel_passed |= IDBuffer.Render_Triangle(final_verts[0],final_verts[i],final_verts[i+1]);
 				if (pixel_passed && (IDBuffer.Get_Render_Mode() == IDBufferClass::NON_OCCLUDER_MODE)) {
 					return true;

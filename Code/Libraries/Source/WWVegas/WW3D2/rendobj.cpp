@@ -1022,7 +1022,7 @@ bool RenderObjClass::Intersect_Sphere_Quick(IntersectionClass *Intersection, Int
  * HISTORY:                                                                                    *
  *   3/18/99    PDS : Created.                                                                 *
  *=============================================================================================*/
-bool RenderObjClass::Build_Dependency_List (DynamicVectorClass<StringClass> &file_list, bool recursive)
+bool RenderObjClass::Build_Dependency_List(std::vector<StringClass>& file_list, bool recursive)
 {
 	if (recursive)
 	{
@@ -1043,7 +1043,7 @@ bool RenderObjClass::Build_Dependency_List (DynamicVectorClass<StringClass> &fil
 	Add_Dependencies_To_List (file_list);
 
 	// Return the true/false result code
-	return (file_list.Count () > 0);
+	return (file_list.size() > 0);
 }
  
 
@@ -1059,11 +1059,7 @@ bool RenderObjClass::Build_Dependency_List (DynamicVectorClass<StringClass> &fil
  * HISTORY:                                                                                    *
  *   3/18/99    PDS : Created.                                                                 *
  *=============================================================================================*/
-bool RenderObjClass::Build_Texture_List
-(
-	DynamicVectorClass<StringClass> &	texture_file_list,
-	bool											recursive
-)
+bool RenderObjClass::Build_Texture_List(std::vector<StringClass>& texture_file_list, bool recursive)
 {
 	if (recursive) {
 
@@ -1090,7 +1086,7 @@ bool RenderObjClass::Build_Texture_List
 	Add_Dependencies_To_List (texture_file_list, true);
 
 	// Return the true/false result code
-	return (texture_file_list.Count () > 0);
+	return (texture_file_list.size() > 0);
 }
  
 /***********************************************************************************************
@@ -1105,11 +1101,7 @@ bool RenderObjClass::Build_Texture_List
  * HISTORY:                                                                                    *
  *   3/18/99    PDS : Created.                                                                 *
  *=============================================================================================*/
-void RenderObjClass::Add_Dependencies_To_List
-(
-	DynamicVectorClass<StringClass> &file_list,
-	bool										textures_only
-)
+void RenderObjClass::Add_Dependencies_To_List(std::vector<StringClass>& file_list, bool textures_only)
 {
 	//
 	// Should we add W3D files to the list?
@@ -1120,7 +1112,7 @@ void RenderObjClass::Add_Dependencies_To_List
 		// Main W3D file
 		//
 		const char *model_name = Get_Name ();
-		file_list.Add (::Filename_From_Asset_Name (model_name));
+		file_list.push_back(::Filename_From_Asset_Name(model_name));
 
 		//
 		// External hierarchy file
@@ -1133,7 +1125,7 @@ void RenderObjClass::Add_Dependencies_To_List
 				//
 				// Add this file to the list
 				//
-				file_list.Add (::Filename_From_Asset_Name (htree_name));
+				file_list.push_back(::Filename_From_Asset_Name(htree_name));
 			}
 		}
 
@@ -1146,7 +1138,7 @@ void RenderObjClass::Add_Dependencies_To_List
 			//
 			// Add this file to the list
 			//
-			file_list.Add (::Filename_From_Asset_Name (base_model_name));
+			file_list.push_back(::Filename_From_Asset_Name(base_model_name));
 		}
 	}
 

@@ -35,6 +35,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "meshmdl.h"
+
+#include <vector>
+
 #include "matinfo.h"
 #include "aabtree.h"
 #include "htree.h"
@@ -51,10 +54,10 @@
 ** These buffers are used by the skin code for temporary storage of the deformed vertices and 
 ** vertex normals.  
 */
-static DynamicVectorClass<Vector3>	_TempVertexBuffer;
-static DynamicVectorClass<Vector3>	_TempNormalBuffer;
-static DynamicVectorClass<Vector4>	_TempTransformedVertexBuffer;
-static DynamicVectorClass<unsigned long> _TempClipFlagBuffer;
+static std::vector<Vector3> _TempVertexBuffer;
+static std::vector<Vector3> _TempNormalBuffer;
+static std::vector<Vector4> _TempTransformedVertexBuffer;
+static std::vector<unsigned long> _TempClipFlagBuffer;
 
 
 /*
@@ -264,8 +267,8 @@ DX8FVFCategoryContainer* MeshModelClass::Peek_FVF_Category_Container()
 void MeshModelClass::Shadow_Render(SpecialRenderInfoClass & rinfo,const Matrix3D & tm,const HTreeClass * htree)
 {
 	if (rinfo.BWRenderer != NULL) {
-		if (_TempTransformedVertexBuffer.Length() < VertexCount) _TempTransformedVertexBuffer.Resize(VertexCount);
-		Vector4* transf_ptr=&(_TempTransformedVertexBuffer[0]);
+		_TempTransformedVertexBuffer.assign(VertexCount, Vector4());
+		Vector4* transf_ptr= _TempTransformedVertexBuffer.data();
 		get_deformed_screenspace_vertices(transf_ptr,rinfo,tm,htree);
 
 		Vector2* tptr = reinterpret_cast<Vector2 *>(transf_ptr);

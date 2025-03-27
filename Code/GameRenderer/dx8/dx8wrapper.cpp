@@ -158,9 +158,9 @@ static unsigned				last_frame_texture_stage_state_changes				= 0;
 static unsigned				last_frame_number_of_DX8_calls						= 0;
 
 static D3DPRESENT_PARAMETERS								_PresentParameters;
-static DynamicVectorClass<StringClass>					_RenderDeviceNameTable;
-static DynamicVectorClass<StringClass>					_RenderDeviceShortNameTable;
-static DynamicVectorClass<RenderDeviceDescClass>	_RenderDeviceDescriptionTable;
+static std::vector<StringClass>           _RenderDeviceNameTable;
+static std::vector<StringClass>           _RenderDeviceShortNameTable;
+static std::vector<RenderDeviceDescClass> _RenderDeviceDescriptionTable;
 
 /*
 ** Registry value names
@@ -314,9 +314,9 @@ void DX8Wrapper::Shutdown(void)
 		D3DInterface=NULL;
 	}
 
-	_RenderDeviceNameTable.Clear();		 // note - Delete_All() resizes the vector, causing a reallocation.  Clear is better. jba.
-	_RenderDeviceShortNameTable.Clear();
-	_RenderDeviceDescriptionTable.Clear();	
+	_RenderDeviceNameTable.clear();		 // note - Delete_All() resizes the vector, causing a reallocation.  Clear is better. jba.
+	_RenderDeviceShortNameTable.clear();
+	_RenderDeviceDescriptionTable.clear();
 
 	IsInitted = false;		// 010803 srj
 }
@@ -608,8 +608,8 @@ void DX8Wrapper::Enumerate_Devices()
 			** Set up the device name
 			*/
 			StringClass device_name = id.Description;
-			_RenderDeviceNameTable.Add(device_name);
-			_RenderDeviceShortNameTable.Add(device_name);	// for now, just add the same name to the "pretty name table"
+			_RenderDeviceNameTable.push_back(device_name);
+			_RenderDeviceShortNameTable.push_back(device_name);	// for now, just add the same name to the "pretty name table"
 
 			/*
 			** Set up the render device description
@@ -688,7 +688,7 @@ void DX8Wrapper::Enumerate_Devices()
 			/*
 			** Add the render device to our table
 			*/
-			_RenderDeviceDescriptionTable.Add(desc);
+			_RenderDeviceDescriptionTable.push_back(desc);
 		}
 	}
 }
@@ -696,14 +696,14 @@ void DX8Wrapper::Enumerate_Devices()
 bool DX8Wrapper::Set_Any_Render_Device(void)
 {
 	// Try windowed first
-	for (int dev_number = 0; dev_number < _RenderDeviceNameTable.Count(); dev_number++) {
+	for (int dev_number = 0; dev_number < _RenderDeviceNameTable.size(); dev_number++) {
 		if (Set_Render_Device(dev_number,-1,-1,-1,1,false)) {
 			return true;
 		}
 	}
 
 	// Then fullscreen
-	for (int dev_number = 0; dev_number < _RenderDeviceNameTable.Count(); dev_number++) {
+	for (int dev_number = 0; dev_number < _RenderDeviceNameTable.size(); dev_number++) {
 		if (Set_Render_Device(dev_number,-1,-1,-1,0,false)) {
 			return true;
 		}
@@ -722,7 +722,7 @@ bool DX8Wrapper::Set_Render_Device
 	bool resize_window 
 )
 {
-	for ( int dev_number = 0; dev_number < _RenderDeviceNameTable.Count(); dev_number++) {
+	for ( int dev_number = 0; dev_number < _RenderDeviceNameTable.size(); dev_number++) {
 		if ( strcmp( dev_name, _RenderDeviceNameTable[dev_number]) == 0) {
 			return Set_Render_Device( dev_number, width, height, bits, windowed, resize_window );
 		}
@@ -783,7 +783,7 @@ bool DX8Wrapper::Set_Render_Device(int dev, int width, int height, int bits, int
 {
 	WWASSERT(IsInitted);
 	WWASSERT(dev >= -1);
-	WWASSERT(dev < _RenderDeviceNameTable.Count());
+	WWASSERT(dev < _RenderDeviceNameTable.size());
 
 	/*
 	** If user has never selected a render device, start out with device 0
@@ -1017,7 +1017,7 @@ bool DX8Wrapper::Set_Render_Device(int dev, int width, int height, int bits, int
 
 bool DX8Wrapper::Set_Next_Render_Device(void)
 {
-	int new_dev = (CurRenderDevice + 1) % _RenderDeviceNameTable.Count();
+	int new_dev = (CurRenderDevice + 1) % _RenderDeviceNameTable.size();
 	return Set_Render_Device(new_dev);
 }
 
@@ -1030,16 +1030,14 @@ bool DX8Wrapper::Toggle_Windowed(void)
 
 		// Get information about the current render device's resolutions
 		const RenderDeviceDescClass &render_device = Get_Render_Device_Desc ();
-		const DynamicVectorClass<ResolutionDescClass> &resolutions = render_device.Enumerate_Resolutions ();
+		const std::vector<ResolutionDescClass>& resolutions = render_device.Enumerate_Resolutions();
 		
 		// Loop through all the resolutions supported by the current device.
 		// If we aren't currently running under one of these resolutions,
 		// then we should probably		 to the closest resolution before
 		// toggling the windowed state.
-		int curr_res = -1;
-		for (int res = 0;
-		     (res < resolutions.Count ()) && (curr_res == -1);
-			  res ++) {
+		size_t curr_res = -1;
+		for (size_t res = 0; (res < resolutions.size()) && (curr_res == -1); ++res) {
 			
 			// Is this the resolution we are looking for?
 			if ((resolutions[res].Width == ResolutionWidth) &&
@@ -1095,7 +1093,7 @@ bool DX8Wrapper::Has_Stencil(void)
 
 int DX8Wrapper::Get_Render_Device_Count(void)
 {
-	return _RenderDeviceNameTable.Count();
+	return _RenderDeviceNameTable.size();
 
 }
 int DX8Wrapper::Get_Render_Device(void)
@@ -1115,20 +1113,20 @@ const RenderDeviceDescClass & DX8Wrapper::Get_Render_Device_Desc(int deviceidx)
 	// if the device index is -1 then we want the current device
 	if (deviceidx == -1) {
 		WWASSERT(CurRenderDevice >= 0);
-		WWASSERT(CurRenderDevice < _RenderDeviceNameTable.Count());
+		WWASSERT(CurRenderDevice < _RenderDeviceNameTable.size());
 		return _RenderDeviceDescriptionTable[CurRenderDevice];
 	}
 
 	// We can only ask for multiple device information if the devices
 	// have been detected.
 	WWASSERT(deviceidx >= 0);
-	WWASSERT(deviceidx < _RenderDeviceNameTable.Count());
+	WWASSERT(deviceidx < _RenderDeviceNameTable.size());
 	return _RenderDeviceDescriptionTable[deviceidx];
 }
 
 const char * DX8Wrapper::Get_Render_Device_Name(int device_index)
 {
-	device_index = device_index % _RenderDeviceShortNameTable.Count();
+	device_index = device_index % _RenderDeviceShortNameTable.size();
 	return _RenderDeviceShortNameTable[device_index];
 }
 

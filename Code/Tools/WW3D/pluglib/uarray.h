@@ -43,12 +43,10 @@
 #ifndef UARRAY_H
 #define UARRAY_H
 
+#include <vector>
+
 #ifndef HASHCALC_H
 #include "hashcalc.h"
-#endif
-
-#ifndef VECTOR_H
-#include "vector.h"
 #endif
 
 
@@ -92,7 +90,7 @@ private:
 	};
 		
 	// Dynamic Vector of the unique items:
-	DynamicVectorClass<HashItem>		UniqueItems;
+	std::vector<HashItem> UniqueItems;
 
 	// Hash table:
 	int										HashTableSize;
@@ -100,9 +98,6 @@ private:
 
 	// object which does the hashing for the type
 	HashCalculatorClass<T> *			HashCalculator;
-
-	friend class VectorClass<T>;
-	friend class DynamicVectorClass<T>;
 };
 
 

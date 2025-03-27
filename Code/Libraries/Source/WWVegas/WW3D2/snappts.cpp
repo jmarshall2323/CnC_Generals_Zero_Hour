@@ -45,7 +45,7 @@ WW3DErrorType SnapPointsClass::Load_W3D(ChunkLoadClass & cload)
 	int size = cload.Cur_Chunk_Length();
 	int count = size / sizeof (W3dVectorStruct);
 	
-	Resize(count);
+	reserve(count);
 	for (int i=0; i<count; i++) {
 		W3dVectorStruct vec;
 		if (cload.Read(&vec,sizeof(vec)) != sizeof(vec)) {
@@ -53,7 +53,7 @@ WW3DErrorType SnapPointsClass::Load_W3D(ChunkLoadClass & cload)
 		}
 
 		Vector3 point (vec.X, vec.Y, vec.Z);
-		Add (point);
+		push_back(point);
 		//(*this)[i].Set(vec.X,vec.Y,vec.X);
 	}
 

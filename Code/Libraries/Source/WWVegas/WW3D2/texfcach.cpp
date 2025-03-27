@@ -50,11 +50,13 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 #ifdef WW3D_DX8
 #include "texfcach.h"
+
+#include <vector>
+
 #include "mutex.h"
 #include "thread.h"
 #include <assert.h>
 #include "wwdebug.h"
-#include "simplevec.h"
 #include "wwstring.h"
 #include "textureloader.h"
 #include "texture.h"
@@ -81,7 +83,7 @@ char  *TextureFileCache::_FileNamePtr = NULL;
 static int Instances=0;
 
 static CriticalSectionClass mutex(0);
-static SimpleVecClass<char> compression_buffer;
+static std::vector<char> compression_buffer;
 
 const char BUFFER_OVERRUN_TEST_VALUE=((char)0x7d);
 

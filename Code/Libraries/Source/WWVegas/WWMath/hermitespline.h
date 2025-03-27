@@ -91,7 +91,7 @@ protected:
 	};	
 
 	bool											TangentsDirty;
-	DynamicVectorClass<TangentsClass>	Tangents;
+	std::vector<TangentsClass> Tangents;
 };
 
 
@@ -136,7 +136,7 @@ protected:
 	virtual void		Update_Tangents(void) { TangentsDirty = false; }
 
 	bool											TangentsDirty;
-	DynamicVectorClass<TangentsClass>	Tangents;
+	std::vector<TangentsClass> Tangents;
 };
 
 

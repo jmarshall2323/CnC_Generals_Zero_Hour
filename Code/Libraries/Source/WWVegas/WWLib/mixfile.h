@@ -41,6 +41,8 @@
 	#include "always.h"
 #endif
 
+#include <vector>
+
 #ifndef	FFACTORY_H
 	#include "ffactory.h"
 #endif
@@ -48,8 +50,6 @@
 #ifndef	WWSTRING_H
 	#include "wwstring.h"
 #endif
-
-#include "vector.h"
 
 class FileClass;
 
@@ -71,10 +71,10 @@ public:
 	//
 	//	Filename access
 	//
-	bool		Build_Filename_List (DynamicVectorClass<StringClass> &list);
-	bool		Build_Internal_Filename_List (void)									{ return Build_Filename_List (FilenameList); }
-	void		Get_Filename_List (DynamicVectorClass<StringClass> **list)	{ *list = &FilenameList; }
-	void		Get_Filename_List (DynamicVectorClass<StringClass> &list)	{ list = FilenameList; }
+	bool Build_Filename_List(std::vector<StringClass>& list);
+	bool Build_Internal_Filename_List(void) { return Build_Filename_List (FilenameList); }
+	void Get_Filename_List(std::vector<StringClass>** list) { *list = &FilenameList; }
+	void Get_Filename_List(std::vector<StringClass>& list) { list = FilenameList; }
 
 	//
 	//	Content control
@@ -113,16 +113,16 @@ private:
 	};
 
 	FileFactoryClass *						Factory;
-	DynamicVectorClass<FileInfoStruct>	FileInfo;
+	std::vector<FileInfoStruct> FileInfo;
 	StringClass									MixFilename;
 	int											BaseOffset;
 
 	int											FileCount;
 	int											NamesOffset;
 	bool											IsValid;
-	DynamicVectorClass<StringClass>		FilenameList;
+	std::vector<StringClass> FilenameList;
 
-	DynamicVectorClass<AddInfoStruct>	PendingAddFileList;
+	std::vector<AddInfoStruct> PendingAddFileList;
 	bool											IsModified;
 };
 
@@ -152,7 +152,7 @@ private:
 		StringClass		Filename;
 	};
 
-	DynamicVectorClass<FileInfoStruct>	FileInfo;
+	std::vector<FileInfoStruct> FileInfo;
 	FileClass								*	MixFile;
 };
 

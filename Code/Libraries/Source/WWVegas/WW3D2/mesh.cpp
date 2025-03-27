@@ -135,7 +135,7 @@ bool MeshClass::Legacy_Meshes_Fogged = true;
 /*
 ** Temporary storage used during decal creation
 */
-static DynamicVectorClass<Vector3>	_TempVertexBuffer;
+static std::vector<Vector3> _TempVertexBuffer;
 
 
 /***********************************************************************************************
@@ -559,10 +559,11 @@ void MeshClass::Create_Decal(DecalGeneratorClass * generator)
 		OBBoxClass::Transform(modeltm_inv, generator->Get_Bounding_Volume(), &localbox);
 
 		// generate apt, if it is not empty, add a decal.
-		SimpleDynVecClass<uint32> apt;
+		std::vector<uint32> apt;
 		Model->Generate_Rigid_APT(localbox, apt);
 		
-		if (apt.Count() > 0) {
+		if (apt.size() > 0)
+		{
 			if (DecalMesh == NULL) {
 				DecalMesh =		NEW_REF(RigidDecalMeshClass, (this, generator->Peek_Decal_System()));
 			}
@@ -577,12 +578,12 @@ void MeshClass::Create_Decal(DecalGeneratorClass * generator)
 		// The deformed worldspace vertices are used both for the APT and in Create_Decal() to
 		// generate the texture coordinates.
 		int vertex_count = Model->Get_Vertex_Count();
-		if (_TempVertexBuffer.Count() < vertex_count) _TempVertexBuffer.Resize(vertex_count);
-		Vector3 *dst_vert = &(_TempVertexBuffer[0]);
+		_TempVertexBuffer.assign(vertex_count, Vector3());
+		Vector3 *dst_vert = _TempVertexBuffer.data();
 		Get_Deformed_Vertices(dst_vert);
 
 		// generate apt, if it is not empty, add a decal.
-		SimpleDynVecClass<uint32> apt;
+		std::vector<uint32> apt;
 
 		OBBoxClass worldbox = generator->Get_Bounding_Volume();
 
@@ -590,7 +591,8 @@ void MeshClass::Create_Decal(DecalGeneratorClass * generator)
 		Model->Generate_Skin_APT(worldbox, apt, dst_vert);
 		
 		// if it is not empty, add a decal
-		if (apt.Count() > 0) {
+		if (apt.size() > 0)
+		{
 			if (DecalMesh == NULL) {
 				DecalMesh = NEW_REF(SkinDecalMeshClass, (this, generator->Peek_Decal_System()));
 			}
@@ -844,8 +846,8 @@ void MeshClass::Render_Material_Pass(MaterialPassClass * pass,IndexBufferClass *
 		/*
 		** Generate the APT 
 		*/
-		static SimpleDynVecClass<uint32> _apt;
-		_apt.Delete_All(false);
+		static std::vector<uint32> _apt;
+		_apt.clear();
 			
 		Matrix3D modeltminv;
 		Get_Transform().Get_Orthogonal_Inverse(modeltminv);
@@ -863,7 +865,8 @@ void MeshClass::Render_Material_Pass(MaterialPassClass * pass,IndexBufferClass *
 			Model->Generate_Rigid_APT(view_dir,_apt);
 		}
 	
-		if (_apt.Count() > 0) {
+		if (_apt.size() > 0)
+		{
 
 			int buftype = BUFFER_TYPE_DYNAMIC_DX8;
 			if (Model->Get_Flag(MeshGeometryClass::SORT) && WW3D::Is_Sorting_Enabled()) {
@@ -876,13 +879,13 @@ void MeshClass::Render_Material_Pass(MaterialPassClass * pass,IndexBufferClass *
 			int min_v = Model->Get_Vertex_Count();
 			int max_v = 0;
 
-			DynamicIBAccessClass dynamic_ib(buftype,_apt.Count() * 3);
+			DynamicIBAccessClass dynamic_ib(buftype, _apt.size() * 3);
 			{
 				DynamicIBAccessClass::WriteLockClass lock(&dynamic_ib);
 				unsigned short * indices = lock.Get_Index_Array();
 				const Vector3i * polys = Model->Get_Polygon_Array();
 
-				for (int i=0; i < _apt.Count(); i++)
+				for (size_t i = 0; i < _apt.size(); i++)
 				{
 					unsigned v0 = polys[_apt[i]].I;
 					unsigned v1 = polys[_apt[i]].J;
@@ -913,7 +916,7 @@ void MeshClass::Render_Material_Pass(MaterialPassClass * pass,IndexBufferClass *
 
 			DX8Wrapper::Draw_Triangles(
 				0,
-				_apt.Count(),
+				_apt.size(),
 				min_v,
 				max_v-min_v+1);
 			//MW: Need uninstall custom materials in case they leave D3D in unknown state
@@ -1002,8 +1005,8 @@ void MeshClass::Special_Render(SpecialRenderInfoClass & rinfo)
 		} else {
 
 			int vertex_count = Model->Get_Vertex_Count();
-			if (_TempVertexBuffer.Count() < vertex_count) _TempVertexBuffer.Resize(vertex_count);
-			Vector3 *dst_vert = &(_TempVertexBuffer[0]);
+			_TempVertexBuffer.assign(vertex_count, Vector3());
+			Vector3 *dst_vert = _TempVertexBuffer.data();
 			Get_Deformed_Vertices(dst_vert);
 
 			rinfo.VisRasterizer->Set_Model_Transform(Matrix3D::Identity);
@@ -1411,7 +1414,7 @@ void MeshClass::Generate_Culling_Tree(void)
  *=============================================================================================*/
 void MeshClass::Add_Dependencies_To_List
 (
-	DynamicVectorClass<StringClass> &file_list,
+	std::vector<StringClass>& file_list,
 	bool										textures_only
 )
 {
@@ -1431,7 +1434,7 @@ void MeshClass::Add_Dependencies_To_List
 			//
 			TextureClass *texture = material->Peek_Texture (index);
 			if (texture != NULL) {
-				file_list.Add (texture->Get_Full_Path ());
+				file_list.push_back(texture->Get_Full_Path());
 			}
 		}
 		

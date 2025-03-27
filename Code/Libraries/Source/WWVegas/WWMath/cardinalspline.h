@@ -42,6 +42,10 @@
 #ifndef CARDINALSPLINE_H
 #define CARDINALSPLINE_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "hermitespline.h"
 
 /**
@@ -68,7 +72,7 @@ public:
 
 protected:	
 	
-	DynamicVectorClass<float>	Tightness;
+	std::vector<float> Tightness;
 };
 
 
@@ -96,7 +100,7 @@ public:
 
 protected:	
 	
-	DynamicVectorClass<float>	Tightness;
+	std::vector<float> Tightness;
 };
 
 

@@ -42,11 +42,14 @@
 #ifndef AABTREECULL_H
 #define AABTREECULL_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "cullsys.h"
 #include "aaplane.h"
 #include "wwmath.h"
 #include "mempool.h"
-#include "simplevec.h"
 #include <math.h>
 #include <float.h>
 
@@ -73,7 +76,7 @@ public:
 	** box will become a leaf; then the objects will be re-inserted in the new tree.
 	*/
 	void					Re_Partition(void);
-	void					Re_Partition(const AABoxClass & bounds,SimpleDynVecClass<AABoxClass> & boxes);
+	void Re_Partition(const AABoxClass& bounds, std::vector<AABoxClass>& boxes);
 	
 	/*
 	** Update_Bounding_Boxes.  This function causes all bounding boxes in the tree to update themselves.
@@ -310,18 +313,19 @@ public:
 	/*
 	** Partition the tree based on a set of input "seed" boxes.
 	*/
-	void						Partition(const AABoxClass & bounds,SimpleDynVecClass<AABoxClass> & boxes);
-	void						Split_Boxes(	const SplitChoiceStruct & sc,
-													SimpleDynVecClass<AABoxClass> & boxes,
-													SimpleDynVecClass<AABoxClass> & frontboxes,
-													SimpleDynVecClass<AABoxClass> & backboxes);
+	void Partition(const AABoxClass& bounds, std::vector<AABoxClass>& boxes);
+	void Split_Boxes(const SplitChoiceStruct& sc,
+	                 const std::vector<AABoxClass>& boxes,
+	                 std::vector<AABoxClass>& frontboxes,
+	                 std::vector<AABoxClass>& backboxes
+	                );
 
 	/*
 	** Functions used by both partitioning algorithms
 	*/
-	void						Select_Splitting_Plane(SplitChoiceStruct * sc,SimpleDynVecClass<AABoxClass> & boxes);
-	void						Select_Splitting_Plane_Brute_Force(SplitChoiceStruct * sc,SimpleDynVecClass<AABoxClass> & boxes);
-	void						Compute_Score(SplitChoiceStruct * sc,SimpleDynVecClass<AABoxClass> & boxes);
+	void Select_Splitting_Plane(SplitChoiceStruct* sc, const std::vector<AABoxClass>& boxes);
+	void Select_Splitting_Plane_Brute_Force(SplitChoiceStruct* sc, const std::vector<AABoxClass>& boxes);
+	void Compute_Score(SplitChoiceStruct* sc, const std::vector<AABoxClass>& boxes);
 };
 
 

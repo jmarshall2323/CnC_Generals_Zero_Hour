@@ -37,13 +37,15 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "shattersystem.h"
+
+#include <vector>
+
 #include "assetmgr.h"
 #include "mesh.h"
 #include "meshmdl.h"
 #include "dynamesh.h"
 #include "htree.h"
 #include "plane.h"
-#include "simplevec.h"
 #include "wwstring.h"
 #include "vp.h"
 #include "meshmatdesc.h"
@@ -213,11 +215,11 @@ protected:
 ***********************************************************************************************/
 
 enum { MAX_MESH_FRAGMENTS = 32 };
-static SimpleDynVecClass<BSPClass *>				ShatterPatterns;
-static SimpleDynVecClass<PolygonClass>				ClipPools[MAX_MESH_FRAGMENTS];
-static SimpleDynVecClass<DynamicMeshClass	*>		MeshFragments(MAX_MESH_FRAGMENTS);
-static SimpleVecClass<Vector3>						TmpVertPositions(256);
-static SimpleVecClass<Vector3>						TmpVertNormals(256);
+static std::vector<BSPClass*>         ShatterPatterns;
+static std::vector<PolygonClass>      ClipPools[MAX_MESH_FRAGMENTS];
+static std::vector<DynamicMeshClass*> MeshFragments(MAX_MESH_FRAGMENTS);
+static std::vector<Vector3>           TmpVertPositions(256);
+static std::vector<Vector3>           TmpVertNormals(256);
 
 
 /***********************************************************************************************
@@ -227,18 +229,14 @@ static SimpleVecClass<Vector3>						TmpVertNormals(256);
 ***********************************************************************************************/
 static Vector3 * _get_temp_vertex_position_array(int count)
 {
-	if (TmpVertPositions.Length() < count) {
-		TmpVertPositions.Resize(count);
-	}
-	return &(TmpVertPositions[0]);
+	TmpVertPositions.assign(count, Vector3());
+	return TmpVertPositions.data();
 }
 
 static Vector3 * _get_temp_vertex_normal_array(int count)
 {
-	if (TmpVertNormals.Length() < count) {
-		TmpVertNormals.Resize(count);
-	}
-	return &(TmpVertNormals[0]);
+	TmpVertNormals.assign(count, Vector3());
+	return TmpVertNormals.data();
 }
 
 /***********************************************************************************************
@@ -766,7 +764,7 @@ void BSPClass::Clip_Polygon(const PolygonClass & polygon)
 	if (Front == NULL) {
 		// We're a leaf node so put the polygons into the mesh fragment arrays
 		if (front_poly.Get_Vertex_Count() >= 3) {
-			ClipPools[FrontLeafIndex].Add(front_poly);	
+			ClipPools[FrontLeafIndex].push_back(front_poly);
 		} 
 	} else {
 		// Pass the polygons to our child for further clipping
@@ -778,7 +776,7 @@ void BSPClass::Clip_Polygon(const PolygonClass & polygon)
 	// Process the back halfspace:
 	if (Back==NULL) {
 		if (back_poly.Get_Vertex_Count() >= 3) {
-			ClipPools[BackLeafIndex].Add(back_poly);	
+			ClipPools[BackLeafIndex].push_back(back_poly);
 		}
 	} else {
 		if (back_poly.Get_Vertex_Count() >= 3) {
@@ -804,7 +802,7 @@ void ShatterSystem::Init(void)
 	** Resize the Mesh Fragment pointer array to handle the maximum number
 	** of mesh fragments.
 	*/
-	MeshFragments.Resize(MAX_MESH_FRAGMENTS);
+	MeshFragments.reserve(MAX_MESH_FRAGMENTS);
 
 	/*
 	** Search for ShatterPattern hierarchy tree objects, beginning with ShatterPattern00
@@ -824,13 +822,13 @@ void ShatterSystem::Init(void)
 		if ((htree->Num_Pivots() > 1) && (htree->Num_Pivots() < MAX_MESH_FRAGMENTS)) {
 			int leaf_counter = 0;
 			htree->Base_Update(Matrix3D(1));
-			ShatterPatterns.Add(W3DNEW BSPClass(htree,1,leaf_counter));			
+			ShatterPatterns.push_back(W3DNEW BSPClass(htree, 1, leaf_counter));
 		}
 		
 		/*
 		** Try to load the next tree
 		*/
-		htree_name.Format(SHATTER_PATTERN_FORMAT,ShatterPatterns.Count());
+		htree_name.Format(SHATTER_PATTERN_FORMAT, ShatterPatterns.size());
 		htree = WW3DAssetManager::Get_Instance()->Get_HTree(htree_name);
 	}
 }
@@ -845,11 +843,12 @@ void ShatterSystem::Shutdown(void)
 	/*
 	** Release any loaded BSP trees
 	*/
-	for (int i=0; i<ShatterPatterns.Count(); i++) {
-		delete ShatterPatterns[i];
-		ShatterPatterns[i] = NULL;
+	for (auto& pattern : ShatterPatterns)
+	{
+		delete pattern;
 	}
-	ShatterPatterns.Delete_All();
+	ShatterPatterns.clear();
+	ShatterPatterns.shrink_to_fit();
 }
 
 
@@ -897,7 +896,7 @@ void ShatterSystem::Shatter_Mesh(MeshClass * mesh,const Vector3 & point,const Ve
 	/*
 	** Grab a random shatter pattern
 	*/
-	BSPClass * clipper = ShatterPatterns[rand() % ShatterPatterns.Count()];
+	BSPClass* clipper = ShatterPatterns[rand() % ShatterPatterns.size()];
 
 	/*
 	** Compute transforms which take vertices from mesh-space to shatter-space
@@ -1042,7 +1041,7 @@ void ShatterSystem::Shatter_Mesh(MeshClass * mesh,const Vector3 & point,const Ve
 
 int ShatterSystem::Get_Fragment_Count(void)
 {
-	return MeshFragments.Count();
+	return MeshFragments.size();
 }
 
 RenderObjClass * ShatterSystem::Get_Fragment(int fragment_index)
@@ -1061,19 +1060,21 @@ RenderObjClass * ShatterSystem::Peek_Fragment(int fragment_index)
 void ShatterSystem::Release_Fragments(void)
 {
 	// release any ref's to render objects
-	for (int i=0; i<MeshFragments.Count(); i++) {
-		REF_PTR_RELEASE(MeshFragments[i]);
+	for (auto& mesh_fragment : MeshFragments)
+	{
+		REF_PTR_RELEASE(mesh_fragment);
 	}
 	
 	// reset array but don't resize
-	MeshFragments.Delete_All(false);					
+	MeshFragments.clear();
 }
 
 void ShatterSystem::Reset_Clip_Pools(void)
 {
-	for (int i=0; i<MAX_MESH_FRAGMENTS; i++) {
+	for (size_t i = 0; i < MAX_MESH_FRAGMENTS; i++)
+	{
 		// reset array but don't resize
-		ClipPools[i].Delete_All(false);				
+		ClipPools[i].clear();
 	}
 }
 
@@ -1098,19 +1099,18 @@ void ShatterSystem::Process_Clip_Pools
 	/*
 	** Loop over all ClipPools and build a mesh for any that contain polygons
 	*/
-	for (int ipool=0; ipool<MAX_MESH_FRAGMENTS; ipool++) {
-
-		if (ClipPools[ipool].Count() > 0) {
-
-			int ivert,ipoly,ipass,istage;
-
+	for (size_t ipool = 0; ipool < MAX_MESH_FRAGMENTS; ipool++)
+	{
+		if (!ClipPools[ipool].empty())
+		{
 			/*
 			** Count the verts and polys
 			*/
 			int pcount = 0;
 			int vcount = 0;
-			for (ipoly=0;ipoly<ClipPools[ipool].Count();ipoly++) {
-				int poly_vert_count = ClipPools[ipool][ipoly].Get_Vertex_Count();
+			for (const auto& poly : ClipPools[ipool])
+			{
+				int poly_vert_count = poly.Get_Vertex_Count();
 				vcount += poly_vert_count;
 				pcount += poly_vert_count-2;
 			}
@@ -1132,7 +1132,8 @@ void ShatterSystem::Process_Clip_Pools
 			new_mesh->Set_Pass_Count(mtl_params.PassCount);
 			
 			bool has_textures = false;
-			for (ipass=0; ipass<model->Get_Pass_Count(); ipass++) {
+			for (size_t ipass = 0; ipass < model->Get_Pass_Count(); ipass++)
+			{
 				if (model->Peek_Single_Material(ipass) != NULL) {
 					matinfo->Add_Vertex_Material(model->Peek_Single_Material(ipass));
 				}
@@ -1143,7 +1144,8 @@ void ShatterSystem::Process_Clip_Pools
 			}
 			new_mesh->Set_Material_Info(matinfo);
 			
-			for (ipass=0; ipass<model->Get_Pass_Count(); ipass++) {
+			for (size_t ipass = 0; ipass < model->Get_Pass_Count(); ipass++)
+			{
 				new_mesh->Set_Vertex_Material(model->Peek_Single_Material(ipass),false,ipass);
 				new_mesh->Set_Shader(model->Get_Single_Shader(ipass),ipass);
 
@@ -1160,15 +1162,13 @@ void ShatterSystem::Process_Clip_Pools
 			** Add the polygons and vertices to the mesh, transform the vertices
 			** back into the original mesh's coordinate system as we do this
 			*/
-			for (ipoly=0; ipoly<ClipPools[ipool].Count(); ipoly++) {
-				
-				PolygonClass & poly = ClipPools[ipool][ipoly];
-				
+			for (auto& poly : ClipPools[ipool])
+			{
 				new_mesh->Begin_Tri_Fan();
 				SHATTER_DEBUG_SAY(("Begin Tri Fan\n"));
 
-				for(ivert=0; ivert<poly.Get_Vertex_Count(); ivert++) {
-
+				for(size_t ivert = 0; ivert < poly.Get_Vertex_Count(); ivert++)
+				{
 					Vector3 pos,norm;
 					VertexClass & vert = poly[ivert];
 				
@@ -1181,8 +1181,8 @@ void ShatterSystem::Process_Clip_Pools
 					new_mesh->Location_Inline(pos);
 					new_mesh->Normal(norm);
 
-					for (ipass=0; ipass<mtl_params.PassCount; ipass++) {
-
+					for (size_t ipass = 0; ipass < mtl_params.PassCount; ipass++)
+					{
 						unsigned mycolor=0;
 						
 						/*
@@ -1212,7 +1212,8 @@ void ShatterSystem::Process_Clip_Pools
 						** If there were UV coordinates in the original mesh for either stage,
 						** then copy the vertex's uv's into into the new mesh.
 						*/
-						for (istage=0; istage<MeshMatDescClass::MAX_TEX_STAGES; istage++) {
+						for (size_t istage = 0; istage < MeshMatDescClass::MAX_TEX_STAGES; istage++)
+						{
 							if (mtl_params.UV[ipass][istage] != NULL) {
 								SHATTER_DEBUG_SAY(("UV: pass:%d stage: %d: %f %f\n",ipass,istage,vert.TexCoord[ipass][istage].X,vert.TexCoord[ipass][istage].Y));
 								new_mesh->UV(vert.TexCoord[ipass][istage]);
@@ -1227,7 +1228,8 @@ void ShatterSystem::Process_Clip_Pools
 					** TODO: support texture arrays?
 					** TODO: support stage 1 textures
 					*/
-					for (ipass=0; ipass<mtl_params.PassCount; ipass++) {
+					for (size_t ipass = 0; ipass < mtl_params.PassCount; ipass++)
+					{
 						TextureClass * tex = model->Peek_Single_Texture(ipass,0);	
 						if (tex != NULL) {
 							new_mesh->Set_Texture(tex,true,ipass);
@@ -1262,7 +1264,7 @@ void ShatterSystem::Process_Clip_Pools
 			** Install it in the mesh fragment pool, transferring our reference
 			** to the fragment array...
 			*/
-			MeshFragments.Add(new_mesh);
+			MeshFragments.push_back(new_mesh);
 		}
 	}
 	REF_PTR_RELEASE(model);

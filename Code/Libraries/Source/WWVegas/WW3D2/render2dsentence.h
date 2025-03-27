@@ -41,9 +41,12 @@
 #ifndef RENDER2DSENTENCE_H
 #define RENDER2DSENTENCE_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "render2d.h"
 #include "refcount.h"
-#include "vector.h"
 #include "vector2i.h"
 #include "wwstring.h"
 #include "win.h"
@@ -117,7 +120,7 @@ private:
 	//	Private member data
 	//
 	StringClass							Name;
-	DynamicVectorClass<FontCharsBuffer*>	BufferList;
+	std::vector<FontCharsBuffer*> BufferList;
 	int									CurrPixelOffset;
 	int									CharHeight;
 	int									CharAscent;
@@ -219,7 +222,7 @@ private:
 
 	struct PendingSurfaceStruct {
 		SurfaceClass *								Surface;
-		DynamicVectorClass<Render2DClass *>	Renderers;
+		std::vector<Render2DClass*> Renderers;
 
 		bool operator== (const PendingSurfaceStruct &src)	{ return false; }
 		bool operator!= (const PendingSurfaceStruct &src)	{ return true; }
@@ -246,9 +249,9 @@ private:
 	//
 	//	Private member data
 	//
-	DynamicVectorClass<SentenceDataStruct>		SentenceData;
-	DynamicVectorClass<PendingSurfaceStruct>	PendingSurfaces;
-	DynamicVectorClass<RendererDataStruct>		Renderers;
+	std::vector<SentenceDataStruct>   SentenceData;
+	std::vector<PendingSurfaceStruct> PendingSurfaces;
+	std::vector<RendererDataStruct>   Renderers;
 	FontCharsClass	*						Font;
 	Vector2											BaseLocation;
 	Vector2											Location;

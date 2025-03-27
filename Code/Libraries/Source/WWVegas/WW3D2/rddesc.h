@@ -42,7 +42,10 @@
 #ifndef RDDESC_H
 #define RDDESC_H
 
-#include "vector.h"
+#include "always.h"
+
+#include <vector>
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -115,7 +118,7 @@ public:
 	const char *		Get_Hardware_Vendor() const	{ return HardwareVendor; }
 	const char *		Get_Hardware_Chipset() const	{ return HardwareChipset; }
 
-	const DynamicVectorClass<ResolutionDescClass> & Enumerate_Resolutions(void) const	{ return ResArray; }
+	const std::vector<ResolutionDescClass>& Enumerate_Resolutions(void) const { return ResArray; }
 
 private:
 
@@ -129,7 +132,7 @@ private:
 	void set_hardware_vendor(const char * name)	{ if (HardwareVendor) { free(HardwareVendor); }		HardwareVendor = NULL;		if (name) HardwareVendor = strdup(name); }
 	void set_hardware_chipset(const char * name)	{ if (HardwareChipset) { free(HardwareChipset); }	HardwareChipset = NULL;		if (name) HardwareChipset = strdup(name); }
 
-	void reset_resolution_list(void)					{ ResArray.Delete_All(); }
+	void reset_resolution_list(void) { ResArray.resize(0); }
 	void add_resolution(int w,int h,int bits);
 
 	char *				DeviceName;
@@ -144,7 +147,7 @@ private:
 	char *				HardwareVendor;
 	char *				HardwareChipset;
 	
-	DynamicVectorClass<ResolutionDescClass>	ResArray;
+	std::vector<ResolutionDescClass> ResArray;
 
 	friend class WW3D;
 	friend class DX8Wrapper;
@@ -154,17 +157,17 @@ private:
 inline void RenderDeviceDescClass::add_resolution(int w,int h,int bits)		
 { 
 	bool found = false;
-	for (int i=0; i<ResArray.Count(); i++) {
-		if (	(ResArray[i].Width == w) &&
-				(ResArray[i].Height == h) &&
-				(ResArray[i].BitDepth == bits))
+	for (const auto& resolution : ResArray) {
+		if ((resolution.Width == w) &&
+		    (resolution.Height == h) &&
+		    (resolution.BitDepth == bits))
 		{
 			found = true;
 		}
 	}
 	
 	if (!found) {
-		ResArray.Add(ResolutionDescClass(w,h,bits)); 
+		ResArray.push_back(ResolutionDescClass(w, h, bits));
 	}
 }
 

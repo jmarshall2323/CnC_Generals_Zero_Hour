@@ -48,7 +48,8 @@
 #endif
 
 #include "always.h"
-#include "vector.h"
+
+#include <vector>
 
 class RefCountClass;
 
@@ -99,16 +100,16 @@ class PointerRemapClass
 #endif
 		};
 
-		void		Process_Request_Table(DynamicVectorClass<PtrRemapStruct> & request_table,bool refcount);
+		void Process_Request_Table(std::vector<PtrRemapStruct>& request_table, bool refcount);
 		static int __cdecl ptr_pair_compare_function(void const * ptr1, void const * ptr2);
 		static int __cdecl ptr_request_compare_function(void const * ptr1, void const * ptr2);
 
 		/*
 		**	Array of pointers associated with ID values to assist in swizzling.
 		*/
-		DynamicVectorClass<PtrPairStruct>	PointerPairTable;
-		DynamicVectorClass<PtrRemapStruct>	PointerRequestTable;
-		DynamicVectorClass<PtrRemapStruct>	RefCountRequestTable;
+		std::vector<PtrPairStruct>  PointerPairTable;
+		std::vector<PtrRemapStruct> PointerRequestTable;
+		std::vector<PtrRemapStruct> RefCountRequestTable;
 };
 
 

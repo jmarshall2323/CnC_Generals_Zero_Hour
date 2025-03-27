@@ -68,9 +68,9 @@ enum
 ***********************************************************************************************/
 LookupTableClass::LookupTableClass(int sample_count) :
 	MinInputValue(0.0f),
-	MaxInputValue(0.0f),
-	OutputSamples(sample_count)
+	MaxInputValue(0.0f)
 {
+	OutputSamples.assign(sample_count, 0.0f);
 }
 
 LookupTableClass::~LookupTableClass(void)
@@ -88,8 +88,9 @@ void LookupTableClass::Init(const char * name,Curve1DClass * curve)
 	OOMaxMinusMin = 1.0f / (MaxInputValue - MinInputValue);
 
 	// Sample the curve and store the output values
-	for (int i=0; i<OutputSamples.Length(); i++) {
-		float x = MinInputValue + (MaxInputValue - MinInputValue) * (float)i / (float)(OutputSamples.Length() - 1);
+	for (size_t i = 0; i < OutputSamples.size(); i++)
+	{
+		float x = MinInputValue + (MaxInputValue - MinInputValue) * (float)i / (float)(OutputSamples.size() - 1);
 		float y;
 		curve->Evaluate(x,&y);
 		OutputSamples[i] = y;

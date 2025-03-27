@@ -844,19 +844,14 @@ ParticleEmitterClass::Update_On_Visibilty(void)
 }
 
 
-void
-ParticleEmitterClass::Add_Dependencies_To_List
-(
-	DynamicVectorClass<StringClass> &file_list,
-	bool textures_only
-)
+void ParticleEmitterClass::Add_Dependencies_To_List(std::vector<StringClass>& file_list, bool textures_only)
 {
 	//
 	// Get the texture the emitter is using and add it to our list
 	//
 	TextureClass *texture = Get_Texture ();
 	if (texture != NULL) {
-		file_list.Add (texture->Get_Full_Path ());
+		file_list.push_back(texture->Get_Full_Path());
 		REF_PTR_RELEASE(texture);
 	}
 

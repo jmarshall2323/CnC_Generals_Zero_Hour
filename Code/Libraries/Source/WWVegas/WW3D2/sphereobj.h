@@ -74,13 +74,13 @@ class AlphaVectorChannel : public PrimitiveAnimationChannelClass<AlphaVectorStru
 public:
 	AlphaVectorStruct	Evaluate (float time)
 	{
-		int key_count				= m_Data.Count ();
-		AlphaVectorStruct value	= m_Data[key_count - 1].Get_Value ();
+		const size_t key_count = m_Data.size();
+		AlphaVectorStruct value	= m_Data.back().Get_Value();
 
 		//
 		//	Don't interpolate past the last keyframe
 		//
-		if (time < m_Data[key_count - 1].Get_Time ()) {
+		if (time < m_Data.back().Get_Time()) {
 
 			// Check to see if the last key index is valid
 			if (time < m_Data[m_LastIndex].Get_Time ()) {
@@ -88,7 +88,7 @@ public:
 			}
 
 			KeyClass *key1 = &m_Data[m_LastIndex];
-			KeyClass *key2 = &m_Data[key_count - 1];
+			KeyClass *key2 = &m_Data.back();
 
 			//
 			// Search, using last_key as our starting point

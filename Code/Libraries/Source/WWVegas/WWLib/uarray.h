@@ -43,12 +43,12 @@
 #ifndef UARRAY_H
 #define UARRAY_H
 
+#include "always.h"
+
+#include <vector>
+
 #ifndef HASHCALC_H
 #include "hashcalc.h"
-#endif
-
-#ifndef VECTOR_H
-#include "vector.h"
 #endif
 
 
@@ -73,7 +73,7 @@ public:
 	int				Add(const T & new_item);
 
 	int				Count(void) const								{ return Get_Unique_Count(); }
-	int				Get_Unique_Count(void) const				{ return UniqueItems.Count(); }
+	int Get_Unique_Count(void) const { return UniqueItems.size(); }
 	const T &		Get(int index) const							{ return UniqueItems[index].Item; }
 	const T &		operator [] (int index) const				{ return Get(index); }
 
@@ -92,7 +92,7 @@ private:
 	};
 		
 	// Dynamic Vector of the unique items:
-	DynamicVectorClass<HashItem>		UniqueItems;
+	std::vector<HashItem> UniqueItems;
 
 	// Hash table:
 	int										HashTableSize;
@@ -100,9 +100,6 @@ private:
 
 	// object which does the hashing for the type
 	HashCalculatorClass<T> *			HashCalculator;
-
-	friend class VectorClass<T>;
-	friend class DynamicVectorClass<T>;
 };
 
 
@@ -124,9 +121,6 @@ UniqueArrayClass<T>::UniqueArrayClass(int initial_size,int growth_rate,HashCalcu
 	UniqueItems(initial_size),
 	HashCalculator(hasher)
 {
-	// set the growth rate.
-	UniqueItems.Set_Growth_Step(growth_rate);
-		
 	// sizing and allocating the actual hash table
 	int bits = HashCalculator->Num_Hash_Bits();
 	assert(bits > 0);
@@ -210,7 +204,7 @@ inline int UniqueArrayClass<T>::Add(const T & new_item)
 	/*
 	** Ok, this is a new item so add it (copy it!) into the array
 	*/
-	int index = UniqueItems.Count();
+	const int index = UniqueItems.size();
 	int hash_index = HashCalculator->Get_Hash_Value(0);
 
 	HashItem entry;
@@ -218,7 +212,7 @@ inline int UniqueArrayClass<T>::Add(const T & new_item)
 	entry.NextHashIndex = HashTable[hash_index];
 	HashTable[hash_index] = index;
 	
-	UniqueItems.Add(entry);
+	UniqueItems.push_back(entry);
 
 	return index;
 }

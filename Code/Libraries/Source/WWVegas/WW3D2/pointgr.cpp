@@ -68,13 +68,14 @@
  *   PointGroupClass::Peek_Texture -- Peeks texture                        *
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 #include "pointgr.h"
+
+#include <array>
+
 #include "vertmaterial.h"
 #include "ww3d.h"
 #include "aabox.h"
 #include "statistics.h"
-#include "simplevec.h"
 #include "texture.h"
-#include "vector.h"
 #include "vp.h"
 #include "matrix4.h"
 #include "GameRenderer.h"
@@ -93,12 +94,12 @@ Vector2 *PointGroupClass::_QuadVertexUVFrameTable[5] = { NULL, NULL, NULL, NULL,
 VertexMaterialClass *PointGroupClass::PointMaterial=NULL;
 
 // Static arrays for intermediate calcs (never resized down, just up):
-VectorClass<Vector3>		PointGroupClass::compressed_loc;		// point locations 'compressed' by APT
-VectorClass<Vector4>		PointGroupClass::compressed_diffuse;	// point colors 'compressed' by APT
-VectorClass<float>			PointGroupClass::compressed_size;		// point sizes 'compressed' by APT
-VectorClass<unsigned char>	PointGroupClass::compressed_orient;	// point orientations 'compressed' by APT
-VectorClass<unsigned char>	PointGroupClass::compressed_frame;		// point frames 'compressed' by APT
-VectorClass<Vector3>		PointGroupClass::transformed_loc;		// transformed point locations
+std::vector<Vector3>       PointGroupClass::compressed_loc;     // point locations 'compressed' by APT
+std::vector<Vector4>       PointGroupClass::compressed_diffuse; // point colors 'compressed' by APT
+std::vector<float>         PointGroupClass::compressed_size;    // point sizes 'compressed' by APT
+std::vector<unsigned char> PointGroupClass::compressed_orient;  // point orientations 'compressed' by APT
+std::vector<unsigned char> PointGroupClass::compressed_frame;   // point frames 'compressed' by APT
+std::vector<Vector3>       PointGroupClass::transformed_loc;    // transformed point locations
 
 // This array has vertex locations for screenspace mode - calculated to cover exactly 1x1 and 2x2 pixels.
 Vector3 PointGroupClass::_ScreenspaceVertexLocationSizeTable[2][3] =
@@ -116,9 +117,9 @@ static Vector3 GroundMultiplierX(1.0f, 0.0f, 0.0f);
 static Vector3 GroundMultiplierY(0.0f, 1.0f, 0.0f);
 
 // Some internal variables
-VectorClass<Vector3>			VertexLoc;		// camera-space vertex locations
-VectorClass<Vector4>			VertexDiffuse;	// vertex diffuse/alpha colors
-VectorClass<Vector2>			VertexUV;		// vertex texture coords
+std::vector<Vector3> VertexLoc;     // camera-space vertex locations
+std::vector<Vector4> VertexDiffuse; // vertex diffuse/alpha colors
+std::vector<Vector2> VertexUV;      // vertex texture coords
 
 // Some DX 8 variables
 #define MAX_VB_SIZE			2048
@@ -765,7 +766,6 @@ int PointGroupClass::Get_Polygon_Count(void)
  *   12/10/1998 NH  : Created.                                            * 
  *   02/08/2001 HY  : Upgraded to DX8                                     *
  *========================================================================*/
-static SimpleVecClass<unsigned long> remap;
 void PointGroupClass::Render(RenderInfoClass &rinfo)
 {
 	/// @todo lorenzen asks: is particle culling in the shader perhaps faster than in DoParticles? Fix winding and find out...
@@ -813,49 +813,51 @@ void PointGroupClass::Render(RenderInfoClass &rinfo)
 	// If there is an active point table, use it to compress the point
 	// locations/colors/alphas/sizes/orientations/frames.
 	if (APT) {
-		// Resize compressed result arrays if needed (2x guardband to prevent
-		// frequent reallocations):
 
 		/// @todo lorenzen sez: precompute pointers to indexed array elements, below
 
-		if (compressed_loc.Length() < PointCount) {
-			compressed_loc.Resize(PointCount * 2);
+		// Ignore old data and reserve space for use as a buffer
+		compressed_loc.assign(PointCount, Vector3());
+
+		VectorProcessorClass::CopyIndexed(compressed_loc.data(), PointLoc->Get_Array(), APT->Get_Array(), PointCount);
+		current_loc = compressed_loc.data();
+
+		if (PointDiffuse)
+		{
+			// Ignore old data and reserve space for use as a buffer
+			compressed_diffuse.assign(PointCount, Vector4());
+
+			VectorProcessorClass::CopyIndexed(compressed_diffuse.data(), PointDiffuse->Get_Array(), APT->Get_Array(), PointCount);
+			current_diffuse = compressed_diffuse.data();
 		}
-		VectorProcessorClass::CopyIndexed(&compressed_loc[0],
-			PointLoc->Get_Array(), APT->Get_Array(), PointCount);
-		current_loc = &compressed_loc[0];
-		if (PointDiffuse) {
-			if (compressed_diffuse.Length() < PointCount) {
-				compressed_diffuse.Resize(PointCount * 2);
-			}
-			VectorProcessorClass::CopyIndexed(&compressed_diffuse[0],
-				PointDiffuse->Get_Array(), APT->Get_Array(), PointCount);
-			current_diffuse = &compressed_diffuse[0];
-		}		
-		if (PointSize) {
-			if (compressed_size.Length() < PointCount) {
-				compressed_size.Resize(PointCount * 2);
-			}
-			VectorProcessorClass::CopyIndexed(&compressed_size[0],
-				PointSize->Get_Array(), APT->Get_Array(), PointCount);
-			current_size = &compressed_size[0];
+
+		if (PointSize)
+		{
+			// Ignore old data and reserve space for use as a buffer
+			compressed_size.assign(PointCount, 0.0f);
+
+			VectorProcessorClass::CopyIndexed(compressed_size.data(), PointSize->Get_Array(), APT->Get_Array(), PointCount);
+			current_size = compressed_size.data();
 		}
-		if (PointOrientation) {
-			if (compressed_orient.Length() < PointCount) {
-				compressed_orient.Resize(PointCount * 2);
-			}
-			VectorProcessorClass::CopyIndexed(&compressed_orient[0],
-				PointOrientation->Get_Array(), APT->Get_Array(), PointCount);
-			current_orient = &compressed_orient[0];
+
+		if (PointOrientation)
+		{
+			// Ignore old data and reserve space for use as a buffer
+			compressed_orient.assign(PointCount, 0);
+
+			VectorProcessorClass::CopyIndexed(compressed_orient.data(), PointOrientation->Get_Array(), APT->Get_Array(), PointCount);
+			current_orient = compressed_orient.data();
 		}
-		if (PointFrame) {
-			if (compressed_frame.Length() < PointCount) {
-				compressed_frame.Resize(PointCount * 2);
-			}
-			VectorProcessorClass::CopyIndexed(&compressed_frame[0],
-				PointFrame->Get_Array(), APT->Get_Array(), PointCount);
-			current_frame = &compressed_frame[0];
+
+		if (PointFrame)
+		{
+			// Ignore old data and reserve space for use as a buffer
+			compressed_frame.assign(PointCount, 0);
+
+			VectorProcessorClass::CopyIndexed(compressed_frame.data(), PointFrame->Get_Array(), APT->Get_Array(), PointCount);
+			current_frame = compressed_frame.data();
 		}
+
 	} else {
 		current_loc = PointLoc->Get_Array();
 		if (PointDiffuse) {
@@ -882,23 +884,19 @@ void PointGroupClass::Render(RenderInfoClass &rinfo)
 	// need to interrupt this processing. If we are not billboarding, then we need the actual position
 	// of the vertice to lay it down flat.
 	if (Get_Flag(TRANSFORM) && Billboard) {
-		// Resize transformed location array if needed (2x guardband to prevent
-		// frequent reallocations):
-		if (transformed_loc.Length() < PointCount) {
-			transformed_loc.Resize(PointCount * 2);
-		}		
+		transformed_loc.reserve(PointCount);
+		transformed_loc.clear();
 		// Not using vector processor class because we are discarding w
 		// Not using T&L in DX8 because we don't want DX8 to transform
 		// 3 times per particle when we can do it once
 		for (int i=0; i<PointCount; i++)
 		{			
 			/// @todo lorenzen sez: use pointer arithmetic here and a fast while loop
-			Vector4 result=view*current_loc[i];
-			transformed_loc[i].X=result.X;
-			transformed_loc[i].Y=result.Y;
-			transformed_loc[i].Z=result.Z;
+			const Vector4 out=view*current_loc[i];
+
+			transformed_loc.push_back({ out.X, out.Y, out.Z});
 		}		
-		current_loc = &transformed_loc[0];				
+		current_loc = transformed_loc.data();
 	} // if transform
 
 	// Update the arrays with the offsets.
@@ -1015,30 +1013,26 @@ void PointGroupClass::Update_Arrays(
 	int &vnum, 
 	int &pnum)
 {
-	int verts_per_point = (PointMode == QUADS) ? 4 : 3;
-	int polys_per_point = (PointMode == QUADS) ? 2 : 1;
+	const size_t verts_per_point = (PointMode == QUADS) ? 4 : 3;
+	const size_t polys_per_point = (PointMode == QUADS) ? 2 : 1;
 
 	// total_vnum/pnum reflect the size of the point arrays passed to the
 	// point group. These (instead of vnum/pnum, which reflect the number of
 	// active points) are used for the resize logic - the idea is that these
 	// numbers will vary less often than the active numbers.
-	int total_vnum = verts_per_point * total_points;
+	const int total_vnum = verts_per_point * total_points;
 	vnum = verts_per_point * active_points;
 	pnum = polys_per_point * active_points;
 	
-	// Resize the arrays if they are too small. We only need to check the length of one array
-	// since they always all have the same length.
+	VertexLoc.clear();
+	VertexUV.clear();
+	VertexDiffuse.clear();
+
+	VertexLoc.reserve(total_vnum);
+	VertexUV.reserve(total_vnum);
+	VertexDiffuse.reserve(total_vnum);
 
 	/// @todo lorenzen sez: precompute params below
-
-	if (VertexLoc.Length() < total_vnum) {
-		// Resize arrays (2x guardband to prevent frequent reallocations).
-		VertexLoc.Resize(total_vnum * 2, nullptr);
-		VertexUV.Resize(total_vnum * 2, nullptr);
-		VertexDiffuse.Resize(total_vnum * 2, nullptr);
-	}
-
-	int vert, i, j;
 
 	/*
 	** Generate the vertex locations from the point locations (note that both are in camera space).
@@ -1065,127 +1059,127 @@ void PointGroupClass::Update_Arrays(
 	LoopSelectionEnum loop_sel = (LoopSelectionEnum)(((int)PointMode << 2) +
 		(point_orientation ? 2 : 0) + (point_size ? 1 : 0));
 
-	vert = 0;
-	Vector3 *vertex_loc = &VertexLoc[0];
-
-
 	/// @todo lorenzen sez: this switch statement may be done more compactly another way... look into it
 
 	switch (loop_sel) {
 
 		case TRIS_NOSIZE_NOORIENT:
 			{
+				std::array<Vector3, 3> out;
 				// Setup constant vertex offsets (since size and orientation are invariants)
-				Vector3 scaled_offset[3];
+				std::array<Vector3, 3> scaled_offset;
 				scaled_offset[0] = _TriVertexLocationOrientationTable[DefaultPointOrientation][0] * DefaultPointSize;
 				scaled_offset[1] = _TriVertexLocationOrientationTable[DefaultPointOrientation][1] * DefaultPointSize;
 				scaled_offset[2] = _TriVertexLocationOrientationTable[DefaultPointOrientation][2] * DefaultPointSize;
 
 				// Add vertex offsets to point locations to get vertex locations
-				for (i = 0; i < active_points; i++) {
-					vertex_loc[vert + 0] = point_loc[i] + scaled_offset[0];
-					vertex_loc[vert + 1] = point_loc[i] + scaled_offset[1];
-					vertex_loc[vert + 2] = point_loc[i] + scaled_offset[2];
-					vert += 3;
+				for (size_t i = 0; i < active_points; i++)
+				{
+					out[0] = point_loc[i] + scaled_offset[0];
+					out[1] = point_loc[i] + scaled_offset[1];
+					out[2] = point_loc[i] + scaled_offset[2];
+					for (const auto& vert : out)
+						VertexLoc.push_back(vert);
 				}
 			}
 			break;
 
 		case TRIS_SIZE_NOORIENT:
 			{
+				std::array<Vector3, 3> out;
 				// Scale vertex offsets and add them to point locations to get vertex locations
-				for (i = 0; i < active_points; i++) {
-					vertex_loc[vert + 0] = point_loc[i] +
-						_TriVertexLocationOrientationTable[DefaultPointOrientation][0] * point_size[i];
-					vertex_loc[vert + 1] = point_loc[i] +
-						_TriVertexLocationOrientationTable[DefaultPointOrientation][1] * point_size[i];
-					vertex_loc[vert + 2] = point_loc[i] +
-						_TriVertexLocationOrientationTable[DefaultPointOrientation][2] * point_size[i];
-					vert += 3;
+				for (size_t i = 0; i < active_points; i++)
+				{
+					out[0] = point_loc[i] + _TriVertexLocationOrientationTable[DefaultPointOrientation][0] * point_size[i];
+					out[1] = point_loc[i] + _TriVertexLocationOrientationTable[DefaultPointOrientation][1] * point_size[i];
+					out[2] = point_loc[i] + _TriVertexLocationOrientationTable[DefaultPointOrientation][2] * point_size[i];
+					for (const auto& vert : out)
+						VertexLoc.push_back(vert);
 				}
 			}
 			break;
 
 		case TRIS_NOSIZE_ORIENT:
 			{
+				std::array<Vector3, 3> out;
 				// Scale vertex offsets and add them to point locations to get vertex locations
-				for (i = 0; i < active_points; i++) {
-					vertex_loc[vert + 0] = point_loc[i] +
-						_TriVertexLocationOrientationTable[point_orientation[i]][0] * DefaultPointSize;
-					vertex_loc[vert + 1] = point_loc[i] +
-						_TriVertexLocationOrientationTable[point_orientation[i]][1] * DefaultPointSize;
-					vertex_loc[vert + 2] = point_loc[i] +
-						_TriVertexLocationOrientationTable[point_orientation[i]][2] * DefaultPointSize;
-					vert += 3;
+				for (size_t i = 0; i < active_points; i++)
+				{
+					out[0] = point_loc[i] + _TriVertexLocationOrientationTable[point_orientation[i]][0] * DefaultPointSize;
+					out[1] = point_loc[i] + _TriVertexLocationOrientationTable[point_orientation[i]][1] * DefaultPointSize;
+					out[2] = point_loc[i] + _TriVertexLocationOrientationTable[point_orientation[i]][2] * DefaultPointSize;
+					for (const auto& vert : out)
+						VertexLoc.push_back(vert);
 				}
 			}
 			break;
 
 		case TRIS_SIZE_ORIENT:
 			{
+				std::array<Vector3, 3> out;
 				// Scale vertex offsets and add them to point locations to get vertex locations
-				for (i = 0; i < active_points; i++) {
-					vertex_loc[vert + 0] = point_loc[i] +
-						_TriVertexLocationOrientationTable[point_orientation[i]][0] * point_size[i];
-					vertex_loc[vert + 1] = point_loc[i] +
-						_TriVertexLocationOrientationTable[point_orientation[i]][1] * point_size[i];
-					vertex_loc[vert + 2] = point_loc[i] +
-						_TriVertexLocationOrientationTable[point_orientation[i]][2] * point_size[i];
-					vert += 3;
+				for (size_t i = 0; i < active_points; i++)
+				{
+					out[0] = point_loc[i] + _TriVertexLocationOrientationTable[point_orientation[i]][0] * point_size[i];
+					out[1] = point_loc[i] + _TriVertexLocationOrientationTable[point_orientation[i]][1] * point_size[i];
+					out[2] = point_loc[i] + _TriVertexLocationOrientationTable[point_orientation[i]][2] * point_size[i];
+					for (const auto& vert : out)
+						VertexLoc.push_back(vert);
 				}
 			}
 			break;
 
 		case QUADS_NOSIZE_NOORIENT:
 			{
+				std::array<Vector3, 4> out;
 				// Setup constant vertex offsets (since size and orientation are invariants)
-				Vector3 scaled_offset[4];
+				std::array<Vector3, 4> scaled_offset;
 				scaled_offset[0] = _QuadVertexLocationOrientationTable[DefaultPointOrientation][0] * DefaultPointSize;
 				scaled_offset[1] = _QuadVertexLocationOrientationTable[DefaultPointOrientation][1] * DefaultPointSize;
 				scaled_offset[2] = _QuadVertexLocationOrientationTable[DefaultPointOrientation][2] * DefaultPointSize;
 				scaled_offset[3] = _QuadVertexLocationOrientationTable[DefaultPointOrientation][3] * DefaultPointSize;
 
 				// Add vertex offsets to point locations to get vertex locations
-				for (i = 0; i < active_points; i++) {
-					vertex_loc[vert + 0] = point_loc[i] + scaled_offset[0];
-					vertex_loc[vert + 1] = point_loc[i] + scaled_offset[1];
-					vertex_loc[vert + 2] = point_loc[i] + scaled_offset[2];
-					vertex_loc[vert + 3] = point_loc[i] + scaled_offset[3];
-					vert += 4;
+				for (size_t i = 0; i < active_points; i++)
+				{
+					out[0] = point_loc[i] + scaled_offset[0];
+					out[1] = point_loc[i] + scaled_offset[1];
+					out[2] = point_loc[i] + scaled_offset[2];
+					out[3] = point_loc[i] + scaled_offset[3];
+					for (const auto& vert : out)
+						VertexLoc.push_back(vert);
 				}
 			}
 			break;
 
 		case QUADS_SIZE_NOORIENT:
 			{
+				std::array<Vector3, 4> out;
 				// Scale vertex offsets and add them to point locations to get vertex locations
-				for (i = 0; i < active_points; i++) {
-					vertex_loc[vert + 0] = point_loc[i] +
-						_QuadVertexLocationOrientationTable[DefaultPointOrientation][0] * point_size[i];
-					vertex_loc[vert + 1] = point_loc[i] +
-						_QuadVertexLocationOrientationTable[DefaultPointOrientation][1] * point_size[i];
-					vertex_loc[vert + 2] = point_loc[i] +
-						_QuadVertexLocationOrientationTable[DefaultPointOrientation][2] * point_size[i];
-					vertex_loc[vert + 3] = point_loc[i] +
-						_QuadVertexLocationOrientationTable[DefaultPointOrientation][3] * point_size[i];
-					vert += 4;
+				for (size_t i = 0; i < active_points; i++)
+				{
+					out[0] = point_loc[i] + _QuadVertexLocationOrientationTable[DefaultPointOrientation][0] * point_size[i];
+					out[1] = point_loc[i] + _QuadVertexLocationOrientationTable[DefaultPointOrientation][1] * point_size[i];
+					out[2] = point_loc[i] + _QuadVertexLocationOrientationTable[DefaultPointOrientation][2] * point_size[i];
+					out[3] = point_loc[i] + _QuadVertexLocationOrientationTable[DefaultPointOrientation][3] * point_size[i];
+					for (const auto& vert : out)
+						VertexLoc.push_back(vert);
 				}
 			}
 			break;
 
 		case QUADS_NOSIZE_ORIENT:
 			{
+				std::array<Vector3, 4> out;
 				// Scale vertex offsets and add them to point locations to get vertex locations
-				for (i = 0; i < active_points; i++) {
-					vertex_loc[vert + 0] = point_loc[i] +
-						_QuadVertexLocationOrientationTable[point_orientation[i]][0] * DefaultPointSize;
-					vertex_loc[vert + 1] = point_loc[i] +
-						_QuadVertexLocationOrientationTable[point_orientation[i]][1] * DefaultPointSize;
-					vertex_loc[vert + 2] = point_loc[i] +
-						_QuadVertexLocationOrientationTable[point_orientation[i]][2] * DefaultPointSize;
-					vertex_loc[vert + 3] = point_loc[i] +
-						_QuadVertexLocationOrientationTable[point_orientation[i]][3] * DefaultPointSize;
-					vert += 4;
+				for (size_t i = 0; i < active_points; i++)
+				{
+					out[0] = point_loc[i] + _QuadVertexLocationOrientationTable[point_orientation[i]][0] * DefaultPointSize;
+					out[1] = point_loc[i] + _QuadVertexLocationOrientationTable[point_orientation[i]][1] * DefaultPointSize;
+					out[2] = point_loc[i] + _QuadVertexLocationOrientationTable[point_orientation[i]][2] * DefaultPointSize;
+					out[3] = point_loc[i] + _QuadVertexLocationOrientationTable[point_orientation[i]][3] * DefaultPointSize;
+					for (const auto& vert : out)
+						VertexLoc.push_back(vert);
 				}
 			}
 			break;
@@ -1193,13 +1187,14 @@ void PointGroupClass::Update_Arrays(
 		case QUADS_SIZE_ORIENT:
 			{
 				Matrix4 view;
-				Vector4 result;
+				std::array<Vector3, 4> out;
 				if (!Billboard) {
 					DX8Wrapper::Get_Transform(D3DTS_VIEW,view);
 				}
 
 				// Scale vertex offsets and add them to point locations to get vertex locations
-				for (i = 0; i < active_points; i++) {
+				for (size_t i = 0; i < active_points; i++)
+				{
 					if (!Billboard) {
 						// If we're not billboarding, then the coordinate we have is in screen space.
 						Matrix4 rotMat;
@@ -1208,55 +1203,45 @@ void PointGroupClass::Update_Arrays(
 						Vector4 orientedVecX = rotMat * GroundMultiplierX;
 						Vector4 orientedVecY = rotMat * GroundMultiplierY;
 
-						vertex_loc[vert + 0].X = point_loc[i].X +	(orientedVecX.X + orientedVecY.X) * point_size[i];
-						vertex_loc[vert + 0].Y = point_loc[i].Y +	(orientedVecX.Y + orientedVecY.Y) * point_size[i];
-						vertex_loc[vert + 0].Z = point_loc[i].Z;
+						std::array<Vector3, 4> temp;
 
-						vertex_loc[vert + 1].X = point_loc[i].X +	(orientedVecX.X - orientedVecY.X) * point_size[i];
-						vertex_loc[vert + 1].Y = point_loc[i].Y +	(orientedVecX.Y - orientedVecY.Y) * point_size[i];
-						vertex_loc[vert + 1].Z = point_loc[i].Z;
+						temp[0].X = point_loc[i].X +	(orientedVecX.X + orientedVecY.X) * point_size[i];
+						temp[0].Y = point_loc[i].Y +	(orientedVecX.Y + orientedVecY.Y) * point_size[i];
+						temp[0].Z = point_loc[i].Z;
 
-						vertex_loc[vert + 2].X = point_loc[i].X +	-(orientedVecX.X + orientedVecY.X) * point_size[i];
-						vertex_loc[vert + 2].Y = point_loc[i].Y +	-(orientedVecX.Y + orientedVecY.Y) * point_size[i];
-						vertex_loc[vert + 2].Z = point_loc[i].Z;
+						temp[1].X = point_loc[i].X +	(orientedVecX.X - orientedVecY.X) * point_size[i];
+						temp[1].Y = point_loc[i].Y +	(orientedVecX.Y - orientedVecY.Y) * point_size[i];
+						temp[1].Z = point_loc[i].Z;
 
-						vertex_loc[vert + 3].X = point_loc[i].X +	(-orientedVecX.X + orientedVecY.X) * point_size[i];
-						vertex_loc[vert + 3].Y = point_loc[i].Y +	(-orientedVecX.Y + orientedVecY.Y) * point_size[i];
-						vertex_loc[vert + 3].Z = point_loc[i].Z;
+						temp[2].X = point_loc[i].X +	-(orientedVecX.X + orientedVecY.X) * point_size[i];
+						temp[2].Y = point_loc[i].Y +	-(orientedVecX.Y + orientedVecY.Y) * point_size[i];
+						temp[2].Z = point_loc[i].Z;
+
+						temp[3].X = point_loc[i].X +	(-orientedVecX.X + orientedVecY.X) * point_size[i];
+						temp[3].Y = point_loc[i].Y +	(-orientedVecX.Y + orientedVecY.Y) * point_size[i];
+						temp[3].Z = point_loc[i].Z;
 
 						// now apply the view transform so that this data is in the format expected
 						// upon the functions return.
-						result = view*vertex_loc[vert + 0];
-						vertex_loc[vert + 0].X = result.X;
-						vertex_loc[vert + 0].Y = result.Y;
-						vertex_loc[vert + 0].Z = result.Z;
+						const Vector4 v0 = view * temp[0];
+						const Vector4 v1 = view * temp[1];
+						const Vector4 v2 = view * temp[2];
+						const Vector4 v3 = view * temp[3];
 
-						result = view*vertex_loc[vert + 1];
-						vertex_loc[vert + 1].X = result.X;
-						vertex_loc[vert + 1].Y = result.Y;
-						vertex_loc[vert + 1].Z = result.Z;
-
-						result = view*vertex_loc[vert + 2];
-						vertex_loc[vert + 2].X = result.X;
-						vertex_loc[vert + 2].Y = result.Y;
-						vertex_loc[vert + 2].Z = result.Z;
-
-						result = view*vertex_loc[vert + 3];
-						vertex_loc[vert + 3].X = result.X;
-						vertex_loc[vert + 3].Y = result.Y;
-						vertex_loc[vert + 3].Z = result.Z;
-					} else {
-
-						vertex_loc[vert + 0] = point_loc[i] +
-							_QuadVertexLocationOrientationTable[point_orientation[i]][0] * point_size[i];
-						vertex_loc[vert + 1] = point_loc[i] +
-							_QuadVertexLocationOrientationTable[point_orientation[i]][1] * point_size[i];
-						vertex_loc[vert + 2] = point_loc[i] +
-							_QuadVertexLocationOrientationTable[point_orientation[i]][2] * point_size[i];
-						vertex_loc[vert + 3] = point_loc[i] +
-							_QuadVertexLocationOrientationTable[point_orientation[i]][3] * point_size[i];
+						out[0] = { v0.X, v0.Y, v0.Z };
+						out[1] = { v1.X, v1.Y, v1.Z };
+						out[2] = { v2.X, v2.Y, v2.Z };
+						out[3] = { v3.X, v3.Y, v3.Z };
 					}
-					vert += 4;
+					else
+					{
+						out[0] = point_loc[i] + _QuadVertexLocationOrientationTable[point_orientation[i]][0] * point_size[i];
+						out[1] = point_loc[i] + _QuadVertexLocationOrientationTable[point_orientation[i]][1] * point_size[i];
+						out[2] = point_loc[i] + _QuadVertexLocationOrientationTable[point_orientation[i]][2] * point_size[i];
+						out[3] = point_loc[i] + _QuadVertexLocationOrientationTable[point_orientation[i]][3] * point_size[i];
+					}
+					for (const auto& vert : out)
+						VertexLoc.push_back(vert);
 				}
 			}
 			break;
@@ -1267,18 +1252,21 @@ void PointGroupClass::Update_Arrays(
 			{
 				// Offsets need to be scaled to the current screen resolution
 
-   			// First find x and y scale factors (sizes in pixels need to be
-   			// normalized to 2D cam viewplane of -1,-1 to 1,1)
-   			int xres, yres, bitdepth;
-   			bool windowed;
-   			WW3D::Get_Render_Target_Resolution(xres, yres, bitdepth, windowed);
+				// First find x and y scale factors (sizes in pixels need to be
+				// normalized to 2D cam viewplane of -1,-1 to 1,1)
+				int xres, yres, bitdepth;
+				bool windowed;
+				WW3D::Get_Render_Target_Resolution(xres, yres, bitdepth, windowed);
    
-   			float x_scale = (VPXMax - VPXMin) / xres;
-   			float y_scale = (VPYMax - VPYMin) / yres;
-   
-				Vector3 scaled_locs[2][3];
-				for (int i = 0; i < 2; i++) {
-					for (int j = 0; j < 3; j++) {
+				const float x_scale = (VPXMax - VPXMin) / xres;
+				const float y_scale = (VPYMax - VPYMin) / yres;
+
+				// scaled_locs[2][3]
+				std::array<std::array<Vector3, 3>, 2> scaled_locs;
+				for (size_t i = 0; i < 2; i++)
+				{
+					for (size_t j = 0; j < 3; j++)
+					{
 						scaled_locs[i][j].X = _ScreenspaceVertexLocationSizeTable[i][j].X * x_scale;
 						scaled_locs[i][j].Y = _ScreenspaceVertexLocationSizeTable[i][j].Y * y_scale;
 						scaled_locs[i][j].Z = _ScreenspaceVertexLocationSizeTable[i][j].Z;
@@ -1286,12 +1274,15 @@ void PointGroupClass::Update_Arrays(
 				}
 
 				// Add vertex offsets to point locations to get vertex locations
-				int size_idx = (DefaultPointSize <= 1.0f) ? 0 : 1;
-				for (i = 0; i < active_points; i++) {
-					vertex_loc[vert + 0] = point_loc[i] + scaled_locs[size_idx][0];
-					vertex_loc[vert + 1] = point_loc[i] + scaled_locs[size_idx][1];
-					vertex_loc[vert + 2] = point_loc[i] + scaled_locs[size_idx][2];
-					vert += 3;
+				const size_t size_idx = (DefaultPointSize <= 1.0f) ? 0 : 1;
+				std::array<Vector3, 3> out;
+				for (size_t i = 0; i < active_points; i++)
+				{
+					out[0] = point_loc[i] + scaled_locs[size_idx][0];
+					out[1] = point_loc[i] + scaled_locs[size_idx][1];
+					out[2] = point_loc[i] + scaled_locs[size_idx][2];
+					for (const auto& vert : out)
+						VertexLoc.push_back(vert);
 				}
 			}
 			break;
@@ -1301,18 +1292,21 @@ void PointGroupClass::Update_Arrays(
 			{
 				// Offsets need to be scaled to the current screen resolution
 
-   			// First find x and y scale factors (sizes in pixels need to be
-   			// normalized to 2D cam viewplane of -1,-1 to 1,1)
-   			int xres, yres, bitdepth;
-   			bool windowed;
-   			WW3D::Get_Render_Target_Resolution(xres, yres, bitdepth, windowed);
+				// First find x and y scale factors (sizes in pixels need to be
+				// normalized to 2D cam viewplane of -1,-1 to 1,1)
+				int xres, yres, bitdepth;
+				bool windowed;
+				WW3D::Get_Render_Target_Resolution(xres, yres, bitdepth, windowed);
+
+				const float x_scale = (VPXMax - VPXMin) / xres;
+				const float y_scale = (VPYMax - VPYMin) / yres;
    
-   			float x_scale = (VPXMax - VPXMin) / xres;
-   			float y_scale = (VPYMax - VPYMin) / yres;
-   
-				Vector3 scaled_locs[2][3];
-				for (int i = 0; i < 2; i++) {
-					for (int j = 0; j < 3; j++) {
+				// scaled_locs[2][3]
+				std::array<std::array<Vector3, 3>, 2> scaled_locs;
+				for (size_t i = 0; i < 2; i++)
+				{
+					for (size_t j = 0; j < 3; j++)
+					{
 						scaled_locs[i][j].X = _ScreenspaceVertexLocationSizeTable[i][j].X * x_scale;
 						scaled_locs[i][j].Y = _ScreenspaceVertexLocationSizeTable[i][j].Y * y_scale;
 						scaled_locs[i][j].Z = _ScreenspaceVertexLocationSizeTable[i][j].Z;
@@ -1320,12 +1314,15 @@ void PointGroupClass::Update_Arrays(
 				}
 
 				// Add vertex offsets to point locations to get vertex locations
-				for (i = 0; i < active_points; i++) {
-					int size_idx = (point_size[i] <= 1.0f) ? 0 : 1;
-					vertex_loc[vert + 0] = point_loc[i] + scaled_locs[size_idx][0];
-					vertex_loc[vert + 1] = point_loc[i] + scaled_locs[size_idx][1];
-					vertex_loc[vert + 2] = point_loc[i] + scaled_locs[size_idx][2];
-					vert += 3;
+				std::array<Vector3, 3> out;
+				for (size_t i = 0; i < active_points; i++)
+				{
+					const size_t size_idx = (point_size[i] <= 1.0f) ? 0 : 1;
+					out[0] = point_loc[i] + scaled_locs[size_idx][0];
+					out[1] = point_loc[i] + scaled_locs[size_idx][1];
+					out[2] = point_loc[i] + scaled_locs[size_idx][2];
+					for (const auto& vert : out)
+						VertexLoc.push_back(vert);
 				}
 			}
 			break;
@@ -1346,52 +1343,76 @@ void PointGroupClass::Update_Arrays(
 	/// @todo lorenzen sez: use pointer arithmetic below
 
 		// Fill UV array according to frame override array:
-		Vector2 *vertex_uv = &VertexUV[0];
-		if (PointMode != QUADS) {
+		if (PointMode != QUADS)
+		{
 			// Modes with three vertices per point:
 			Vector2 *uv_ptr = _TriVertexUVFrameTable[FrameRowColumnCountLog2];
-			int vert = 0;
-			for (int i = 0; i < active_points; i++) {
-				int uv_idx = (point_frame[i] & frame_mask) * 3;
-				vertex_uv[vert++] = uv_ptr[uv_idx + 0];
-				vertex_uv[vert++] = uv_ptr[uv_idx + 1];
-				vertex_uv[vert++] = uv_ptr[uv_idx + 2];
+			std::array <Vector2, 3> out;
+			for (size_t i = 0; i < active_points; i++)
+			{
+				const size_t uv_idx = (point_frame[i] & frame_mask) * 3;
+
+				out[0] = uv_ptr[uv_idx + 0];
+				out[1] = uv_ptr[uv_idx + 1];
+				out[2] = uv_ptr[uv_idx + 2];
+
+				for (const auto& uv : out)
+					VertexUV.push_back(uv);
 			}
-		} else {
+		}
+		else
+		{
 			// Modes with four vertices per point:
 			Vector2 *uv_ptr = _QuadVertexUVFrameTable[FrameRowColumnCountLog2];
-			int vert = 0;
-			for (int i = 0; i < active_points; i++) {
-				int uv_idx = (point_frame[i] & frame_mask) * 4;
-				vertex_uv[vert++] = uv_ptr[uv_idx + 0];
-				vertex_uv[vert++] = uv_ptr[uv_idx + 1];
-				vertex_uv[vert++] = uv_ptr[uv_idx + 2];
-				vertex_uv[vert++] = uv_ptr[uv_idx + 3];
+			std::array <Vector2, 4> out;
+			for (size_t i = 0; i < active_points; i++)
+			{
+				const size_t uv_idx = (point_frame[i] & frame_mask) * 4;
+
+				out[0] = uv_ptr[uv_idx + 0];
+				out[1] = uv_ptr[uv_idx + 1];
+				out[2] = uv_ptr[uv_idx + 2];
+				out[3] = uv_ptr[uv_idx + 3];
+
+				for (const auto& uv : out)
+					VertexUV.push_back(uv);
 			}
 		}
 
-	} else {
+	}
+	else
+	{
 		/// @todo lorenzen sez: use pointer arithmetic below
 		// Fill UV array according to frame state:
-		Vector2 *vertex_uv = &VertexUV[0];
-		if (PointMode != QUADS) {
+		if (PointMode != QUADS)
+		{
 			// Modes with three vertices per point:
-			Vector2 *uv_ptr = _TriVertexUVFrameTable[FrameRowColumnCountLog2] + ((DefaultPointFrame & frame_mask) * 3);
-			int vert = 0;
-			for (int i = 0; i < active_points; i++) {
-				vertex_uv[vert++] = uv_ptr[0];
-				vertex_uv[vert++] = uv_ptr[1];
-				vertex_uv[vert++] = uv_ptr[2];
+			const Vector2 *uv_ptr = _TriVertexUVFrameTable[FrameRowColumnCountLog2] + ((DefaultPointFrame & frame_mask) * 3);
+			std::array <Vector2, 3> out;
+			for (size_t i = 0; i < active_points; i++)
+			{
+				out[0] = uv_ptr[0];
+				out[1] = uv_ptr[1];
+				out[2] = uv_ptr[2];
+
+				for (const auto& uv : out)
+					VertexUV.push_back(uv);
 			}
-		} else {
+		}
+		else
+		{
 			// Modes with four vertices per point:
-			Vector2 *uv_ptr = _QuadVertexUVFrameTable[FrameRowColumnCountLog2] + ((DefaultPointFrame & frame_mask) * 4);
-			int vert = 0;
-			for (int i = 0; i < active_points; i++) {
-				vertex_uv[vert++] = uv_ptr[0];
-				vertex_uv[vert++] = uv_ptr[1];
-				vertex_uv[vert++] = uv_ptr[2];
-				vertex_uv[vert++] = uv_ptr[3];
+			const Vector2 *uv_ptr = _QuadVertexUVFrameTable[FrameRowColumnCountLog2] + ((DefaultPointFrame & frame_mask) * 4);
+			std::array <Vector2, 4> out;
+			for (size_t i = 0; i < active_points; i++)
+			{
+				out[0] = uv_ptr[0];
+				out[1] = uv_ptr[1];
+				out[2] = uv_ptr[2];
+				out[3] = uv_ptr[3];
+
+				for (const auto& uv : out)
+					VertexUV.push_back(uv);
 			}
 		}
 
@@ -1402,14 +1423,14 @@ void PointGroupClass::Update_Arrays(
 	*/
 	/// @todo lorenzen sez: use a quicker, unwrapped loop, and pointer arithmetic
 	/// @todo lorenzen sez: this is a leaf function, dang it
-	vert = 0;	
-	if (point_diffuse) {
-		Vector4* vertex_color = &VertexDiffuse[0];
-		for (i = 0; i < active_points; i++) {
-			for (j = 0; j < verts_per_point; j++) {
-				vertex_color[vert + j] = point_diffuse[i];
+	if (point_diffuse)
+	{
+		for (size_t i = 0; i < active_points; i++)
+		{
+			for (size_t j = 0; j < verts_per_point; j++)
+			{
+				VertexDiffuse.push_back(point_diffuse[i]);
 			}
-			vert += verts_per_point;
 		}
 	}
 }
@@ -1602,10 +1623,24 @@ void PointGroupClass::_Shutdown(void)
 	REF_PTR_RELEASE(SortingTris);
 	REF_PTR_RELEASE(Quads);
 	REF_PTR_RELEASE(Tris);
-	transformed_loc.Clear();
-	VertexLoc.Clear();
-	VertexDiffuse.Clear();
-	VertexUV.Clear();
+	compressed_loc.clear();
+	compressed_loc.shrink_to_fit();
+	compressed_diffuse.clear();
+	compressed_diffuse.shrink_to_fit();
+	compressed_size.clear();
+	compressed_size.shrink_to_fit();
+	compressed_orient.clear();
+	compressed_orient.shrink_to_fit();
+	compressed_frame.clear();
+	compressed_frame.shrink_to_fit();
+	transformed_loc.clear();
+	transformed_loc.shrink_to_fit();
+	VertexLoc.clear();
+	VertexLoc.shrink_to_fit();
+	VertexDiffuse.clear();
+	VertexDiffuse.shrink_to_fit();
+	VertexUV.clear();
+	VertexUV.shrink_to_fit();
 }
 
 
@@ -1689,56 +1724,50 @@ void PointGroupClass::RenderVolumeParticle(RenderInfoClass &rinfo, unsigned int 
 	//// VOLUME_PARTICLE LOOP ///////////////
 	for ( int t = 0; t < depth; ++t )
 	{
-
-
-
-
-
 		// If there is an active point table, use it to compress the point
 		// locations/colors/alphas/sizes/orientations/frames.
 		if (APT) {
-			// Resize compressed result arrays if needed (2x guardband to prevent
-			// frequent reallocations):
-
 			/// @todo lorenzen sez: precompute pointers to indexed array elements, below
+			// Ignore old data and reserve space for use as a buffer
+			compressed_loc.assign(PointCount, Vector3());
 
-			if (compressed_loc.Length() < PointCount) {
-				compressed_loc.Resize(PointCount * 2);
+			VectorProcessorClass::CopyIndexed(compressed_loc.data(), PointLoc->Get_Array(), APT->Get_Array(), PointCount);
+			current_loc = compressed_loc.data();
+
+			if (PointDiffuse)
+			{
+				// Ignore old data and reserve space for use as a buffer
+				compressed_diffuse.assign(PointCount, Vector4());
+
+				VectorProcessorClass::CopyIndexed(compressed_diffuse.data(), PointDiffuse->Get_Array(), APT->Get_Array(), PointCount);
+				current_diffuse = compressed_diffuse.data();
 			}
-			VectorProcessorClass::CopyIndexed(&compressed_loc[0],
-				PointLoc->Get_Array(), APT->Get_Array(), PointCount);
-			current_loc = &compressed_loc[0];
-			if (PointDiffuse) {
-				if (compressed_diffuse.Length() < PointCount) {
-					compressed_diffuse.Resize(PointCount * 2);
-				}
-				VectorProcessorClass::CopyIndexed(&compressed_diffuse[0],
-					PointDiffuse->Get_Array(), APT->Get_Array(), PointCount);
-				current_diffuse = &compressed_diffuse[0];
-			}		
-			if (PointSize) {
-				if (compressed_size.Length() < PointCount) {
-					compressed_size.Resize(PointCount * 2);
-				}
-				VectorProcessorClass::CopyIndexed(&compressed_size[0],
-					PointSize->Get_Array(), APT->Get_Array(), PointCount);
-				current_size = &compressed_size[0];
+
+			if (PointSize)
+			{
+				// Ignore old data and reserve space for use as a buffer
+				compressed_size.assign(PointCount, 0.0f);
+
+				VectorProcessorClass::CopyIndexed(compressed_size.data(), PointSize->Get_Array(), APT->Get_Array(), PointCount);
+				current_size = compressed_size.data();
 			}
-			if (PointOrientation) {
-				if (compressed_orient.Length() < PointCount) {
-					compressed_orient.Resize(PointCount * 2);
-				}
-				VectorProcessorClass::CopyIndexed(&compressed_orient[0],
-					PointOrientation->Get_Array(), APT->Get_Array(), PointCount);
-				current_orient = &compressed_orient[0];
+
+			if (PointOrientation)
+			{
+				// Ignore old data and reserve space for use as a buffer
+				compressed_orient.assign(PointCount, 0);
+
+				VectorProcessorClass::CopyIndexed(compressed_orient.data(), PointOrientation->Get_Array(), APT->Get_Array(), PointCount);
+				current_orient = compressed_orient.data();
 			}
-			if (PointFrame) {
-				if (compressed_frame.Length() < PointCount) {
-					compressed_frame.Resize(PointCount * 2);
-				}
-				VectorProcessorClass::CopyIndexed(&compressed_frame[0],
-					PointFrame->Get_Array(), APT->Get_Array(), PointCount);
-				current_frame = &compressed_frame[0];
+
+			if (PointFrame)
+			{
+				// Ignore old data and reserve space for use as a buffer
+				compressed_frame.assign(PointCount, 0);
+
+				VectorProcessorClass::CopyIndexed(compressed_frame.data(), PointFrame->Get_Array(), APT->Get_Array(), PointCount);
+				current_frame = compressed_frame.data();
 			}
 		} else {
 			current_loc = PointLoc->Get_Array();
@@ -1766,11 +1795,7 @@ void PointGroupClass::RenderVolumeParticle(RenderInfoClass &rinfo, unsigned int 
 		// need to interrupt this processing. If we are not billboarding, then we need the actual position
 		// of the vertice to lay it down flat.
 		if (Get_Flag(TRANSFORM) && Billboard) {
-			// Resize transformed location array if needed (2x guardband to prevent
-			// frequent reallocations):
-			if (transformed_loc.Length() < PointCount) {
-				transformed_loc.Resize(PointCount * 2);
-			}		
+			transformed_loc.reserve(PointCount);
 			// Not using vector processor class because we are discarding w
 			// Not using T&L in DX8 because we don't want DX8 to transform
 			// 3 times per particle when we can do it once
@@ -1796,12 +1821,11 @@ void PointGroupClass::RenderVolumeParticle(RenderInfoClass &rinfo, unsigned int 
 				temp.Y = current_loc[i].Y + cameraToPointDelta.Y;
 				temp.Z = current_loc[i].Z + cameraToPointDelta.Z;
 
-				Vector4 result= view * temp;
-				transformed_loc[i].X=result.X;
-				transformed_loc[i].Y=result.Y;
-				transformed_loc[i].Z=result.Z;
+				const Vector4 out = view * temp;
+
+				transformed_loc.push_back({out.X, out.Y, out.Z});
 			}		
-			current_loc = &transformed_loc[0];				
+			current_loc = transformed_loc.data();
 		} // if transform
 
 		// Update the arrays with the offsets.

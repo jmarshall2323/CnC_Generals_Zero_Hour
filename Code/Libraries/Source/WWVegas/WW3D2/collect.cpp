@@ -104,10 +104,10 @@ protected:
 	void				Free(void);
 
 	char								Name[W3D_NAME_LEN];
-	DynamicVectorClass<char *> ObjectNames;
+	std::vector<const char*> ObjectNames;
 	SnapPointsClass *				SnapPoints;
 
-	DynamicVectorClass <ProxyClass>	ProxyList;
+	std::vector<ProxyClass> ProxyList;
 
 	friend class CollectionClass;
 };
@@ -167,18 +167,18 @@ CollectionClass::CollectionClass(void) :
  *   12/8/98    GTH : Created.                                                                 *
  *=============================================================================================*/
 CollectionClass::CollectionClass(const CollectionDefClass & def) :
-	SubObjects(def.ObjectNames.Count()),	
+	SubObjects(),
 	SnapPoints(NULL)
 {
 	// Set our name
 	Set_Name (def.Get_Name ());
 
 	// create the sub objects
-	SubObjects.Resize(def.ObjectNames.Count());
-	for (int i=0; i<def.ObjectNames.Count(); i++) {
-		WWASSERT(SubObjects.Count() == i);
-		SubObjects.Add(WW3DAssetManager::Get_Instance()->Create_Render_Obj(def.ObjectNames[i]));
-		SubObjects[i]->Set_Container(this);
+	SubObjects.reserve(def.ObjectNames.size());
+	for (const auto& object_name : def.ObjectNames)
+	{
+		SubObjects.push_back(WW3DAssetManager::Get_Instance()->Create_Render_Obj(object_name));
+		SubObjects.back()->Set_Container(this);
 	}
 
 	// Copy the list of placeholder objects from the definition
@@ -210,7 +210,7 @@ CollectionClass::CollectionClass(const CollectionDefClass & def) :
  *=============================================================================================*/
 CollectionClass::CollectionClass(const CollectionClass & src) :
 	CompositeRenderObjClass(src),
-	SubObjects(src.SubObjects.Count()),
+	SubObjects(),
 	SnapPoints(NULL)
 {
 	*this = src;
@@ -235,11 +235,11 @@ CollectionClass & CollectionClass::operator = (const CollectionClass & that)
 		Free();
 		CompositeRenderObjClass::operator = (that);
 
-		SubObjects.Resize(that.SubObjects.Count());
-		for (int i=0; i<that.SubObjects.Count(); i++) {
-			WWASSERT(SubObjects.Count() == i);
-			SubObjects.Add(that.SubObjects[i]->Clone());
-			SubObjects[i]->Set_Container(this);
+		SubObjects.reserve(that.SubObjects.size());
+		for (const auto& sub_object: that.SubObjects)
+		{
+			SubObjects.push_back(sub_object->Clone());
+			SubObjects.back()->Set_Container(this);
 		}
 
 		// Copy the list of placeholder objects from the definition
@@ -305,14 +305,15 @@ RenderObjClass * CollectionClass::Clone(void) const
  *=============================================================================================*/
 void CollectionClass::Free(void)
 {
-	for (int i=0; i<SubObjects.Count(); i++) {
-		SubObjects[i]->Set_Container(NULL);
-		SubObjects[i]->Release_Ref();
-		SubObjects[i] = NULL;
+	for (const auto& sub_object : SubObjects)
+	{
+		sub_object->Set_Container(NULL);
+		sub_object->Release_Ref();
 	}
-	SubObjects.Delete_All();
-	ProxyList.Delete_All ();
-
+	SubObjects.clear();
+	SubObjects.shrink_to_fit();
+	ProxyList.clear();
+	ProxyList.shrink_to_fit();
 	REF_PTR_RELEASE(SnapPoints);	
 }
 
@@ -350,8 +351,9 @@ int CollectionClass::Class_ID(void)	const
 int CollectionClass::Get_Num_Polys(void) const
 {
 	int pcount = 0;
-	for (int i=0; i<SubObjects.Count(); i++) {
-		pcount += SubObjects[i]->Get_Num_Polys();
+	for (const auto& sub_object : SubObjects)
+	{
+		pcount += sub_object->Get_Num_Polys();
 	}
 	return pcount;
 }
@@ -379,8 +381,9 @@ void CollectionClass::Render(RenderInfoClass & rinfo)
 		Update_Sub_Object_Transforms();
 	}
 
-	for (int i=0; i<SubObjects.Count(); i++) {
-		SubObjects[i]->Render(rinfo);
+	for (const auto& sub_object : SubObjects)
+	{
+		sub_object->Render(rinfo);
 	}
 }
 
@@ -407,8 +410,9 @@ void CollectionClass::Special_Render(SpecialRenderInfoClass & rinfo)
 		Update_Sub_Object_Transforms();
 	}
 
-	for (int i=0; i<SubObjects.Count(); i++) {
-		SubObjects[i]->Special_Render(rinfo);
+	for (const auto& sub_object : SubObjects)
+	{
+		sub_object->Special_Render(rinfo);
 	}
 }
 
@@ -464,7 +468,7 @@ void CollectionClass::Set_Position(const Vector3 &v)
  *=============================================================================================*/
 int CollectionClass::Get_Num_Sub_Objects(void) const
 {
-	return SubObjects.Count();
+	return SubObjects.size();
 }
 
 
@@ -507,13 +511,13 @@ int CollectionClass::Add_Sub_Object(RenderObjClass * subobj)
 	subobj->Add_Ref();
 	subobj->Set_Container(this);
 	subobj->Set_Transform(Transform);
-	int res = SubObjects.Add(subobj);
+	SubObjects.push_back(subobj);
 	Update_Sub_Object_Bits();
 	Update_Obj_Space_Bounding_Volumes();
 	if (Is_In_Scene()) {
 		subobj->Notify_Added(Scene);
 	}
-	return res;
+	return true;
 }
 
 
@@ -532,31 +536,30 @@ int CollectionClass::Add_Sub_Object(RenderObjClass * subobj)
 int CollectionClass::Remove_Sub_Object(RenderObjClass * robj)
 {
 	if (robj == NULL) return 0;
-	
-	int res = 0;
 
-	Matrix3D tm = Get_Transform();
+	const auto& result = std::find(SubObjects.begin(), SubObjects.end(), robj);
 
-	for (int i=0; i<SubObjects.Count(); i++) {
-		if (robj == SubObjects[i]) {
-			
-			if (Is_In_Scene()) {
-				SubObjects[i]->Notify_Removed(Scene);
-			}
-			SubObjects[i]->Set_Container(NULL);
-			SubObjects[i]->Set_Transform(tm);
-			SubObjects[i]->Release_Ref();
-			res = SubObjects.Delete(i);
-			break;
-		}
+	if (result == SubObjects.end())
+		return false;
+
+	auto& sub_object = *result;
+	const Matrix3D tm = Get_Transform();
+
+	if (Is_In_Scene())
+	{
+		sub_object->Notify_Removed(Scene);
 	}
 
-	if (res != 0) {
-		Update_Sub_Object_Bits();
-		Update_Obj_Space_Bounding_Volumes();
-	}
+	sub_object->Set_Container(NULL);
+	sub_object->Set_Transform(tm);
+	sub_object->Release_Ref();
 
-	return res;
+	SubObjects.erase(result);
+
+	Update_Sub_Object_Bits();
+	Update_Obj_Space_Bounding_Volumes();
+
+	return true;
 }
 
 
@@ -575,8 +578,9 @@ int CollectionClass::Remove_Sub_Object(RenderObjClass * robj)
 bool CollectionClass::Cast_Ray(RayCollisionTestClass & raytest)
 {
 	bool res = false;
-	for (int i=0; i<SubObjects.Count(); i++) {
-		res |= SubObjects[i]->Cast_Ray(raytest);
+	for (const auto& sub_object : SubObjects)
+	{
+		res |= sub_object->Cast_Ray(raytest);
 	}
 	return res;
 }
@@ -597,8 +601,9 @@ bool CollectionClass::Cast_Ray(RayCollisionTestClass & raytest)
 bool CollectionClass::Cast_AABox(AABoxCollisionTestClass & boxtest)
 {
 	bool res = false;
-	for (int i=0; i<SubObjects.Count(); i++) {
-		res |= SubObjects[i]->Cast_AABox(boxtest);
+	for (const auto& sub_object : SubObjects)
+	{
+		res |= sub_object->Cast_AABox(boxtest);
 	}
 	return res;
 }
@@ -619,8 +624,9 @@ bool CollectionClass::Cast_AABox(AABoxCollisionTestClass & boxtest)
 bool CollectionClass::Cast_OBBox(OBBoxCollisionTestClass & boxtest)
 {
 	bool res = false;
-	for (int i=0; i<SubObjects.Count(); i++) {
-		res |= SubObjects[i]->Cast_OBBox(boxtest);
+	for (const auto& sub_object : SubObjects)
+	{
+		res |= sub_object->Cast_OBBox(boxtest);
 	}
 	return res;
 }
@@ -641,8 +647,9 @@ bool CollectionClass::Cast_OBBox(OBBoxCollisionTestClass & boxtest)
 bool CollectionClass::Intersect_AABox(AABoxIntersectionTestClass & boxtest)
 {
 	bool res = false;
-	for (int i=0; i<SubObjects.Count(); i++) {
-		res |= SubObjects[i]->Intersect_AABox(boxtest);
+	for (const auto& sub_object : SubObjects)
+	{
+		res |= sub_object->Intersect_AABox(boxtest);
 	}
 	return res;
 }
@@ -663,8 +670,9 @@ bool CollectionClass::Intersect_AABox(AABoxIntersectionTestClass & boxtest)
 bool CollectionClass::Intersect_OBBox(OBBoxIntersectionTestClass & boxtest)
 {
 	bool res = false;
-	for (int i=0; i<SubObjects.Count(); i++) {
-		res |= SubObjects[i]->Intersect_OBBox(boxtest);
+	for (const auto& sub_object : SubObjects)
+	{
+		res |= sub_object->Intersect_OBBox(boxtest);
 	}
 	return res;
 }
@@ -719,9 +727,12 @@ void CollectionClass::Get_Obj_Space_Bounding_Box(AABoxClass & box) const
  *=============================================================================================*/
 int CollectionClass::Snap_Point_Count(void)
 {
-	if (SnapPoints) {
-		return SnapPoints->Count();
-	} else {
+	if (SnapPoints)
+	{
+		return SnapPoints->size();
+	}
+	else
+	{
 		return 0;
 	}
 }
@@ -767,8 +778,9 @@ void CollectionClass::Get_Snap_Point(int index,Vector3 * set)
  *=============================================================================================*/
 void CollectionClass::Scale(float scale)
 {
-	for (int i=0; i<SubObjects.Count(); i++) {
-		SubObjects[i]->Scale(scale);
+	for (const auto& sub_object : SubObjects)
+	{
+		sub_object->Scale(scale);
 	}
 }
 
@@ -787,8 +799,9 @@ void CollectionClass::Scale(float scale)
  *=============================================================================================*/
 void CollectionClass::Scale(float scalex, float scaley, float scalez)
 {
-	for (int i=0; i<SubObjects.Count(); i++) {
-		SubObjects[i]->Scale(scalex,scaley,scalez);
+	for (const auto& sub_object : SubObjects)
+	{
+		sub_object->Scale(scalex,scaley,scalez);
 	}
 }
 
@@ -807,8 +820,7 @@ void CollectionClass::Scale(float scalex, float scaley, float scalez)
  *=============================================================================================*/
 void CollectionClass::Update_Obj_Space_Bounding_Volumes(void)
 {
-	int i;
-	if (SubObjects.Count() <= 0) {
+	if (SubObjects.size() == 0) {
 		BoundSphere = SphereClass(Vector3(0,0,0),0);
 		BoundBox.Center.Set(0,0,0);
 		BoundBox.Extent.Set(0,0,0);
@@ -820,8 +832,9 @@ void CollectionClass::Update_Obj_Space_Bounding_Volumes(void)
 
 	// loop through all sub-objects, combining their bounding spheres.
 	BoundSphere = SubObjects[0]->Get_Bounding_Sphere();
-	for (i=1; i < SubObjects.Count(); i++) {
-		BoundSphere.Add_Sphere(SubObjects[i]->Get_Bounding_Sphere());				
+	for (const auto& sub_object : SubObjects)
+	{
+		BoundSphere.Add_Sphere(sub_object->Get_Bounding_Sphere());
 	}
 
 	// loop through the sub-objects, computing a box in the root coordinate 
@@ -829,8 +842,9 @@ void CollectionClass::Update_Obj_Space_Bounding_Volumes(void)
 	// root coordinate system to identity for this.
 	MinMaxAABoxClass box(Vector3(FLT_MAX,FLT_MAX,FLT_MAX),Vector3(-FLT_MAX,-FLT_MAX,-FLT_MAX));
 	
-	for (i=0; i < SubObjects.Count(); i++) {
-		box.Add_Box(SubObjects[i]->Get_Bounding_Box());
+	for (const auto& sub_object : SubObjects)
+	{
+		box.Add_Box(sub_object->Get_Bounding_Box());
 	}
 
 	BoundBox.Init(box);
@@ -860,9 +874,10 @@ void CollectionClass::Update_Obj_Space_Bounding_Volumes(void)
 void CollectionClass::Update_Sub_Object_Transforms(void)
 {
 	RenderObjClass::Update_Sub_Object_Transforms();
-	for (int i=0; i<SubObjects.Count(); i++) {
-		SubObjects[i]->Set_Transform(Transform);
-		SubObjects[i]->Update_Sub_Object_Transforms();
+	for (const auto& sub_object : SubObjects)
+	{
+		sub_object->Set_Transform(Transform);
+		sub_object->Update_Sub_Object_Transforms();
 	}
 	Set_Sub_Object_Transforms_Dirty(false);
 }
@@ -884,8 +899,8 @@ bool CollectionClass::Get_Proxy (int index, ProxyClass &proxy) const
 {
 	bool retval = false;
 
-	if (index >= 0 && index < ProxyList.Count ()) {
-		
+	if (index >= 0 && index < ProxyList.size())
+	{
 		//
 		// Return the proxy information to the caller
 		//
@@ -911,7 +926,7 @@ bool CollectionClass::Get_Proxy (int index, ProxyClass &proxy) const
  *=============================================================================================*/
 int CollectionClass::Get_Proxy_Count (void) const
 {
-	return ProxyList.Count ();
+	return ProxyList.size();
 }
 
 
@@ -965,11 +980,12 @@ CollectionDefClass::~CollectionDefClass(void)
  *=============================================================================================*/
 void CollectionDefClass::Free(void)
 {
-	for (int i=0; i<ObjectNames.Count(); i++) {
-		delete[] ObjectNames[i];
+	for (const auto& object_name : ObjectNames)
+	{
+		delete[] object_name;
 	}
-
-	ProxyList.Delete_All ();
+	ProxyList.clear();
+	ProxyList.shrink_to_fit();
 }
 
 
@@ -1015,7 +1031,7 @@ WW3DErrorType CollectionDefClass::Load(ChunkLoadClass & cload)
 	if (!cload.Close_Chunk()) goto Error;
 
 	strncpy(Name,header.Name,W3D_NAME_LEN);
-	ObjectNames.Resize(header.RenderObjectCount);
+	ObjectNames.reserve(header.RenderObjectCount);
 	
 	while (cload.Open_Chunk()) {
 		switch (cload.Cur_Chunk_ID()) 
@@ -1025,7 +1041,7 @@ WW3DErrorType CollectionDefClass::Load(ChunkLoadClass & cload)
 				WWASSERT(cload.Cur_Chunk_Length() > 0);
 				char * name = W3DNEWARRAY char [cload.Cur_Chunk_Length()];
 				cload.Read(name,cload.Cur_Chunk_Length());
-				ObjectNames.Add(name);
+				ObjectNames.push_back(name);
 				break;
 			}
 
@@ -1047,7 +1063,7 @@ WW3DErrorType CollectionDefClass::Load(ChunkLoadClass & cload)
 										  info.transform[0][2], info.transform[1][2], info.transform[2][2], info.transform[3][2]);
 
 				// Add this placeholder to our list
-				ProxyList.Add (ProxyClass (name, transform));
+				ProxyList.push_back(ProxyClass (name, transform));
 
 				// Free the name array
 				delete [] name;

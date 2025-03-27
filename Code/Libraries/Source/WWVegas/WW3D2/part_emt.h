@@ -40,6 +40,10 @@
 #ifndef PART_EMT_H
 #define PART_EMT_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "rendobj.h"
 #include "random.h"
 #include "part_buf.h"
@@ -275,7 +279,7 @@ class ParticleEmitterClass : public RenderObjClass
 	protected:
 
 		// Used to build a list of filenames this emitter is dependent on
-		virtual void			Add_Dependencies_To_List (DynamicVectorClass<StringClass> &file_list, bool textures_only = false);
+		virtual void Add_Dependencies_To_List (std::vector<StringClass>& file_list, bool textures_only = false);
 		
 		// This method is called each time the visiblity state of the emitter changes.
 		virtual void			Update_On_Visibilty (void);

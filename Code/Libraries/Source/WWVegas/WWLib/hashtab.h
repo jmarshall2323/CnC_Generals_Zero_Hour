@@ -68,7 +68,7 @@ private:
 	};
 		
 	// Dynamic Vector of the unique items:
-	DynamicVectorClass<HashItem>		Items;
+	std::vector<HashItem> Items;
 
 	// Hash table:
 	int										HashTableSize;
@@ -76,9 +76,6 @@ private:
 
 	// object which does the hashing for the type
 	HashCalculatorClass<T> *			HashCalculator;
-
-	friend class VectorClass;
-	friend class DynamicVectorClass;
 };
 
 

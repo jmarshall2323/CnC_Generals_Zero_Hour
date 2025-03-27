@@ -43,7 +43,9 @@
 #define W3DEXCLUSIONLIST_H
 
 #include "always.h"
-#include "vector.h"
+
+#include <vector>
+
 #include "wwstring.h"
 #include "hashtemplate.h"
 
@@ -63,7 +65,7 @@ class HAnimClass;
 class W3DExclusionListClass
 {
 public:
-	W3DExclusionListClass(const DynamicVectorClass<StringClass> & names);
+	W3DExclusionListClass(const std::vector<StringClass> & names);
 	~W3DExclusionListClass(void);
 	
 	bool	Is_Excluded(PrototypeClass * proto) const;
@@ -75,7 +77,7 @@ public:
 protected:
 
 
-	const DynamicVectorClass<StringClass> &	Names;
+	const std::vector<StringClass>& Names;
 	HashTemplateClass<StringClass,int>			NameHash;
 };
 

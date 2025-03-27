@@ -40,6 +40,8 @@
 #ifndef PART_BUF_H
 #define PART_BUF_H
 
+#include "always.h"
+
 #include "rendobj.h"
 #include "pointgr.h"
 #include "seglinerenderer.h"

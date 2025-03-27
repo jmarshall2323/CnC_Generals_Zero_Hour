@@ -210,10 +210,6 @@ WW3DAssetManager::WW3DAssetManager(void) :
 	assert(TheInstance == NULL);
 	TheInstance = this;
 
-	// set the growth rates
-	PrototypeLoaders.Set_Growth_Step(PROTOLOADERS_GROWTH_RATE);
-	Prototypes.Set_Growth_Step(PROTOTYPES_GROWTH_RATE);
-
 	// install the default loaders
 	Register_Prototype_Loader(&_MeshLoader);
 	Register_Prototype_Loader(&_HModelLoader);
@@ -441,17 +437,14 @@ void WW3DAssetManager::Free_Assets(void)
 	WWPROFILE( "WW3DAssetManager::Free_Assets" );
 
 	// delete all of the prototypes
-	int count = Prototypes.Count();
-	while (count-- > 0) {
-
-		PrototypeClass * proto = Prototypes[count];
-		Prototypes.Delete(count);
-
-		if (proto != NULL) {
-			proto->DeleteSelf();
+	for (const auto& prototype : Prototypes) {
+		if (prototype)
+		{
+			prototype->DeleteSelf();
 		}
 	}
-	
+	Prototypes.clear();
+
 	// clear the prototype hash table
 	memset(PrototypeHashTable,0,sizeof(PrototypeClass *) * PROTOTYPE_HASH_TABLE_SIZE);	
 
@@ -507,7 +500,7 @@ void WW3DAssetManager::Release_Unused_Assets(void)
  * HISTORY:                                                                                    *
  *   12/12/2002 GH  : Created.                                                                 * 
  *=============================================================================================*/
-void WW3DAssetManager::Free_Assets_With_Exclusion_List(const DynamicVectorClass<StringClass> & exclusion_names)
+void WW3DAssetManager::Free_Assets_With_Exclusion_List(const std::vector<StringClass>& exclusion_names)
 {
 	// Reset the dx8 mesh renderer
 	TheDX8MeshRenderer.Invalidate();
@@ -517,37 +510,40 @@ void WW3DAssetManager::Free_Assets_With_Exclusion_List(const DynamicVectorClass<
    
 	// temporary vector to hold the prototypes that get excluded from being deleted.
 	// grow by the initial size so we don't waste lots of time re-allocating!
-	const int DEFAULT_EXCLUDE_ARRAY_SIZE = 8000;
-	DynamicVectorClass<PrototypeClass *> exclude_array(DEFAULT_EXCLUDE_ARRAY_SIZE);
-	exclude_array.Set_Growth_Step(DEFAULT_EXCLUDE_ARRAY_SIZE);
+	constexpr size_t DEFAULT_EXCLUDE_ARRAY_SIZE = 8000;
+	std::vector<PrototypeClass*> exclude_array;
+	exclude_array.reserve(DEFAULT_EXCLUDE_ARRAY_SIZE);
 
 	// iterate the array of prototypes saving each one that should be excluded from deletion
-	for (int i=0; i<Prototypes.Count(); i++) {
+	for (auto& prototype : Prototypes)
+	{
+		if (!prototype)
+			continue;
 
-		PrototypeClass * proto = Prototypes[i];
-		if (proto != NULL) {		
-
-			// If this prototype is excluded, copy the pointer, otherwise delete it.
-			if (exclusion_list.Is_Excluded(proto)) {
-				//WWDEBUG_SAY(("excluding %s\n",proto->Get_Name()));
-				exclude_array.Add(proto);
-			} else {
-				//WWDEBUG_SAY(("deleting %s\n",proto->Get_Name()));
-				proto->DeleteSelf();
-			}
-			Prototypes[i] = NULL;
+		// If this prototype is excluded, copy the pointer, otherwise delete it.
+		if (exclusion_list.Is_Excluded(prototype))
+		{
+			//WWDEBUG_SAY(("excluding %s\n", prototype->Get_Name()));
+			exclude_array.push_back(prototype);
 		}
+		else
+		{
+			//WWDEBUG_SAY(("deleting %s\n", prototype->Get_Name()));
+			prototype->DeleteSelf();
+		}
+
+		prototype = nullptr;
 	}
 	
 	// reset the array now that we've gotten rid of everything.
-	Prototypes.Reset_Active();
+	Prototypes.clear();
 
 	// clear the prototype hash table
 	memset(PrototypeHashTable,0,sizeof(PrototypeClass *) * PROTOTYPE_HASH_TABLE_SIZE);	
 
 	// re-add the prototypes that we saved
-	for (int i = 0; i<exclude_array.Count(); i++) {
-		Add_Prototype(exclude_array[i]);
+	for (const auto& exclude_entry : exclude_array) {
+		Add_Prototype(exclude_entry);
 	}
 
 	// delete all of the anims and trees
@@ -577,19 +573,20 @@ void WW3DAssetManager::Free_Assets_With_Exclusion_List(const DynamicVectorClass<
  * HISTORY:                                                                                    *
  *   12/12/2002 GH  : Created.                                                                 * 
  *=============================================================================================*/
-void WW3DAssetManager::Create_Asset_List(DynamicVectorClass<StringClass> & model_list)
+void WW3DAssetManager::Create_Asset_List(std::vector<StringClass>& model_list)
 {
-	for (int i=0; i<Prototypes.Count(); i++) 	{
+	for (auto& prototype : Prototypes)
+	{
+		if (!prototype)
+			continue;
+
 		// ok, we ignore all of the following:
 		// - sub objects, these will have a '.' in their name
 		// - munged objects, these will have # characters in their name
-		PrototypeClass * proto = Prototypes[i];
-		if (proto) {
-			const char * name = proto->Get_Name();
+		const char * name = prototype->Get_Name();
 
-			if ((strchr(name,'#') == NULL) && (strchr(name,'.') == NULL)) {
-				model_list.Add(StringClass(name));
-			}
+		if ((strchr(name,'#') == NULL) && (strchr(name,'.') == NULL)) {
+			model_list.push_back(StringClass(name));
 		}
 	}
 
@@ -1452,10 +1449,12 @@ FontCharsClass *	WW3DAssetManager::Get_FontChars( const char * name, int point_s
 	WWPROFILE( "WW3DAssetManager::Get_FontChars" );
 
 	// loop through and see if we already have the font chars and we can just return it.
-	for ( int i = 0; i < FontCharsList.Count(); i++ ) {
-		if ( FontCharsList[i]->Is_Font( name, point_size, is_bold ) ) {
-			FontCharsList[i]->Add_Ref();
-			return FontCharsList[i];
+	for (const auto& font_chars : FontCharsList)
+	{
+		if (font_chars->Is_Font(name, point_size, is_bold))
+		{
+			font_chars->Add_Ref();
+			return font_chars;
 		}
 	}
 
@@ -1463,7 +1462,7 @@ FontCharsClass *	WW3DAssetManager::Get_FontChars( const char * name, int point_s
 	FontCharsClass * font = NEW_REF( FontCharsClass, () );
 	font->Initialize_GDI_Font( name, point_size, is_bold );
 	font->Add_Ref();
-	FontCharsList.Add( font );			// add it to the list	
+	FontCharsList.push_back(font); // add it to the list
 	return font;							// return it
 }
 
@@ -1483,10 +1482,11 @@ FontCharsClass *	WW3DAssetManager::Get_FontChars( const char * name, int point_s
 void	WW3DAssetManager::Release_All_FontChars( void )
 {
 	// for each fontchars in the list, get it and release ref it
-	while ( FontCharsList.Count() ) {
-		FontCharsList[0]->Release_Ref();
-		FontCharsList.Delete( 0 );
+	for (const auto& font_char : FontCharsList)
+	{
+		font_char->Release_Ref();
 	}
+	FontCharsList.clear();
 }
 
 /***********************************************************************************************
@@ -1510,7 +1510,7 @@ void	WW3DAssetManager::Release_All_FontChars( void )
 void WW3DAssetManager::Register_Prototype_Loader(PrototypeLoaderClass * loader)
 {
 	WWASSERT(loader != NULL);
-	PrototypeLoaders.Add(loader);
+	PrototypeLoaders.push_back(loader);
 }
 
 
@@ -1530,10 +1530,11 @@ void WW3DAssetManager::Register_Prototype_Loader(PrototypeLoaderClass * loader)
  *=============================================================================================*/
 PrototypeLoaderClass * WW3DAssetManager::Find_Prototype_Loader(int chunk_id)
 {
-	for (int i=0; i<PrototypeLoaders.Count(); i++) {
-		PrototypeLoaderClass * loader = PrototypeLoaders[i];
-		if (loader && loader->Chunk_Type() == chunk_id) {
-			return loader;
+	for (const auto& prototype_lodaer : PrototypeLoaders)
+	{
+		if (prototype_lodaer && prototype_lodaer->Chunk_Type() == chunk_id)
+		{
+			return prototype_lodaer;
 		}
 	}
 	return NULL;
@@ -1560,7 +1561,7 @@ void WW3DAssetManager::Add_Prototype(PrototypeClass * newproto)
 	int hash = CRC_Stringi(newproto->Get_Name()) & PROTOTYPE_HASH_MASK;
 	newproto->friend_setNextHash(PrototypeHashTable[hash]);
 	PrototypeHashTable[hash] = newproto;
-	Prototypes.Add(newproto);
+	Prototypes.push_back(newproto);
 }
 
 
@@ -1611,7 +1612,7 @@ void WW3DAssetManager::Remove_Prototype(PrototypeClass *proto)
 		}
 
 		// Now remove this from our vector-array of prototypes
-		Prototypes.Delete (proto);
+		std::erase(Prototypes, proto);
 	}
 
 	return;
@@ -1691,12 +1692,13 @@ PrototypeClass * WW3DAssetManager::Find_Prototype(const char * name)
 
 bool RObjIterator::Is_Done(void)
 {
-	return !(Index < WW3DAssetManager::Get_Instance()->Prototypes.Count());
+	return !(Index < WW3DAssetManager::Get_Instance()->Prototypes.size());
 }
 
 const char * RObjIterator::Current_Item_Name(void)
 {
-	if (Index < WW3DAssetManager::Get_Instance()->Prototypes.Count()) {
+	if (Index < WW3DAssetManager::Get_Instance()->Prototypes.size())
+	{
 		return WW3DAssetManager::Get_Instance()->Prototypes[Index]->Get_Name();
 	} else {
 		return NULL;
@@ -1705,7 +1707,8 @@ const char * RObjIterator::Current_Item_Name(void)
 
 int RObjIterator::Current_Item_Class_ID(void)
 {
-	if (Index < WW3DAssetManager::Get_Instance()->Prototypes.Count()) {
+	if (Index < WW3DAssetManager::Get_Instance()->Prototypes.size())
+	{
 		return WW3DAssetManager::Get_Instance()->Prototypes[Index]->Get_Class_ID();
 	} else {
 		return -1;

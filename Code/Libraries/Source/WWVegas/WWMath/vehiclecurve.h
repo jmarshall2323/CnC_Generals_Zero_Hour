@@ -42,8 +42,11 @@
 #ifndef __VEHICLE_CURVE_H
 #define __VEHICLE_CURVE_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "curve.h"
-#include "vector.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,14 +151,12 @@ protected:
 
 	} ArcInfoStruct;
 
-	typedef DynamicVectorClass<ArcInfoStruct>	ARC_LIST;
-
 	///////////////////////////////////////////////////////////////////////////
 	//	Protected member data
 	///////////////////////////////////////////////////////////////////////////
 	bool			m_IsDirty;
 	float			m_Radius;
-	ARC_LIST		m_ArcList;	
+	std::vector<ArcInfoStruct> m_ArcList;
 
 	float			m_LastTime;
 	float			m_Sharpness;

@@ -88,15 +88,17 @@ enum
  *=============================================================================================*/
 void CatmullRomSpline3DClass::Update_Tangents(void)
 {
-	if (Keys.Count() < 2) {
-		for (int i=0; i<Keys.Count(); i++) {
+	if (Keys.size() < 2)
+	{
+		for (size_t i = 0; i < Keys.size(); i++)
+		{
 			Tangents[0].InTangent.Set(0,0,0);
 			Tangents[0].OutTangent.Set(0,0,0);
 		}
 	}
 
 	// first and last knot
-	int end = Keys.Count() - 1;
+	const size_t end = Keys.size() - 1;
 	Tangents[0].InTangent.Set(0,0,0);
 	Tangents[end].OutTangent.Set(0,0,0);
 
@@ -128,7 +130,8 @@ void CatmullRomSpline3DClass::Update_Tangents(void)
 	Tangents[0].OutTangent *= out_factor;
 
 	// inner knots
-	for (int i=1; i<Keys.Count()-1; i++) {
+	for (size_t i = 1; i < Keys.size()-1; i++)
+	{
 		Tangents[i].InTangent.X = 0.5f*(Keys[i+1].Point.X - Keys[i-1].Point.X);
 		Tangents[i].InTangent.Y = 0.5f*(Keys[i+1].Point.Y - Keys[i-1].Point.Y);
 		Tangents[i].InTangent.Z = 0.5f*(Keys[i+1].Point.Z - Keys[i-1].Point.Z);
@@ -234,8 +237,10 @@ bool CatmullRomSpline3DClass::Load(ChunkLoadClass &cload)
  *=============================================================================================*/
 void CatmullRomSpline1DClass::Update_Tangents(void)
 {
-	if (Keys.Count() < 2) {
-		for (int i=0; i<Keys.Count(); i++) {
+	if (Keys.size() < 2)
+	{
+		for (size_t i = 0; i < Keys.size(); i++)
+		{
 			Tangents[i].InTangent = 0.0f;
 			Tangents[i].OutTangent = 0.0f;
 		}
@@ -243,7 +248,7 @@ void CatmullRomSpline1DClass::Update_Tangents(void)
 	}
 
 	// first and last knot
-	int end = Keys.Count() - 1;
+	const size_t end = Keys.size() - 1;
 	Tangents[0].InTangent = 0.0f;
 	Tangents[end].OutTangent = 0.0f;
 
@@ -269,7 +274,8 @@ void CatmullRomSpline1DClass::Update_Tangents(void)
 	Tangents[0].OutTangent *= out_factor;
 
 	// inner knots
-	for (int i=1; i<Keys.Count()-1; i++) {
+	for (size_t i = 1; i < Keys.size() - 1; i++)
+	{
 		Tangents[i].InTangent = 0.5f*(Keys[i+1].Point - Keys[i-1].Point);
 		Tangents[i].OutTangent = Tangents[i].InTangent;
 

@@ -106,13 +106,13 @@ TwiddlerClass::Twiddle (void) const
 {
 	DefinitionClass *definition = NULL;
 
-	if (m_DefinitionList.Count () > 0) {
+	if (m_DefinitionList.size() > 0) {
 		
 		//
 		//	Get a random index into our definition list
 		//
 		RandomClass randomizer (::GetTickCount ());
-		int index = randomizer (0, m_DefinitionList.Count () - 1);
+		const int index = randomizer (0, m_DefinitionList.size() - 1);
 
 		//
 		//	Lookup the definition this entry represents
@@ -225,12 +225,11 @@ TwiddlerClass::Save_Variables (ChunkSaveClass &csave)
 {
 	WRITE_MICRO_CHUNK (csave, VARID_INDIRECT_CLASSID, m_IndirectClassID)
 
-	for (int index = 0; index < m_DefinitionList.Count (); index ++) {
-		
+	for (const auto& def_id : m_DefinitionList)
+	{
 		//
 		//	Save this definition ID to the chunk
 		//
-		int def_id = m_DefinitionList[index];
 		WRITE_MICRO_CHUNK (csave, VARID_DEFINTION_ID, def_id)
 	}	
 	
@@ -249,7 +248,7 @@ TwiddlerClass::Load_Variables (ChunkLoadClass &cload)
 	//
 	//	Start fresh
 	//
-	m_DefinitionList.Delete_All ();
+	m_DefinitionList.clear();
 
 	//
 	//	Loop through all the microchunks that define the variables
@@ -267,7 +266,7 @@ TwiddlerClass::Load_Variables (ChunkLoadClass &cload)
 				//
 				int def_id = 0;
 				cload.Read (&def_id, sizeof (def_id));
-				m_DefinitionList.Add (def_id);
+				m_DefinitionList.push_back(def_id);
 			}
 			break;
 		}

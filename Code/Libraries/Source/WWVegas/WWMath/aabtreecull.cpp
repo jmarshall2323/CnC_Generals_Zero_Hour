@@ -350,7 +350,7 @@ void AABTreeCullSystemClass::Re_Partition(void)
 
 }
 
-void AABTreeCullSystemClass::Re_Partition(const AABoxClass & bounds,SimpleDynVecClass<AABoxClass> & boxes)
+void AABTreeCullSystemClass::Re_Partition(const AABoxClass& bounds, std::vector<AABoxClass>& boxes)
 {
 	/*
 	** transfer all objects to a temporary node
@@ -1112,10 +1112,10 @@ void AABTreeNodeClass::Partition(void)
 	/*
 	** Create an array of the bounding boxes of our objects
 	*/
-	SimpleDynVecClass<AABoxClass> boxes(obj_count);
+	std::vector<AABoxClass> boxes(obj_count);
 	CullableClass * obj = Object;
 	while (obj != NULL) {
-		boxes.Add(obj->Get_Cull_Box());		
+		boxes.push_back(obj->Get_Cull_Box());
 		obj = get_next_object(obj);
 	}
 
@@ -1125,7 +1125,8 @@ void AABTreeNodeClass::Partition(void)
 	*/
 	SplitChoiceStruct sc;
 	Select_Splitting_Plane(&sc,boxes);
-	boxes.Resize(0);
+	boxes.clear();
+	boxes.shrink_to_fit();
 	
 	/*
 	** If there was no good split, just leave all of
@@ -1222,14 +1223,14 @@ void AABTreeNodeClass::Split_Objects(const AABTreeNodeClass::SplitChoiceStruct &
 ** Partitioning code which generates the tree based on a set of input boxes
 **
 ******************************************************************************************/
-void AABTreeNodeClass::Partition(const AABoxClass & bounds,SimpleDynVecClass<AABoxClass> & boxes)
+void AABTreeNodeClass::Partition(const AABoxClass& bounds, std::vector<AABoxClass>& boxes)
 {
 	Box = bounds;
 
 	/*
 	** if we're down to only 1 box, we're done
 	*/
-	if (boxes.Count() <= 1) return;
+	if (boxes.size() <= 1) return;
 
 	/*
 	** Select and assign the splitting plane
@@ -1249,63 +1250,67 @@ void AABTreeNodeClass::Partition(const AABoxClass & bounds,SimpleDynVecClass<AAB
 	** Split the boxes
 	** Deallocate the input box array to conserve RAM
 	*/
-	SimpleDynVecClass<AABoxClass> frontboxes(sc.FrontCount);
-	SimpleDynVecClass<AABoxClass> backboxes(sc.BackCount);
+	std::vector<AABoxClass> frontboxes(sc.FrontCount);
+	std::vector<AABoxClass> backboxes(sc.BackCount);
 	Split_Boxes(sc,boxes,frontboxes,backboxes);
-	boxes.Delete_All();
+	boxes.clear();
+	boxes.shrink_to_fit();
 
 	/*
 	** Build a front tree if necessary.
 	*/
-	if (frontboxes.Count() > 0) {
+	if (frontboxes.size() > 0)
+	{
 		Front = new AABTreeNodeClass;
 		Front->Parent = this;
 		Front->Partition(sc.FrontBox,frontboxes);
-	} else {
+	}
+	else
+	{
 		Front = NULL;
 	}
 	
 	/*
 	** Build a back tree if necessary. 
 	*/
-	if (backboxes.Count() > 0) {
+	if (backboxes.size() > 0)
+	{
 		Back = new AABTreeNodeClass;
 		Back->Parent = this;
 		Back->Partition(sc.BackBox,backboxes);
-	} else {
+	}
+	else
+	{
 		Back = NULL;
 	}
 }
 
 void AABTreeNodeClass::Split_Boxes
 (
-	const AABTreeNodeClass::SplitChoiceStruct & sc,
-	SimpleDynVecClass<AABoxClass> & boxes,
-	SimpleDynVecClass<AABoxClass> & frontboxes,
-	SimpleDynVecClass<AABoxClass> & backboxes
+	const AABTreeNodeClass::SplitChoiceStruct& sc,
+	const std::vector<AABoxClass>& boxes,
+	std::vector<AABoxClass>& frontboxes,
+	std::vector<AABoxClass>& backboxes
 )
 {
-	WWASSERT(boxes.Count() == sc.FrontCount + sc.BackCount);
+	WWASSERT(boxes.size() == sc.FrontCount + sc.BackCount);
 
 	// copy each box in the input array into the appropriate output array
-	for (int i=0; i<boxes.Count(); i++) {
-		
-		const AABoxClass & box = boxes[i];
-
-		if (CollisionMath::Overlap_Test(sc.Plane,box.Center) == CollisionMath::FRONT) {
-
-			frontboxes.Add(box);
-
-		} else {
-
-			backboxes.Add(box);
-
+	for (const auto& box : boxes)
+	{
+		if (CollisionMath::Overlap_Test(sc.Plane, box.Center) == CollisionMath::FRONT)
+		{
+			frontboxes.push_back(box);
+		}
+		else
+		{
+			backboxes.push_back(box);
 		}
 	}
 
 	// when we are all done, the counts should match. 
-	WWASSERT(frontboxes.Count() == sc.FrontCount);
-	WWASSERT(backboxes.Count() == sc.BackCount);
+	WWASSERT(frontboxes.size() == sc.FrontCount);
+	WWASSERT(backboxes.size() == sc.BackCount);
 }
 
 
@@ -1318,18 +1323,14 @@ void AABTreeNodeClass::Split_Boxes
 **
 ******************************************************************************************/
 
-void AABTreeNodeClass::Select_Splitting_Plane
-(
-	SplitChoiceStruct * sc,
-	SimpleDynVecClass<AABoxClass> & boxes
-)
+void AABTreeNodeClass::Select_Splitting_Plane(SplitChoiceStruct* sc, const std::vector<AABoxClass>& boxes)
 {
 	const int NUM_TRYS = 300;
 
 	/*
 	** Try putting axis-aligned planes through some random vertices
 	*/
-	int objcount = boxes.Count();	
+	const int objcount = boxes.size();
 	int trys = 0;
 	for (trys = 0; trys < MIN(NUM_TRYS,objcount); trys++) {
 
@@ -1374,20 +1375,14 @@ void AABTreeNodeClass::Select_Splitting_Plane
 	}
 }
 
-void AABTreeNodeClass::Select_Splitting_Plane_Brute_Force
-(
-	AABTreeNodeClass::SplitChoiceStruct * sc,
-	SimpleDynVecClass<AABoxClass> & boxes
-)
+void AABTreeNodeClass::Select_Splitting_Plane_Brute_Force(AABTreeNodeClass::SplitChoiceStruct* sc, const std::vector<AABoxClass>& boxes)
 { 
 	/*
 	** Try putting axis-aligned planes along each face of each box
 	*/
-	int objcount = boxes.Count();	
-	for (int obj_index = 0; obj_index < objcount; obj_index++) {
-
+	for (const auto& box : boxes)
+	{
 		AAPlaneClass plane;
-		const AABoxClass & box = boxes[obj_index];
 
 		/*
 		** Try each face of this box 
@@ -1421,26 +1416,20 @@ void AABTreeNodeClass::Select_Splitting_Plane_Brute_Force
 	*/
 #ifdef WWDEBUG
 	if (sc->Cost == FLT_MAX) {		
-		WWDEBUG_SAY(("Unable to split node!  objcount = %d. (%.2f,%.2f,%.2f)\r\n",objcount,Box.Center.X, Box.Center.Y, Box.Center.Z));
+		WWDEBUG_SAY(("Unable to split node!  boxes count = %d. (%.2f,%.2f,%.2f)\r\n", boxes.size(), Box.Center.X, Box.Center.Y, Box.Center.Z));
 	}
 #endif
 }
 
 
-void AABTreeNodeClass::Compute_Score
-(
-	AABTreeNodeClass::SplitChoiceStruct * sc,
-	SimpleDynVecClass<AABoxClass> & boxes
-)
+void AABTreeNodeClass::Compute_Score(AABTreeNodeClass::SplitChoiceStruct* sc, const std::vector<AABoxClass>& boxes)
 {
 	/*
 	** Suitability of a plane as a partition plane is based on the following factors:
 	** - How many "tiles" are on each side of the plane,
 	*/
-	for (int i=0; i<boxes.Count(); i++) {
-
-		const AABoxClass & box = boxes[i];
-
+	for (const auto& box : boxes)
+	{
 		if (CollisionMath::Overlap_Test(sc->Plane,box.Center) == CollisionMath::FRONT) {
 
 			sc->FrontCount++;	

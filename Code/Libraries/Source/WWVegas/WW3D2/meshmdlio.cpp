@@ -76,6 +76,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "meshmdl.h"
+
+#include <vector>
+
 #include "aabtree.h"
 #include "matinfo.h"
 #include "vertmaterial.h"
@@ -86,7 +89,6 @@
 #include "w3d_file.h"
 #include "w3d_util.h"
 #include "assetmgr.h"
-#include "simplevec.h"
 #include "realcrc.h"
 #include "GameRenderer.h"
 
@@ -129,9 +131,9 @@ private:
 	VertexMaterialClass *	Peek_Vertex_Material(int index)								{ return VertexMaterials[index]; }
 	TextureClass *				Peek_Texture(int index)											{ return Textures[index]; }
 	
-	int							Shader_Count(void)												{ return Shaders.Count(); }
-	int							Vertex_Material_Count(void)									{ return VertexMaterials.Count(); }
-	int							Texture_Count(void)												{ return Textures.Count(); }
+	int Shader_Count(void) { return Shaders.size(); }
+	int Vertex_Material_Count(void) { return VertexMaterials.size(); }
+	int Texture_Count(void) { return Textures.size(); }
 
 	/*
 	** Legacy material support.  
@@ -182,11 +184,11 @@ private:
 	int							CurPass;
 	int							CurTexStage;
 
-	DynamicVectorClass < LegacyMaterialClass * >		LegacyMaterials;
-	DynamicVectorClass < ShaderClass >					Shaders;
-	DynamicVectorClass < VertexMaterialClass * >		VertexMaterials;
-	DynamicVectorClass < unsigned long >				VertexMaterialCrcs;
-	DynamicVectorClass < TextureClass * >				Textures;			
+	std::vector <LegacyMaterialClass*> LegacyMaterials;
+	std::vector <ShaderClass> Shaders;
+	std::vector <VertexMaterialClass*> VertexMaterials;
+	std::vector <unsigned long> VertexMaterialCrcs;
+	std::vector <TextureClass*> Textures;
 
 	/*
 	** Alternate material data.  Any alternate material data will be loaded into 
@@ -197,7 +199,7 @@ private:
 	*/
 	MeshMatDescClass											AlternateMatDesc;
 
-	SimpleVecClass<Vector2>									TempUVArray;
+	std::vector<Vector2> TempUVArray;
 
 	/*
 	** Record when we load the DIG chunk
@@ -1934,20 +1936,21 @@ MeshLoadContextClass::MeshLoadContextClass(void)
  *=============================================================================================*/
 MeshLoadContextClass::~MeshLoadContextClass(void)
 {
-	int i;
-
 	if (TexCoords != NULL) {
 		delete TexCoords;
 		TexCoords = NULL;
 	}
-	for (i=0; i<Textures.Count(); i++) {
-		Textures[i]->Release_Ref();
+	for (auto& tex : Textures)
+	{
+		tex->Release_Ref();
 	}
-	for (i=0; i<VertexMaterials.Count(); i++) {
-		VertexMaterials[i]->Release_Ref();
+	for (auto& vmat : VertexMaterials)
+	{
+		vmat->Release_Ref();
 	}
-	for (i=0; i<LegacyMaterials.Count(); i++) {
-		delete LegacyMaterials[i];
+	for (auto& lmat : LegacyMaterials)
+	{
+		delete lmat;
 	}
 }
 
@@ -1989,8 +1992,8 @@ W3dTexCoordStruct * MeshLoadContextClass::Get_Texcoord_Array(void)
  *=============================================================================================*/
 int MeshLoadContextClass::Add_Shader(ShaderClass shader)								
 { 
-	int index = Shaders.Count();
-	Shaders.Add(shader); 
+	int index = Shaders.size();
+	Shaders.push_back(shader);
 	return index;
 }
 
@@ -2011,8 +2014,8 @@ int MeshLoadContextClass::Add_Vertex_Material(VertexMaterialClass * vmat)
 { 
 	WWASSERT(vmat != NULL);
 	vmat->Add_Ref();
-	int index = VertexMaterials.Count();
-	VertexMaterials.Add(vmat); 
+	int index = VertexMaterials.size();
+	VertexMaterials.push_back(vmat);
 	return index;
 }
 
@@ -2033,8 +2036,8 @@ int MeshLoadContextClass::Add_Texture(TextureClass * tex)
 { 
 	WWASSERT(tex != NULL);
 	tex->Add_Ref();
-	int index = Textures.Count();
-	Textures.Add(tex); 
+	int index = Textures.size();
+	Textures.push_back(tex);
 	return index;
 }
 
@@ -2061,10 +2064,12 @@ void MeshLoadContextClass::Add_Legacy_Material(ShaderClass shader,VertexMaterial
 
 	// add the shader if it is unique
 	int si = 0;
-	for (si = 0; si<Shaders.Count(); si++) {
+	for (si = 0; si < Shaders.size(); si++)
+	{
 		if (Shaders[si] == shader) break;
 	}
-	if (si == Shaders.Count()) {
+	if (si == Shaders.size())
+	{
 		mat->ShaderIdx = Add_Shader(shader);
 	} else {
 		mat->ShaderIdx = si;
@@ -2076,13 +2081,15 @@ void MeshLoadContextClass::Add_Legacy_Material(ShaderClass shader,VertexMaterial
 	} else {
 		unsigned long crc = vmat->Get_CRC();	
 		int vi = 0;
-		for (vi=0; vi<VertexMaterialCrcs.Count(); vi++) {
+		for (vi = 0; vi < VertexMaterialCrcs.size(); vi++)
+		{
 			if (VertexMaterialCrcs[vi] == crc) break;
 		}
-		if (vi == VertexMaterials.Count()) {
+		if (vi == VertexMaterials.size())
+		{
 			mat->VertexMaterialIdx = Add_Vertex_Material(vmat);
-			VertexMaterialCrcs.Add(crc);
-			WWASSERT(VertexMaterialCrcs.Count() == VertexMaterials.Count());
+			VertexMaterialCrcs.push_back(crc);
+			WWASSERT(VertexMaterialCrcs.size() == VertexMaterials.size());
 		} else {
 			mat->VertexMaterialIdx = vi;
 		}
@@ -2093,18 +2100,20 @@ void MeshLoadContextClass::Add_Legacy_Material(ShaderClass shader,VertexMaterial
 		mat->TextureIdx = -1;
 	} else {
 		int ti = 0;
-		for (ti =0; ti<Textures.Count(); ti++) {
+		for (ti = 0; ti < Textures.size(); ti++)
+		{
 			if (Textures[ti] == tex) break;
 			if (stricmp(Textures[ti]->Get_Texture_Name(),tex->Get_Texture_Name()) == 0) break;
 		}
-		if (ti == Textures.Count()) {
+		if (ti == Textures.size())
+		{
 			mat->TextureIdx = Add_Texture(tex);
 		} else {
 			mat->TextureIdx = ti;
 		}
 	}
 
-	LegacyMaterials.Add(mat);
+	LegacyMaterials.push_back(mat);
 }
 
 
@@ -2126,7 +2135,7 @@ void MeshLoadContextClass::Add_Legacy_Material(ShaderClass shader,VertexMaterial
 ShaderClass MeshLoadContextClass::Peek_Legacy_Shader(int legacy_material_index)
 {
 	WWASSERT(legacy_material_index >= 0);
-	WWASSERT(legacy_material_index < LegacyMaterials.Count());
+	WWASSERT(legacy_material_index < LegacyMaterials.size());
 	int si = LegacyMaterials[legacy_material_index]->ShaderIdx;
 	return Peek_Shader(si);
 }
@@ -2147,7 +2156,7 @@ ShaderClass MeshLoadContextClass::Peek_Legacy_Shader(int legacy_material_index)
 VertexMaterialClass * MeshLoadContextClass::Peek_Legacy_Vertex_Material(int legacy_material_index)
 {
 	WWASSERT(legacy_material_index >= 0);
-	WWASSERT(legacy_material_index < LegacyMaterials.Count());
+	WWASSERT(legacy_material_index < LegacyMaterials.size());
 	int vi = LegacyMaterials[legacy_material_index]->VertexMaterialIdx;
 	if (vi != -1) {
 		return Peek_Vertex_Material(vi);
@@ -2172,7 +2181,7 @@ VertexMaterialClass * MeshLoadContextClass::Peek_Legacy_Vertex_Material(int lega
 TextureClass * MeshLoadContextClass::Peek_Legacy_Texture(int legacy_material_index)
 {
 	WWASSERT(legacy_material_index >= 0);
-	WWASSERT(legacy_material_index < LegacyMaterials.Count());
+	WWASSERT(legacy_material_index < LegacyMaterials.size());
 	int ti = LegacyMaterials[legacy_material_index]->TextureIdx;
 	if (ti != -1) {
 		return Peek_Texture(ti);
@@ -2184,8 +2193,8 @@ TextureClass * MeshLoadContextClass::Peek_Legacy_Texture(int legacy_material_ind
 
 Vector2 * MeshLoadContextClass::Get_Temporary_UV_Array(int elementcount)
 {
-	TempUVArray.Uninitialised_Grow(elementcount);
-	return &(TempUVArray[0]);
+	TempUVArray.assign(elementcount, Vector2());
+	return TempUVArray.data();
 }
 
 

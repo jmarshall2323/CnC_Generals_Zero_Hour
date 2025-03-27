@@ -29,7 +29,6 @@
 
 #include "Lib/BaseType.h"
 #include "camera.h"
-#include "simplevec.h"
 #include "GameRenderer.h"
 #include "common/MapObject.h"
 #include "common/PerfTimer.h"

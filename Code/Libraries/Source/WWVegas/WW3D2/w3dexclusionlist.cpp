@@ -42,10 +42,11 @@
 #include "hanim.h"
 
 
-W3DExclusionListClass::W3DExclusionListClass(const DynamicVectorClass<StringClass> & names) : 
+W3DExclusionListClass::W3DExclusionListClass(const std::vector<StringClass>& names) :
 	Names(names) 
 {
-	for (int i=0; i<Names.Count(); i++) {
+	for (size_t i = 0; i < Names.size(); i++)
+	{
 		NameHash.Insert(Names[i],i);
 	}
 }

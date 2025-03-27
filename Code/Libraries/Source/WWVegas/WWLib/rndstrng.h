@@ -40,7 +40,10 @@
 #ifndef RNDSTRNG_H
 #define RNDSTRNG_H
 
-#include	"vector.h"
+#include "always.h"
+
+#include <vector>
+
 #include	"random.h"
 
 class	StringClass;
@@ -62,7 +65,7 @@ public:
 	const char * Get_String( void );
 
 private:
-	DynamicVectorClass<StringClass*>	Strings;
+	std::vector<StringClass*> Strings;
 	Random2Class							Randomizer;
 };
 

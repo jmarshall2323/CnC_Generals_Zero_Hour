@@ -44,6 +44,9 @@
 #define HANIM_H
 
 #include "always.h"
+
+#include <vector>
+
 #include "quat.h"
 #include "refcount.h"
 #include "w3d_file.h"
@@ -51,7 +54,6 @@
 #include "mempool.h"
 #include <refcount.h>
 #include <slist.h>
-#include <vector.h>
 
 struct NodeMotionStruct;
 class MotionChannelClass;
@@ -124,7 +126,7 @@ public:
 */
 class NamedPivotMapClass;
 
-class PivotMapClass : public DynamicVectorClass<float>, public RefCountClass
+class PivotMapClass : public std::vector<float>, public RefCountClass
 {
 public:
 	virtual NamedPivotMapClass * As_Named_Pivot_Map() { return 0; }
@@ -165,7 +167,7 @@ private:
 		bool operator != (WeightInfoStruct const &that) const { return &that != this; }
 	};
 
-	DynamicVectorClass<WeightInfoStruct>	WeightInfo;
+	std::vector<WeightInfoStruct> WeightInfo;
 };
 
 
@@ -225,7 +227,7 @@ public:
 	void	Reset( void );		// empties the dynamic vector
 
  	bool	Normalize_Weights(void);	// Normalizes all weights (returns true if succeeded)
-	int	Get_Num_Anims( void ) { return HAnimComboData.Count(); }
+	int	Get_Num_Anims( void ) { return HAnimComboData.size(); }
 
 	void	Set_Motion( int indx, HAnimClass *motion );
 	HAnimClass *Get_Motion( int indx );
@@ -253,7 +255,7 @@ public:
 
 protected:
 
-	DynamicVectorClass<HAnimComboDataClass *> HAnimComboData;
+	std::vector<HAnimComboDataClass*> HAnimComboData;
 
 };
 

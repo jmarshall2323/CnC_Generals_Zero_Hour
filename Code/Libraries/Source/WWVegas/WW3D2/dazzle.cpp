@@ -38,7 +38,6 @@
 
 
 #include "dazzle.h"
-#include "simplevec.h"
 #include "vector2.h"
 #include "camera.h"
 #include "ww3d.h"
@@ -224,8 +223,6 @@ LensflareName=DEFAULT_LENSFLARE
 
 // Global instance of a dazzle loader
 DazzleLoaderClass		_DazzleLoader;
-
-static SimpleVecClass<DazzleRenderObjClass*> temp_ptrs;
 
 static DazzleTypeClass** types;
 static unsigned type_count;

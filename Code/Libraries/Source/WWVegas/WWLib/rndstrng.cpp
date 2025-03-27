@@ -45,25 +45,26 @@ RandomStringClass::RandomStringClass( void )
 
 RandomStringClass::~RandomStringClass( void )
 {
-	while ( Strings.Count() ) {
-		delete Strings[ 0 ];
-		Strings.Delete( 0 );
+	for (const auto& str : Strings)
+	{
+		delete str;
 	}
+	Strings.clear();
 }
 
 void RandomStringClass::Add_String( const char * str )
 {
-	StringClass	 * string = W3DNEW StringClass( str );
-	Strings.Add( string );
+	Strings.push_back(W3DNEW StringClass(str));
 }
 
 const char * RandomStringClass::Get_String( void )
 {
-	if ( Strings.Count() == 0 ) {
+	if (Strings.empty())
+	{
 		return NULL;
 	}
 	unsigned int index = Randomizer();
-	index %= Strings.Count();
+	index %= Strings.size();
 	return *Strings[index];
 }
 

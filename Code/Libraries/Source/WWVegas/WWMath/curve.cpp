@@ -117,7 +117,7 @@ void Curve3DClass::Set_Looping(bool onoff)
 
 float Curve3DClass::Get_Start_Time(void)
 {
-	if (Keys.Count() > 0) {
+	if (Keys.size() > 0) {
 		return Keys[0].Time;
 	} else {
 		return 0.0f;
@@ -126,8 +126,8 @@ float Curve3DClass::Get_Start_Time(void)
 
 float Curve3DClass::Get_End_Time(void)
 {
-	if (Keys.Count() > 0) {
-		return Keys[Keys.Count() - 1].Time;
+	if (Keys.size() > 0) {
+		return Keys.back().Time;
 	} else {
 		return 0.0f;
 	}
@@ -135,13 +135,13 @@ float Curve3DClass::Get_End_Time(void)
 
 int Curve3DClass::Key_Count(void)
 {
-	return Keys.Count();
+	return Keys.size();
 }
 
 void Curve3DClass::Get_Key(int i,Vector3 * set_point,float * set_t)
 {
 	assert(i >= 0);
-	assert(i < Keys.Count());
+	assert(i < Keys.size());
 	if (set_point != NULL) {
 		*set_point = Keys[i].Point;
 	}
@@ -153,7 +153,7 @@ void Curve3DClass::Get_Key(int i,Vector3 * set_point,float * set_t)
 void Curve3DClass::Set_Key(int i,const Vector3 & point)
 {
 	assert(i >= 0);
-	assert(i < Keys.Count());
+	assert(i < Keys.size());
 	Keys[i].Point = point;
 }	
 
@@ -161,7 +161,7 @@ void Curve3DClass::Set_Key(int i,const Vector3 & point)
 int Curve3DClass::Add_Key(const Vector3 & point,float t)
 {
 	int idx = 0;
-	while (idx < Keys.Count() && Keys[idx].Time < t) {
+	while (idx < Keys.size() && Keys[idx].Time < t) {
 		idx++;
 	}
 
@@ -169,26 +169,26 @@ int Curve3DClass::Add_Key(const Vector3 & point,float t)
 	newkey.Point = point;
 	newkey.Time = t;
 
-	Keys.Insert(idx,newkey);
+	Keys.insert(Keys.begin() + idx,newkey);
 	return idx;
 }	
 
 void Curve3DClass::Remove_Key(int i)
 {
 	assert(i >= 0);
-	assert(i < Keys.Count());
-	Keys.Delete(i);	
+	assert(i < Keys.size());
+	Keys.erase(Keys.begin() + i);
 }
 
 void Curve3DClass::Clear_Keys(void)
 {
-	Keys.Clear();
+	Keys.clear();
 }
 
 void Curve3DClass::Find_Interval(float time,int * i0,int * i1,float * t)
 {
 	WWASSERT(time >= Keys[0].Time);
-	WWASSERT(time <= Keys[Keys.Count()-1].Time);
+	WWASSERT(time <= Keys.back().Time);
 
 	int i=0;
 	while (time > Keys[i+1].Time) {
@@ -201,7 +201,7 @@ void Curve3DClass::Find_Interval(float time,int * i0,int * i1,float * t)
 
 bool Curve3DClass::Save(ChunkSaveClass & csave)
 {
-	int keycount = Keys.Count();
+	const int keycount = Keys.size();
 	csave.Begin_Chunk(CURVE3D_CHUNK_VARIABLES);
 	WRITE_MICRO_CHUNK(csave,CURVE3D_VARIABLE_ISLOOPING,IsLooping);
 	WRITE_MICRO_CHUNK(csave,CURVE3D_VARIABLE_KEYCOUNT,keycount);
@@ -210,9 +210,10 @@ bool Curve3DClass::Save(ChunkSaveClass & csave)
 	// Saving the keys, Note that if the format of a key changes we'll
 	// need a new chunk. (I didn't wrap each variable in its own chunk)
 	csave.Begin_Chunk(CURVE3D_CHUNK_KEYS);			
-	for (int i=0; i<keycount; i++) {
-		csave.Write(&(Keys[i].Point),sizeof(Keys[i].Point));
-		csave.Write(&(Keys[i].Time),sizeof(Keys[i].Time));
+	for (const auto& key : Keys)
+	{
+		csave.Write(&(key.Point),sizeof(key.Point));
+		csave.Write(&(key.Time),sizeof(key.Time));
 	}
 	csave.End_Chunk();
 	return true;
@@ -225,7 +226,7 @@ bool Curve3DClass::Load(ChunkLoadClass & cload)
 	KeyClass newkey;
 
 	// reset the curve
-	Keys.Delete_All();
+	Keys.clear();
 
 	// read in the chunks
 	while (cload.Open_Chunk()) {
@@ -247,7 +248,7 @@ bool Curve3DClass::Load(ChunkLoadClass & cload)
 				for (i=0; i<keycount; i++) {
 					cload.Read(&(newkey.Point),sizeof(newkey.Point));
 					cload.Read(&(newkey.Time),sizeof(newkey.Time));
-					Keys.Add(newkey);
+					Keys.push_back(newkey);
 				}
 				break;
 
@@ -276,8 +277,9 @@ void LinearCurve3DClass::Evaluate(float time,Vector3 * set_val)
 		return;
 	}
 
-	if (time >= Keys[Keys.Count() - 1].Time) {
-		*set_val = Keys[Keys.Count() - 1].Point;
+	if (time >= Keys.back().Time)
+	{
+		*set_val = Keys.back().Point;
 		return;
 	}
 
@@ -360,7 +362,7 @@ void Curve1DClass::Set_Looping(bool onoff)
 
 float Curve1DClass::Get_Start_Time(void)
 {
-	if (Keys.Count() > 0) {
+	if (Keys.size() > 0) {
 		return Keys[0].Time;
 	} else {
 		return 0.0f;
@@ -369,8 +371,8 @@ float Curve1DClass::Get_Start_Time(void)
 
 float Curve1DClass::Get_End_Time(void)
 {
-	if (Keys.Count() > 0) {
-		return Keys[Keys.Count() - 1].Time;
+	if (Keys.size() > 0) {
+		return Keys[Keys.size() - 1].Time;
 	} else {
 		return 0.0f;
 	}
@@ -378,13 +380,13 @@ float Curve1DClass::Get_End_Time(void)
 
 int Curve1DClass::Key_Count(void)
 {
-	return Keys.Count();
+	return Keys.size();
 }
 
 void Curve1DClass::Get_Key(int i,float * set_point,float * set_t,unsigned int * extra)
 {
 	assert(i >= 0);
-	assert(i < Keys.Count());
+	assert(i < Keys.size());
 	if (set_point != NULL) {
 		*set_point = Keys[i].Point;
 	}
@@ -399,7 +401,7 @@ void Curve1DClass::Get_Key(int i,float * set_point,float * set_t,unsigned int * 
 void Curve1DClass::Set_Key(int i,float point,unsigned int extra)
 {
 	assert(i >= 0);
-	assert(i < Keys.Count());
+	assert(i < Keys.size());
 	Keys[i].Point = point;
 	Keys[i].Extra = extra;
 }	
@@ -408,7 +410,7 @@ void Curve1DClass::Set_Key(int i,float point,unsigned int extra)
 int Curve1DClass::Add_Key(float point,float t,unsigned int extra)
 {
 	int idx = 0;
-	while (idx < Keys.Count() && Keys[idx].Time < t) {
+	while (idx < Keys.size() && Keys[idx].Time < t) {
 		idx++;
 	}
 
@@ -417,34 +419,34 @@ int Curve1DClass::Add_Key(float point,float t,unsigned int extra)
 	newkey.Time = t;
 	newkey.Extra = extra;
 
-	Keys.Insert(idx,newkey);
+	Keys.insert(Keys.begin() + idx,newkey);
 	return idx;
 }	
 
 void Curve1DClass::Remove_Key(int i)
 {
 	assert(i >= 0);
-	assert(i < Keys.Count());
-	Keys.Delete(i);	
+	assert(i < Keys.size());
+	Keys.erase(Keys.begin() + i);
 }
 
 void Curve1DClass::Clear_Keys(void)
 {
-	Keys.Clear();
+	Keys.clear();
 }
 
 void Curve1DClass::Find_Interval(float time,int * i0,int * i1,float * t)
 {
 	if (IsLooping) {
 		if (time < Keys[0].Time) {
-			*i0 = Keys.Count() - 1;
+			*i0 = Keys.size() - 1;
 			*i1 = 0;
 			float interval = 1.0f - Keys[*i0].Time + Keys[*i1].Time;
 			*t = (1.0f - Keys[*i0].Time + time) / interval;
 			return;
 		}
-		else if (time > Keys[Keys.Count() - 1].Time) {
-			*i0 = Keys.Count() - 1;
+		else if (time > Keys.back().Time) {
+			*i0 = Keys.size() - 1;
 			*i1 = 0;
 			float interval = 1.0f - Keys[*i0].Time + Keys[*i1].Time;
 			*t = (time - Keys[*i0].Time) / interval;
@@ -453,7 +455,7 @@ void Curve1DClass::Find_Interval(float time,int * i0,int * i1,float * t)
 	}
 	else {
 		WWASSERT(time >= Keys[0].Time);
-		WWASSERT(time <= Keys[Keys.Count()-1].Time);
+		WWASSERT(time <= Keys.back().Time);
 	}
 
 	int i=0;
@@ -467,7 +469,7 @@ void Curve1DClass::Find_Interval(float time,int * i0,int * i1,float * t)
 
 bool Curve1DClass::Save(ChunkSaveClass & csave)
 {
-	int keycount = Keys.Count();
+	const int keycount = Keys.size();
 	csave.Begin_Chunk(CURVE1D_CHUNK_VARIABLES);
 	WRITE_MICRO_CHUNK(csave,CURVE1D_VARIABLE_ISLOOPING,IsLooping);
 	WRITE_MICRO_CHUNK(csave,CURVE1D_VARIABLE_KEYCOUNT,keycount);
@@ -476,10 +478,11 @@ bool Curve1DClass::Save(ChunkSaveClass & csave)
 	// Saving the keys, Note that if the format of a key changes we'll
 	// need a new chunk. (I didn't wrap each variable in its own chunk)
 	csave.Begin_Chunk(CURVE1D_CHUNK_KEYS);
-	for (int i=0; i<keycount; i++) {
-		csave.Write(&(Keys[i].Point),sizeof(Keys[i].Point));
-		csave.Write(&(Keys[i].Time),sizeof(Keys[i].Time));
-		csave.Write(&(Keys[i].Extra),sizeof(Keys[i].Extra));
+	for (const auto& key : Keys)
+	{
+		csave.Write(&(key.Point),sizeof(key.Point));
+		csave.Write(&(key.Time),sizeof(key.Time));
+		csave.Write(&(key.Extra),sizeof(key.Extra));
 	}
 	csave.End_Chunk();
 	return true;
@@ -492,7 +495,7 @@ bool Curve1DClass::Load(ChunkLoadClass & cload)
 	KeyClass newkey;
 
 	// reset the curve
-	Keys.Delete_All();
+	Keys.clear();
 
 	// read in the chunks
 	while (cload.Open_Chunk()) {
@@ -515,7 +518,7 @@ bool Curve1DClass::Load(ChunkLoadClass & cload)
 					cload.Read(&(newkey.Point),sizeof(newkey.Point));
 					cload.Read(&(newkey.Time),sizeof(newkey.Time));
 					cload.Read(&(newkey.Extra),sizeof(newkey.Extra));
-					Keys.Add(newkey);
+					Keys.push_back(newkey);
 				}
 				break;
 
@@ -542,8 +545,8 @@ void LinearCurve1DClass::Evaluate(float time,float * set_val)
 			return;
 		}
 
-		if (time >= Keys[Keys.Count() - 1].Time) {
-			*set_val = Keys[Keys.Count() - 1].Point;
+		if (time >= Keys.back().Time) {
+			*set_val = Keys.back().Point;
 			return;
 		}
 	}

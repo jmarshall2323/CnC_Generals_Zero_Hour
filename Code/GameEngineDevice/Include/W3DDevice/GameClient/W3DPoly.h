@@ -48,9 +48,12 @@
 #ifndef __W3DPOLY_H_
 #define __W3DPOLY_H_
 
+#include "always.h"
+
+#include <vector>
+
 #include "vector3.h"
 #include "plane.h"
-#include "simplevec.h"
 
 //-------------------------------------------------------------------------------------------------
 /**VisPolyClass - This class is used to clip a polygon to a plane.  Useful for manually
@@ -64,7 +67,7 @@ public:
 	void Add_Vertex(const Vector3 & point);
 	void Clip(const PlaneClass & plane,ClipPolyClass & dest) const;
 
-	SimpleDynVecClass<Vector3> Verts;
+	std::vector<Vector3> Verts;
 };
 
 #endif //__W3DPOLY_H_

@@ -41,9 +41,12 @@
 #ifndef STREAK_H
 #define STREAK_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "rendobj.h"
 #include "shader.h"
-#include "simplevec.h"
 #include "seglinerenderer.h"
 #include "streakrender.h"
 
@@ -196,9 +199,9 @@ class StreakLineClass : public RenderObjClass
 
 	// Per-point location array
 	//ShareBufferClass<Vector3> *PointLocations;	
-	SimpleDynVecClass<Vector3>	PointLocations;   // World/cameraspace point locs
-	SimpleDynVecClass<Vector4>	PointColors;   // RGBA
-	SimpleDynVecClass<float>		PointWidths;   // float line thickness
+	std::vector<Vector3>         PointLocations; // World/cameraspace point locs
+	std::vector<Vector4>         PointColors;    // RGBA
+	std::vector<float>           PointWidths;    // float line thickness
 
 	
 

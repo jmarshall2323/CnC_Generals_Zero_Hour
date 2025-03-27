@@ -41,9 +41,12 @@
 #ifndef COLLECT_H
 #define COLLECT_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "rendobj.h"
 #include "composite.h"
-#include "vector.h"
 #include "proto.h"
 #include "w3d_file.h"
 #include "wwstring.h"
@@ -123,8 +126,8 @@ protected:
 	void								Free(void);
 	void								Update_Sub_Object_Transforms(void);
 	
-	DynamicVectorClass <ProxyClass>			ProxyList;
-	DynamicVectorClass <RenderObjClass *>	SubObjects;
+	std::vector<ProxyClass>      ProxyList;
+	std::vector<RenderObjClass*> SubObjects;
 	SnapPointsClass *								SnapPoints;
 
 	SphereClass										BoundSphere;

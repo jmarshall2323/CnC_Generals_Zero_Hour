@@ -34,6 +34,9 @@
  * Functions:                                                              * 
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 #include "part_buf.h"
+
+#include <vector>
+
 #include "part_emt.h"
 #include "ww3d.h"
 #include "rinfo.h"
@@ -42,7 +45,6 @@
 #include "predlod.h"
 #include "pot.h"
 #include "bound.h"
-#include "simplevec.h"
 #include "sphere.h"
 #include "wwprofile.h"
 #include <limits.h>
@@ -798,7 +800,7 @@ void ParticleBufferClass::Render_Line(RenderInfoClass & rinfo)
 	}
 
 	// Unroll the circular buffer while skipping LOD'd particles
-	static SimpleDynVecClass<Vector3> tmp_points;
+	static std::vector<Vector3> tmp_points;
 	Vector3 * positions = Position[pingpong]->Get_Array();
 
 	unsigned int sub1_end;		// End of subrange 1.
@@ -813,21 +815,22 @@ void ParticleBufferClass::Render_Line(RenderInfoClass & rinfo)
 		sub2_start = 0;
 	}
 
-	tmp_points.Delete_All(false);
+	tmp_points.clear();
 	
 	for (i = Start; i < sub1_end; i++) {
 		if (PermutationArray[i & 0xF] >= DecimationThreshold) {
-			tmp_points.Add(positions[i]);
+			tmp_points.push_back(positions[i]);
 		}
 	}
 	for (i = sub2_start; i < End; i++) {
 		if (PermutationArray[i & 0xF] >= DecimationThreshold) {
-			tmp_points.Add(positions[i]);
+			tmp_points.push_back(positions[i]);
 		}
 	}
 
 	// If we got any points, render them
-	if (tmp_points.Count() > 0) {
+	if (tmp_points.size() > 0)
+	{
 		SphereClass bounding_sphere;
 		Get_Obj_Space_Bounding_Sphere(bounding_sphere);
 		
@@ -836,11 +839,7 @@ void ParticleBufferClass::Render_Line(RenderInfoClass & rinfo)
 		REF_PTR_RELEASE(tex);
 		LineRenderer->Set_Shader(PointGroup->Get_Shader());
 
-		LineRenderer->Render(rinfo,
-									Transform,
-									tmp_points.Count(),
-									&(tmp_points[0]),
-									bounding_sphere);
+		LineRenderer->Render(rinfo, Transform, tmp_points.size(),tmp_points.data(), bounding_sphere);
 	}
 }
 

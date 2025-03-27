@@ -42,8 +42,10 @@
 #define AABTREE_H
 
 #include "always.h"
+
+#include <vector>
+
 #include "refcount.h"
-#include "simplevec.h"
 #include "vector3.h"
 #include "vector3i.h"
 #include "aaplane.h"
@@ -97,8 +99,8 @@ public:
 	int						Get_Node_Count(void) { return NodeCount; }
 	int						Get_Poly_Count(void) { return PolyCount; }
 	int						Compute_Ram_Size(void);
-	void						Generate_APT(const OBBoxClass & box,SimpleDynVecClass<uint32> & apt);
-	void						Generate_APT(const OBBoxClass & box,const Vector3 & viewdir,SimpleDynVecClass<uint32> & apt);
+	void Generate_APT(const OBBoxClass& box, std::vector<uint32>& apt);
+	void Generate_APT(const OBBoxClass& box, const Vector3& viewdir, std::vector<uint32>& apt);
 
 	bool						Cast_Ray(RayCollisionTestClass & raytest);
 	int						Cast_Semi_Infinite_Axis_Aligned_Ray(const Vector3 & start_point,
@@ -157,12 +159,13 @@ private:
 	*/
 	struct OBBoxAPTContextStruct
 	{
-		OBBoxAPTContextStruct(const OBBoxClass & box,SimpleDynVecClass<uint32> & apt) : 
-			Box(box), APT(apt)
+		OBBoxAPTContextStruct(const OBBoxClass& box, std::vector<uint32>& apt) :
+			Box(box),
+			APT(apt)
 		{ }
 
 		OBBoxClass							Box;
-		SimpleDynVecClass<uint32> &	APT;
+		std::vector<uint32>& APT;
 	};
 
 	/**
@@ -171,7 +174,7 @@ private:
 	*/
 	struct OBBoxRayAPTContextStruct
 	{
-		OBBoxRayAPTContextStruct(const OBBoxClass & box,const Vector3 & viewdir,SimpleDynVecClass<uint32> & apt) :
+		OBBoxRayAPTContextStruct(const OBBoxClass& box, const Vector3& viewdir, std::vector<uint32>& apt) :
 			Box(box),
 			ViewVector(viewdir),
 			APT(apt)
@@ -179,7 +182,7 @@ private:
 
 		OBBoxClass							Box;
 		Vector3								ViewVector;
-		SimpleDynVecClass<uint32> &	APT;
+		std::vector<uint32>& APT;
 	};
 
 	void						Generate_OBBox_APT_Recursive(CullNodeStruct * node,OBBoxAPTContextStruct & context);

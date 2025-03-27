@@ -41,12 +41,15 @@
 #ifndef POINTGR_H
 #define POINTGR_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "sharebuf.h"
 #include "shader.h"
 #include "vector4.h"
 #include "vector3.h"
 #include "vector2.h"
-#include "vector.h"
 
 class VertexMaterialClass;
 class RenderInfoClass;
@@ -220,12 +223,12 @@ private:
 	static VertexMaterialClass *PointMaterial;
 
 	// Static arrays for intermediate calcs (never resized down, just up):
-	static VectorClass<Vector3>		compressed_loc;		// point locations 'compressed' by APT
-	static VectorClass<Vector4>		compressed_diffuse;	// point colors 'compressed' by APT
-	static VectorClass<float>			compressed_size;		// point sizes 'compressed' by APT
-	static VectorClass<unsigned char>	compressed_orient;	// point orientations 'compressed' by APT
-	static VectorClass<unsigned char>	compressed_frame;		// point frames 'compressed' by APT
-	static VectorClass<Vector3>		transformed_loc;		// transformed point locations
+	static std::vector<Vector3>       compressed_loc;      // point locations 'compressed' by APT
+	static std::vector<Vector4>       compressed_diffuse;  // point colors 'compressed' by APT
+	static std::vector<float>         compressed_size;     // point sizes 'compressed' by APT
+	static std::vector<unsigned char> compressed_orient;   // point orientations 'compressed' by APT
+	static std::vector<unsigned char> compressed_frame;    // point frames 'compressed' by APT
+	static std::vector<Vector3>       transformed_loc;     // transformed point locations
 };
 
 
