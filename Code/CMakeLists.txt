@@ -1,54 +1,109 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.30)
 
 project(RTS LANGUAGES C CXX)
-
-set(CMAKE_CONFIGURATION_TYPES "Debug;Internal;Release" CACHE STRING "Configs" FORCE)
 
 ################################################################################
 # SETUP
 ################################################################################
 
-
 set(GNG_GLOBAL_PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
+
+    # Disable C++20 modules as we don't use them
+    CXX_SCAN_FOR_MODULES OFF
+
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../Run/"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../Run/"
 )
+
+##### DEVELOPMENT OPTIONS #####
+
+# Options used for development purporses only
+
+# Development options are not meant to be used by packagers or users,
+# so we avoid exposing them by using 'set' instead of 'option'
+
+# Default settings here should provide the best end user experince not best developer experince
+
+# Build dependencies as Release
+set(GNG_FORCE_RELEASE_BUILD_DEPENDENCIES ON)
+
+# Enable VTUNE for scripts profiling
+set(GNG_VTUNE_SCRIPT_PROFILING OFF)
+
+# Defines "PARAM_EDITING_ON" no clue what it does but probably allows run time editing of somethings - Andrew-2E128
+set(GNG_PARAM_EDITING OFF)
 
 ##### AUTOMATED #####
 
-set(GNG_COMPILE_OPTIONS "")
-set(GNG_LINK_OPTIONS "")
-set(GNG_COMPILE_DEFINITIONS "")
+# Interprocedural Optimization (LTO/WPO)
+message(CHECK_START "Interprocedural Optimization")
+
+include(CMakeDependentOption)
+include(CheckIPOSupported)
+
+check_ipo_supported(RESULT GNG_IPO_SUPPORTED OUTPUT error)
+cmake_dependent_option(GNG_ENABLE_IPO "Enable Interprocedural Optimization (LTO/WPO)" ON "${GNG_IPO_SUPPORTED}" OFF)
+
+if(GNG_IPO_SUPPORTED)
+    if (GNG_ENABLE_IPO)
+        message(CHECK_PASS " Supported and Enabled")
+    else()
+        message(CHECK_PASS " Supported but Disabled")
+    endif()
+else()
+    message(CHECK_FAIL " Not Supported")
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(GNG_DEBUG TRUE)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Internal")
-    set(GNG_INTERNAL TRUE)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(GNG_RELEASE TRUE)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(GNG_RELEASE TRUE)
+elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
     set(GNG_RELEASE TRUE)
 endif()
 
+if(GNG_DEBUG)
+    set(GNG_ENABLE_IPO OFF)
+    message(STATUS "Interprocedural Optimization disabled for debug build to reduce compile time.")
+endif()
+
+list(APPEND GNG_GLOBAL_PROPERTIES
+    $<$<BOOL:${GNG_ENABLE_IPO}>:INTERPROCEDURAL_OPTIMIZATION ON>
+)
+
 ##### Compiler & Linker Settings #####
+
+# Compiler Independent options
+
+set(GNG_COMPILE_OPTIONS
+)
+set(GNG_LINK_OPTIONS
+)
+set(GNG_COMPILE_DEFINITIONS
+    $<$<BOOL:${GNG_VTUNE_SCRIPT_PROFILING}>:
+        DO_VTUNE_STUFF
+        SPECIAL_SCRIPT_PROFILING
+    >
+
+    $<$<BOOL:${GNG_PARAM_EDITING}>:PARAM_EDITING_ON>
+)
 
 # Microsoft Visual C/C++ Compiler
 if(MSVC)
 
     ##### Common #####
 
-    set(GNG_COMPILE_OPTIONS
-        /nologo # Hide compiler copyright notice
+    list(APPEND GNG_COMPILE_OPTIONS
         /W1     # Warnings level 1 (TODO Increase it as we fix such warnnings)
     )
-    set(GNG_LINK_OPTIONS
-        /NOLOGO # Hide linker copyright notice
+    list(APPEND GNG_LINK_OPTIONS
     )
-    set(GNG_COMPILE_DEFINITIONS
-        _WINDOWS
+    list(APPEND GNG_COMPILE_DEFINITIONS
         WINVER=0x0A00              # Windows 10 is the minimum as we use DX12
         _WIN32_WINNT=0x0A00        # Windows 10 is the minimum as we use DX12
 
@@ -60,42 +115,25 @@ if(MSVC)
 
     if(GNG_DEBUG)
         list(APPEND GNG_COMPILE_OPTIONS
-            /Od   # Disable optimizations
-            /MDd  # MultiThreaded Debug DLL Runtime
-            /Zi   # Generate Debug Database (.pdb)
-            /RTC1 # Runtime Error Checking
+            #/Od   # Disable optimizations [Removal Candidate: CMake default]
+            #/MDd  # MultiThreaded Debug DLL Runtime [Removal Candidate: CMake default]
+            #/Zi   # Generate Debug Database (.pdb) [Removal Candidate: CMake default]
+            #/RTC1 # Runtime Error Checking [Removal Candidate: CMake default]
         )
         list(APPEND GNG_LINK_OPTIONS
-            /DEBUG
+            #/DEBUG [Removal Candidate: CMake default]
         )
         list(APPEND GNG_COMPILE_DEFINITIONS
             _DEBUG
-        )
-
-    ##### Internal #####
-
-    elseif(GNG_INTERNAL)
-        list(APPEND GNG_COMPILE_OPTIONS
-            /O2 # Favor speed over size
-            /MD # MultiThreaded DLL Runtime
-            /Zi # Generate Debug Database (.pdb)
-            /Gy # Enable Function level linking
-        )
-        list(APPEND GNG_LINK_OPTIONS
-            /DEBUG
-        )
-        list(APPEND GNG_COMPILE_DEFINITIONS
-            _INTERNAL
-            NDEBUG
         )
 
     ##### Release #####
 
     elseif(GNG_RELEASE)
         list(APPEND GNG_COMPILE_OPTIONS
-            /O2 # Favor speed over size
-            /MD # MultiThreaded DLL Runtime
-            /Gy # Enable Function level linking
+            #/O2 # Favor speed over size [Removal Candidate: CMake default]
+            #/MD # MultiThreaded DLL Runtime [Removal Candidate: CMake default]
+            #/Gy # Enable Function level linking [Removal Candidate: Does not seem to have any effect on the final binary]
         )
         list(APPEND GNG_LINK_OPTIONS
 
@@ -110,14 +148,59 @@ if(MSVC)
 endif()
 
 ################################################################################
+message(STATUS "========== GNG External Dependencies ==========")
 
-add_subdirectory(GameEngine)
-add_subdirectory(GameEngineDevice)
-add_subdirectory(GameRenderer)
-add_subdirectory(Tools/WorldBuilder)
-add_subdirectory(Tools/DebugWindow)
-add_subdirectory(Tools/ParticleEditor)
-add_subdirectory(Tools/GUIEdit)
+if(GNG_FORCE_RELEASE_BUILD_DEPENDENCIES)
+    # Save off the current build type
+    set(_OLD_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
+    # Force subdirectory to Release
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+message(STATUS "---------- OpenAL ----------")
+
+# Disable unused features
+set(ALSOFT_BACKEND_WAVE OFF)
+set(ALSOFT_EAX OFF)
+
+# Disable extras
+set(ALSOFT_UTILS OFF)
+set(ALSOFT_NO_CONFIG_UTIL OFF)
+set(ALSOFT_EXAMPLES OFF)
+
+# Disable all installs
+set(ALSOFT_INSTALL OFF)
+set(ALSOFT_INSTALL_CONFIG OFF)
+set(ALSOFT_INSTALL_HRTF_DATA OFF)
+set(ALSOFT_INSTALL_AMBDEC_PRESETS OFF)
+set(ALSOFT_INSTALL_EXAMPLES OFF)
+set(ALSOFT_INSTALL_UTILS OFF)
+
+add_subdirectory(Libraries/OpenAL)
+
+set_target_properties(OpenAL PROPERTIES
+    # OpenAL DLL output path
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../Run"
+
+    $<$<BOOL:${GNG_ENABLE_IPO}>:INTERPROCEDURAL_OPTIMIZATION ON>
+)
+
+message(STATUS "---------- UniSpySDK ----------")
+
+add_subdirectory(Libraries/Source/GameSpy)
+ 
+set_target_properties(UniSpySDK PROPERTIES
+    $<$<BOOL:${GNG_ENABLE_IPO}>:INTERPROCEDURAL_OPTIMIZATION ON>
+)
+
+if(GNG_FORCE_RELEASE_BUILD_DEPENDENCIES)
+    # Restore previous build type
+    set(CMAKE_BUILD_TYPE "${_OLD_BUILD_TYPE}")
+endif()
+
+message(STATUS "========== GNG ==========")
+message(STATUS "Note: \"not found\" things above are required")
+
 add_subdirectory(Libraries/Source/Compression)
 add_subdirectory(Libraries/Source/WWVegas/ww3d2)
 add_subdirectory(Libraries/Source/WWVegas/WWDebug)
@@ -126,30 +209,15 @@ add_subdirectory(Libraries/Source/WWVegas/WWLib)
 add_subdirectory(Libraries/Source/WWVegas/WWMath)
 add_subdirectory(Libraries/Source/WWVegas/WWSaveLoad)
 
-set(ALSOFT_UTILS OFF)
-set(ALSOFT_NO_CONFIG_UTIL OFF)
-set(ALSOFT_EXAMPLES OFF)
-set(ALSOFT_INSTALL OFF)
-set(ALSOFT_INSTALL_CONFIG OFF)
-set(ALSOFT_INSTALL_HRTF_DATA OFF)
+add_subdirectory(GameEngineDevice)
+add_subdirectory(GameRenderer)
+add_subdirectory(GameEngine)
 
-set(ALSOFT_INSTALL_AMBDEC_PRESETS OFF)
-set(ALSOFT_INSTALL_EXAMPLES OFF)
-set(ALSOFT_INSTALL_UTILS OFF)
+add_subdirectory(Tools/WorldBuilder)
+add_subdirectory(Tools/DebugWindow)
+add_subdirectory(Tools/ParticleEditor)
+add_subdirectory(Tools/GUIEdit)
 
-# Save off the current build type
-set(_OLD_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
-
-# Force subdirectory to Release
-set(CMAKE_BUILD_TYPE "Release")
-
-add_subdirectory(Libraries/OpenAL)
-
-# Restore previous build type
-set(CMAKE_BUILD_TYPE "${_OLD_BUILD_TYPE}")
-
-add_subdirectory(Libraries/Source/GameSpy)
- 
 # Add the main executable; WIN32 for the Windows subsystem (no console).
 add_executable(RTS WIN32
     # Source files
@@ -158,23 +226,10 @@ add_executable(RTS WIN32
     Libraries/Bink/include/miles.c
     Main/WinMain.cpp
     Main/RTS.rc
-
-    # (Optional) If you want to see these headers in the project tree:
-    # Main/resource.h
-    # Main/WinMain.h
-    # etc.
 )
 
 set_target_properties(RTS PROPERTIES
     ${GNG_GLOBAL_PROPERTIES}
- )
-
-set_target_properties(RTS PROPERTIES
-    # Put all .exe files in a folder called "Run"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../run"
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../run"
-    RUNTIME_OUTPUT_DIRECTORY_INTERNAL "${CMAKE_CURRENT_SOURCE_DIR}/../run"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../run"
 
     # Each config has its own output name:
     OUTPUT_NAME_DEBUG "Generals_debug"

@@ -101,18 +101,6 @@ add_executable(WorldBuilder WIN32
     src/WorldBuilderView.cpp
 )
 
-#------------------------------------------------------------------------------
-# 2) Set MFC usage to "Use MFC in a Shared DLL" (i.e., dynamic MFC).
-#    Also set MultiByte: typically implies '_MBCS'.
-#------------------------------------------------------------------------------
-set_property(TARGET WorldBuilder PROPERTY
-    # MFC_FLAG = 2 => Use MFC in a Shared DLL
-    MFC_FLAG 2
-)
-
-#------------------------------------------------------------------------------
-# 3) Configuration-specific include paths:
-#------------------------------------------------------------------------------
 target_include_directories(WorldBuilder PRIVATE
     ../../GameRenderer/
     ../../Libraries/OpenAL/include
@@ -132,14 +120,15 @@ target_include_directories(WorldBuilder PRIVATE
 )
 
 target_compile_definitions(WorldBuilder PRIVATE
-  ${GNG_COMPILE_DEFINITIONS}
-  _AFXDLL
-  _MBCS
-  WIN32
-  EDITOR
-  REGEX_MALLOC
-  STDC_HEADERS
-  WIN32_LEAN_AND_MEAN
+    ${GNG_COMPILE_DEFINITIONS}
+
+    _AFXDLL
+    _MBCS
+    WIN32
+    EDITOR
+    REGEX_MALLOC
+    STDC_HEADERS
+    WIN32_LEAN_AND_MEAN
 )
 
 target_compile_options(WorldBuilder PRIVATE
@@ -175,11 +164,9 @@ target_link_directories(WorldBuilder PRIVATE
 )
 
 set_target_properties(WorldBuilder PROPERTIES
-    # Put all .exe files in a folder called "Run"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../../../run"
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../../../run"
-    RUNTIME_OUTPUT_DIRECTORY_INTERNAL "${CMAKE_CURRENT_SOURCE_DIR}/../../../run"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../../../run"
+    ${GNG_GLOBAL_PROPERTIES}
+
+    MFC_FLAG 2
 
     # Each config has its own output name:
     OUTPUT_NAME_DEBUG "WorldBuilder_debug"

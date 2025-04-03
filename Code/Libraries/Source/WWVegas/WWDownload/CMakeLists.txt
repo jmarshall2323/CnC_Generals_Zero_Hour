@@ -20,6 +20,8 @@ target_include_directories(WWDownload PRIVATE
 
 target_compile_definitions(WWDownload PRIVATE
     ${GNG_COMPILE_DEFINITIONS}
+
+    WIN32_LEAN_AND_MEAN
 )
 
 target_compile_options(WWDownload PRIVATE

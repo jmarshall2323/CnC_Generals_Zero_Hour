@@ -134,21 +134,21 @@ public:
 	void shutdown( void );  ///< shutdown all our data
 	void update( void );  ///< process the universe
 
-	Bool readConfigFile( char *filename );  ///< read the configuration file
-	Bool writeConfigFile( char *filename );  ///< write the configuration file
+	Bool readConfigFile( const  char *filename );  ///< read the configuration file
+	Bool writeConfigFile( const char *filename );  ///< write the configuration file
 
-	void readFontFile( char *filename );  ///< read file with available font definitions
-	void writeFontFile( char *filename );  ///< write all loaded fonts to a file
+	void readFontFile( const char *filename );  ///< read file with available font definitions
+	void writeFontFile( const char *filename );  ///< write all loaded fonts to a file
 
 	char *getSaveFilename( void );
 	char *getSavePathAndFilename( void );
-	void setSaveFile( char *fullPathAndFilename );  ///< set filename to use for saving
+	void setSaveFile( const char *fullPathAndFilename );  ///< set filename to use for saving
 
 	HWND getWindowHandle( void );  ///< get window handle
 	HINSTANCE getInstance( void );  ///< get application instance
 	HWND getStatusBarWindowHandle( void );  ///< get status bar HWND
 	void createStatusBar( void );  ///< create status bar
-	void statusMessage( StatusPart part, char *message );  ///< set status bar textl
+	void statusMessage( StatusPart part, const char *message );  ///< set status bar textl
 	void createToolbar( void );  ///< create the toolbar
 	void setCursor( CursorType type );  ///< set cursor
 
@@ -308,9 +308,9 @@ protected:
 	char *saveAsDialog( void );  ///< save as standard browser
 	char *openDialog( void );  ///< open standard browser
 
-	void validateNames( GameWindow *root, char *filename, Bool *valid );
+	void validateNames( GameWindow *root, const char *filename, Bool *valid );
 	void updateRadioScreenIdentifiers( GameWindow *window, Int screenID );
-	Bool saveData( char *filePathAndFilename, char *filename );  ///< save data to file in filePath
+	Bool saveData( const char *filePathAndFilename, const char *filename );  ///< save data to file in filePath
 
 	Bool validateParentForCreate( GameWindow *parent );  ///< validate parent OK
 

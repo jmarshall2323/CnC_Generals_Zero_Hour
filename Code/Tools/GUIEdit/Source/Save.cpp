@@ -125,7 +125,7 @@ static void clearBufferToSpaces( void )
 //=============================================================================
 static Bool saveType( GameWindow *window, FILE *fp, Int dataIndent )
 {
-	char *type;
+	const char *type;
 
 	if( BitTestEA( window->winGetStyle(), GWS_PUSH_BUTTON ) )
 		type = "PUSHBUTTON";
@@ -486,7 +486,7 @@ static Bool saveTextColor( GameWindow *window, FILE *fp, Int dataIndent )
 // tokenIsEnabledData =========================================================
 /** Token refers to enabled draw data */
 //=============================================================================
-static Bool tokenIsEnabledData( char *token )
+static Bool tokenIsEnabledData( const char *token )
 {
 
 
@@ -507,7 +507,7 @@ static Bool tokenIsEnabledData( char *token )
 // tokenIsDisabledData ========================================================
 /** Token refers to Disabled draw data */
 //=============================================================================
-static Bool tokenIsDisabledData( char *token )
+static Bool tokenIsDisabledData( const char *token )
 {
 
 	if( strcmp( token, "DISABLEDDRAWDATA" ) == 0 ||
@@ -527,7 +527,7 @@ static Bool tokenIsDisabledData( char *token )
 // tokenIsHiliteData ==========================================================
 /** Token refers to Hilite draw data */
 //=============================================================================
-static Bool tokenIsHiliteData( char *token )
+static Bool tokenIsHiliteData( const char *token )
 {
 
 	if( strcmp( token, "HILITEDRAWDATA" ) == 0 ||
@@ -547,8 +547,7 @@ static Bool tokenIsHiliteData( char *token )
 // saveDrawData ===============================================================
 /** Save the draw data array */
 //=============================================================================
-static Bool saveDrawData( char *token, GameWindow *window, 
-													FILE *fp, Int dataIndent )
+static Bool saveDrawData( const char *token, GameWindow *window, FILE *fp, Int dataIndent )
 {
 	Int i;
 	WinInstanceData *instData = window->winGetInstanceData();
@@ -1092,7 +1091,7 @@ static Bool saveWindow( FILE *fp, GameWindow *window, Int indent )
 	* must make sure the entire name once decorated will fit into the field
 	*/
 //=============================================================================
-void GUIEdit::validateNames( GameWindow *root, char *filename, Bool *valid )
+void GUIEdit::validateNames( GameWindow *root, const char *filename, Bool *valid )
 {
 	
 	// the end of recursion
@@ -1199,7 +1198,7 @@ static void writeLayoutBlock( FILE *fp )
 /** Save all our data to the file specified in filePath, which is a full
 	* absolute path to a filename */
 //=============================================================================
-Bool GUIEdit::saveData( char *filePathAndFilename, char *filename )
+Bool GUIEdit::saveData( const char *filePathAndFilename, const char *filename )
 {
 	Int version = WindowLayoutCurrentVersion;
 	FILE *fp;
