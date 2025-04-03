@@ -64,6 +64,7 @@
 #include <vector>
 
 const unsigned MAX_TEXTURE_STAGES=2;
+const unsigned MAX_TEXTURE_STAGESACTUAL=16;
 
 enum {
 	BUFFER_TYPE_DX8,
@@ -467,6 +468,7 @@ public:
 	}
 
 	static HRESULT DrawIndexedPrimitive(D3DPRIMITIVETYPE type, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount) {
+		g_frameDrawCalls++;
 		return D3DDevice->DrawIndexedPrimitive(type, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount);
 	}
 
@@ -475,6 +477,7 @@ public:
 	}
 
 	static HRESULT DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount, CONST void* pVertexStreamZeroData, UINT VertexStreamZeroStride) {
+		g_frameDrawCalls++;
 		return D3DDevice->DrawPrimitiveUP(PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
 	}
 
@@ -499,6 +502,17 @@ public:
 	static HRESULT GetRenderTarget(DWORD RenderTargetIndex, IDirect3DSurface9** ppRenderTarget) {
 		return D3DDevice->GetRenderTarget(RenderTargetIndex, ppRenderTarget);
 	}
+
+	static HRESULT CreateTextureDDS(
+		const void* pDDSData,     // Pointer to the entire DDS file in memory
+		UINT                DDSDataSize,  // Size of that memory block (in bytes)
+		DWORD               Usage,        // e.g., 0 or D3DUSAGE_DYNAMIC, etc.
+		D3DPOOL             Pool,         // For 9Ex, typically D3DPOOL_DEFAULT
+		unsigned int					&Width,
+		unsigned int					&Height,
+		unsigned int					&MipLevels,
+		wwDeviceTexture** ppTexture     // [out] Receives the wrapped texture
+	);
 
 	static HRESULT CreateTexture(UINT Width, UINT Height, UINT Levels, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, wwDeviceTexture** ppTexture, HANDLE* pSharedHandle);
 
@@ -568,6 +582,16 @@ public:
 	static HRESULT SetPixelShader(IDirect3DPixelShader9* pShader) {
 		return D3DDevice->SetPixelShader(pShader);
 	}
+
+	static int GetCurrentDrawCallCount()
+	{
+		return g_frameDrawCalls;
+	}
+
+	static int GetNumTexturesCreated()
+	{
+		return g_frameNumTexturesCreated;
+	}
 	
 protected:
 	static int numDeviceVertexShaders;
@@ -577,10 +601,13 @@ protected:
 
 	static bool	Create_Device(void);
 	static void Release_Device(void);
+	static void D3D9on12RenderWithGraphicsList(ID3D12GraphicsCommandList* commandList);
 
 	static void Reset_Statistics();
 	static void Enumerate_Devices();
 	static void Set_Default_Global_Render_States(void);
+
+	static void CreateFullscreenQuadVB12();
 
 	/*
 	** Device Selection Code.  
@@ -641,12 +668,15 @@ protected:
 
 	static bool								_EnableTriangleDraw;
 
+	static int								g_frameDrawCalls;
+	static int								g_frameNumTexturesCreated;
 	static int								CurRenderDevice;
 	static int								ResolutionWidth;
 	static int								ResolutionHeight;
 	static int								BitDepth;
 	static int								TextureBitDepth;
 	static bool								IsWindowed;
+	static bool								IsUploadingTextureData;
 	static D3DFORMAT					DisplayFormat;
 	
 	static D3DMATRIX						old_world;
@@ -656,7 +686,7 @@ protected:
 	static bool								world_identity;
 	static unsigned						RenderStates[256];
 	static unsigned						TextureStageStates[MAX_TEXTURE_STAGES][32];
-	static wwDeviceTexture*	Textures[MAX_TEXTURE_STAGES];
+	static wwDeviceTexture*	Textures[MAX_TEXTURE_STAGESACTUAL];
 
 	// These fog settings are constant for all objects in a given scene,
 	// unlike the matching renderstates which vary based on shader settings.
@@ -680,6 +710,15 @@ protected:
 	static IDirect3D8 *					D3DInterface;			//d3d8;
 	static IDirect3DDevice8 *			D3DDevice;				//d3ddevice8;	
 	static tr_renderer					*D3D12Renderer;
+	static tr_cmd_pool*					m_cmd_pool;
+	static tr_cmd**						m_cmds;
+	static ID3D12DescriptorHeap*		m_ImGuiSrvDescHeap;
+	static ID3D12DescriptorHeap*		m_RtvSrvDescHeap;
+	static IDirect3DSwapChain9*			m_swapChain9;
+	static D3DPRESENT_PARAMETERS		m_d3dPresentParams;
+	static IDirect3DSurface9			*m_backBuffers[3];
+	static ID3D12Resource*				m_backBufferResources[3];
+	static D3D12_CPU_DESCRIPTOR_HANDLE	m_backBufferRTV[3];
 
 	static IDirect3DSurface8 *			CurrentRenderTarget;
 	static IDirect3DSurface8 *			DefaultRenderTarget;
@@ -1198,5 +1237,7 @@ WWINLINE RenderStateStruct& RenderStateStruct::operator= (const RenderStateStruc
 
 void StartGpuFrameTimer();
 void EndGpuFrameTimer();
+void StartPresentCpuFrameTimer();
+void EndPresentCpuFrameTimer();
 
 #endif

@@ -305,8 +305,9 @@ SortingVertexBufferClass::~SortingVertexBufferClass()
 DX8VertexBufferClass::DX8VertexBufferClass(unsigned FVF, unsigned short vertex_count_, UsageType usage)
 	:
 	VertexBufferClass(BUFFER_TYPE_DX8, FVF, vertex_count_),
-	VertexBuffer(NULL)
+	VertexBuffer()
 {
+	usageType = usage;
 	Create_Vertex_Buffer(usage);
 }
 
@@ -325,7 +326,7 @@ DX8VertexBufferClass::DX8VertexBufferClass(
 	WWASSERT(vertices);
 	WWASSERT(normals);
 	WWASSERT(tex_coords);
-
+	usageType = usage;
 	Create_Vertex_Buffer(usage);
 	Copy(vertices,normals,tex_coords,0,VertexCount);
 }
@@ -347,7 +348,7 @@ DX8VertexBufferClass::DX8VertexBufferClass(
 	WWASSERT(normals);
 	WWASSERT(tex_coords);
 	WWASSERT(diffuse);
-
+	usageType = usage;
 	Create_Vertex_Buffer(usage);
 	Copy(vertices,normals,tex_coords,diffuse,0,VertexCount);
 }
@@ -367,7 +368,7 @@ DX8VertexBufferClass::DX8VertexBufferClass(
 	WWASSERT(vertices);
 	WWASSERT(tex_coords);
 	WWASSERT(diffuse);
-
+	usageType = usage;
 	Create_Vertex_Buffer(usage);
 	Copy(vertices,tex_coords,diffuse,0,VertexCount);
 }
@@ -380,12 +381,14 @@ DX8VertexBufferClass::DX8VertexBufferClass(
 	unsigned short VertexCount,
 	UsageType usage)
 	:
-	VertexBufferClass(BUFFER_TYPE_DX8, D3DFVF_XYZ|D3DFVF_TEX1, VertexCount),
-	VertexBuffer(NULL)
+	VertexBufferClass(BUFFER_TYPE_DX8, D3DFVF_XYZ|D3DFVF_TEX1, VertexCount)	
 {
+	for (int i = 0; i < DX8_VERTEXBUFFER_COUNT; i++)
+		VertexBuffer[i] = NULL;
+
 	WWASSERT(vertices);
 	WWASSERT(tex_coords);
-
+	usageType = usage;
 	Create_Vertex_Buffer(usage);
 	Copy(vertices,tex_coords,0,VertexCount);
 }
@@ -399,7 +402,18 @@ DX8VertexBufferClass::~DX8VertexBufferClass()
 	_DX8VertexBufferCount--;
 	WWDEBUG_SAY(("Current vertex buffer count: %d\n",_DX8VertexBufferCount));
 #endif
-	VertexBuffer->Release();
+	for (int i = 0; i < DX8_VERTEXBUFFER_COUNT; i++)
+	{
+		if(VertexBuffer[i])
+			VertexBuffer[i]->Release();
+	}
+}
+
+IDirect3DVertexBuffer8* DX8VertexBufferClass::Get_DX8_Vertex_Buffer() {
+	//if (usageType != USAGE_DYNAMIC)
+		return VertexBuffer[0];
+
+	//return VertexBuffer[DX8Wrapper::Get_FrameCount() % DX8_VERTEXBUFFER_COUNT];
 }
 
 // ----------------------------------------------------------------------------
@@ -411,7 +425,7 @@ DX8VertexBufferClass::~DX8VertexBufferClass()
 void DX8VertexBufferClass::Create_Vertex_Buffer(UsageType usage)
 {
 	DX8_THREAD_ASSERT();
-	WWASSERT(!VertexBuffer);
+	WWASSERT(!VertexBuffer[0]);
 
 #ifdef VERTEX_BUFFER_LOG
 	StringClass fvf_name;
@@ -438,52 +452,24 @@ void DX8VertexBufferClass::Create_Vertex_Buffer(UsageType usage)
 		usage_flags|=D3DUSAGE_SOFTWAREPROCESSING;
 	}
 
-	HRESULT ret=DX8Wrapper::CreateVertexBuffer(
-		FVF_Info().Get_FVF_Size()*VertexCount,
-		usage_flags,
-		FVF_Info().Get_FVF(),
-		D3DPOOL_DEFAULT,
-		&VertexBuffer,
-		NULL);
-	if (SUCCEEDED(ret)) {
-		return;
+	int numVertexBuffers = 1;
+
+	if (usage == USAGE_DYNAMIC)
+		numVertexBuffers = DX8_VERTEXBUFFER_COUNT;
+	else
+		VertexBuffer[1] = nullptr;
+
+	for (int i = 0; i < DX8_VERTEXBUFFER_COUNT; i++) {
+		HRESULT ret = DX8Wrapper::CreateVertexBuffer(
+			FVF_Info().Get_FVF_Size() * VertexCount,
+			usage_flags,
+			FVF_Info().Get_FVF(),
+			D3DPOOL_DEFAULT,
+			&VertexBuffer[i],
+			NULL);
+
+		DX8_ErrorCode(ret);
 	}
-
-	WWDEBUG_SAY(("Vertex buffer creation failed, trying to release assets...\n"));
-
-	// Vertex buffer creation failed.  Must be out of memory. Try releasing all our D3D assets and re-creating
-	// them.
-
-	// Invalidate the mesh cache
-	WW3D::_Invalidate_Mesh_Cache();
-
-	//@todo: Find some way to invalidate the textures too
-	//TODO: DX9//ret = DX8Wrapper::ResourceManagerDiscardBytes(0);
-
-	// Try again...
-	ret=DX8Wrapper::CreateVertexBuffer(
-		FVF_Info().Get_FVF_Size()*VertexCount,
-		usage_flags,
-		FVF_Info().Get_FVF(),
-		D3DPOOL_DEFAULT,
-		&VertexBuffer,
-		NULL);
-
-	if (SUCCEEDED(ret)) {
-		WWDEBUG_SAY(("...Vertex buffer creation succesful\n"));
-	}
-
-	// If it still fails it is fatal
-	DX8_ErrorCode(ret);
-
-	/* Old Code
-	DX8CALL(CreateVertexBuffer(
-		FVF_Info().Get_FVF_Size()*VertexCount,
-		usage_flags,
-		FVF_Info().Get_FVF(),
-		(usage&USAGE_DYNAMIC) ? D3DPOOL_DEFAULT : D3DPOOL_MANAGED,
-		&VertexBuffer));
-	*/
 }
 
 // ----------------------------------------------------------------------------

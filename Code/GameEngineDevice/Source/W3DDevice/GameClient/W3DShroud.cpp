@@ -695,12 +695,12 @@ void W3DShroud::render(CameraClass *cam)
 
 	{
 		//USE_PERF_TIMER(shroudCopy)
-		DX8Wrapper::_Copy_DX8_Rects(
-				m_pSrcTexture,
-				&srcRect,
-				1,
-				pDestSurface->Peek_D3D_Surface(),
-				&dstPoint);
+		//DX8Wrapper::_Copy_DX8_Rects(
+		//		m_pSrcTexture,
+		//		&srcRect,
+		//		1,
+		//		pDestSurface->Peek_D3D_Surface(),
+		//		&dstPoint);
 	}
 
 	REF_PTR_RELEASE (pDestSurface);

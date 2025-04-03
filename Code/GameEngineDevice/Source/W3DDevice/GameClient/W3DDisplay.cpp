@@ -1864,6 +1864,7 @@ AGAIN:
 			}
 			else
 			{
+				ImGui::Render();
 				if (couldRender)
 				{
 					couldRender = false;

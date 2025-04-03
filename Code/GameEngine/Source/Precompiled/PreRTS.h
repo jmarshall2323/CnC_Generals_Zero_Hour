@@ -132,7 +132,7 @@ class STLSpecialAlloc;
 
 #include "../../../gamerenderer/imgui/imgui.h"
 #include "../../../gamerenderer/imgui/imgui_impl_win32.h"
-#include "../../../gamerenderer/imgui/imgui_impl_dx9.h"
+#include "../../../gamerenderer/imgui/imgui_impl_dx12.h"
 #include "../Console/Cvar.h"
 #include "../Console/CvarManager.h"
 #include "../Console/ConsoleCommandManager.h"

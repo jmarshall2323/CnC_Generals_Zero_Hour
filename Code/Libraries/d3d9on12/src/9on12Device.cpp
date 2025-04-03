@@ -184,7 +184,7 @@ namespace D3D9on12
             RETURN_E_INVALIDARG_AND_CHECK();
         }
 
-        HRESULT hr = pDevice->FlushWork(false, FlushFlags);
+        HRESULT hr = pDevice->FlushWork(false, FlushFlags, true);
         CHECK_HR(hr);
 
         D3D9on12_DDI_ENTRYPOINT_END_AND_RETURN_HR(hr);
@@ -436,7 +436,7 @@ namespace D3D9on12
         D3D9on12_DDI_ENTRYPOINT_END_AND_RETURN_HR(hr);
     }
 
-    HRESULT Device::FlushWork(bool WaitOnCompletion, UINT /*FlushFlags*/)
+    HRESULT Device::FlushWork(bool WaitOnCompletion, UINT /*FlushFlags*/, bool isDeviceFlushed)
     {
         if (WaitOnCompletion)
         {
@@ -444,7 +444,7 @@ namespace D3D9on12
         }
         else
         {
-            GetContext().Flush(D3D12TranslationLayer::COMMAND_LIST_TYPE_ALL_MASK);
+            GetContext().Flush(D3D12TranslationLayer::COMMAND_LIST_TYPE_ALL_MASK, isDeviceFlushed);
         }
         return S_OK;
     }

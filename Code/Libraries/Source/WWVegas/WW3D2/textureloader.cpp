@@ -1029,57 +1029,23 @@ void TextureLoadTaskClass::Begin_Texture_Load()
 
 		bool loaded=false;
 		if (Texture->Is_Compression_Allowed()) {
-			DDSFileClass dds_file(Texture->Get_Full_Path(),Get_Reduction());
-			if (dds_file.Is_Available()) {
-				// Destination size will be the next power of two square from the larger width and height...
-				unsigned width, height;
-				width=dds_file.Get_Width(0);
-				height=dds_file.Get_Height(0);
-				TextureLoader::Validate_Texture_Size(width,height);
-
-				// If the size doesn't match, try and see if texture reduction would help... (mainly for
-				// cases where loaded texture is larger than hardware limit)
-				if (width!=dds_file.Get_Width(0) || height!=dds_file.Get_Height(0)) {
-					for (unsigned i=1;i<dds_file.Get_Mip_Level_Count();++i) {
-						unsigned w=dds_file.Get_Width(i);
-						unsigned h=dds_file.Get_Height(i);
-						TextureLoader::Validate_Texture_Size(width,height);
-						if (w==dds_file.Get_Width(i) || h==dds_file.Get_Height(i)) {
-							Reduction+=i;
-							width=w;
-							height=h;
-							break;
-						}
-					}
+			file_auto_ptr file(_TheFileFactory, Texture->Get_Full_Path());
+			if (!strstr(file->File_Path(), ".tga")) {
+				file->Open();
+				int len = file->Seek(0, SEEK_END);
+				file->Seek(0, SEEK_SET);
+				void* buffer = malloc(len);
+				file->Read(buffer, len);
+				
+				if (DX8Wrapper::CreateTextureDDS(buffer, len, 0, D3DPOOL_DEFAULT, Width, Height, MipLevelCount ,&D3DTexture) == S_OK)
+				{
+					file->Close();
+					End_Load();
+					Apply(true);
+					Add_Task_To_Delete_List(this);
+					return;
 				}
-
-				IsLoading=true;
-				Width=width;
-				Height=height;
-				Format=Get_Valid_Texture_Format(dds_file.Get_Format(),Texture->Is_Compression_Allowed());
-
-				unsigned mip_level_count=Get_Mip_Level_Count();
-				// If texture wants all mip levels, take as many as the file contains (not necessarily all)
-				// Otherwise take as many mip levels as the texture wants, not to exceed the count in file...
-				if (!mip_level_count) mip_level_count=dds_file.Get_Mip_Level_Count();
-				else if (mip_level_count>dds_file.Get_Mip_Level_Count()) mip_level_count=dds_file.Get_Mip_Level_Count();
-
-				// Once more, verify that the mip level count is correct (in case it was changed here it might not
-				// match the size...well actually it doesn't have to match but it can't be bigger than the size)
-				unsigned max_mip_level_count=1;
-				unsigned w=4;
-				unsigned h=4;
-				while (w<Width && h<Height) {
-					w+=w;
-					h+=h;
-					max_mip_level_count++;
-				}
-				if (mip_level_count>max_mip_level_count) mip_level_count=max_mip_level_count;
-
-				D3DTexture=DX8Wrapper::_Create_DX8_Texture(Width,Height,Format,(TextureClass::MipCountType)mip_level_count, D3DPOOL_MANAGED, false, true);
-				MipLevelCount=mip_level_count;
-				//Texture->MipLevelCount);
-				loaded=true;
+				file->Close();
 			}
 		}
 

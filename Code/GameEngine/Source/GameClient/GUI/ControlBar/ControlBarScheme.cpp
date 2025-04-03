@@ -1103,7 +1103,7 @@ void ControlBarSchemeManager::preloadAssets( TimeOfDay timeOfDay )
 			TheDisplay->preloadTextureAssets(CBScheme->m_buttonQueueImage->getFilename());
 		}
 
-		if (CBScheme->m_rightHUDImage)
+		if (CBScheme->m_rightHUDImage && CBScheme->m_buttonQueueImage)
 		{
 			TheDisplay->preloadTextureAssets(CBScheme->m_buttonQueueImage->getFilename());
 		}
