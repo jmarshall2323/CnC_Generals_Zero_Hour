@@ -23,7 +23,7 @@ namespace D3D9on12
         HRESULT Init(ID3D12Device *pDevice, ID3D12CommandQueue *pCommandQueue);
 
         HRESULT Destroy();
-        HRESULT FlushWork(bool WaitOnCompletion, UINT FlushFlags = 0);
+        HRESULT FlushWork(bool WaitOnCompletion, UINT FlushFlags = 0, bool isDeviceFlushed = false);
         HRESULT Present(CONST D3DDDIARG_PRESENT1& PresentArgs, D3DKMT_PRESENT *pKMTArgs);
         HRESULT CloseAndSubmitGraphicsCommandListForPresent(BOOL commandsAdded, _In_reads_(numSrcSurfaces) const D3DDDIARG_PRESENTSURFACE* pSrcSurfaces, UINT numSrcSurfaces, _In_opt_ HANDLE hDestResource, _In_ D3DKMT_PRESENT* pKMTPresent);
 

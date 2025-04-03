@@ -2,7 +2,7 @@ set(GAMERENDERER_SOURCES
     dx12/tinydx.cpp
     imgui/imgui.cpp
     imgui/imgui_draw.cpp
-    imgui/imgui_impl_dx9.cpp
+    imgui/imgui_impl_dx12.cpp
     imgui/imgui_impl_win32.cpp
     imgui/imgui_tables.cpp
     imgui/imgui_widgets.cpp
@@ -47,6 +47,7 @@ target_include_directories(GameRenderer PRIVATE
     .
     ../Libraries/DX90SDK/Include
     ../Libraries/Include
+    ../Libraries/Pix/Include
     ../Libraries/Source/
     ../Libraries/Source/Compression
     ../Libraries/Source/GameSpy

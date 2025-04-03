@@ -31,6 +31,7 @@ public:
 
 	bool BeginRender();
 	bool EndRender();
+	bool EndRender12(ID3D12GraphicsCommandList* cmdList, ID3D12Resource *backBuffer);
 
 	// Accessors for the D3D9 surfaces
 	IDirect3DSurface9* GetMSAARenderTarget()     const { return m_pRT_MSAA; }
@@ -64,4 +65,7 @@ private:
 	UINT               m_Width = 0;
 	UINT               m_Height = 0;
 	bool               m_bUseMSAA = false;
+
+	D3DFORMAT           colorFormat;
+	D3DFORMAT           depthFormat;
 };

@@ -161,7 +161,7 @@ target_link_libraries(WorldBuilder PRIVATE
     wsock32
     imm32
     wininet
-
+    WinPixEventRuntime
     GameEngine
 )
 
@@ -171,6 +171,7 @@ target_link_options(WorldBuilder PRIVATE
 
 target_link_directories(WorldBuilder PRIVATE
     ../../Libraries/DX90SDK/Lib/x64
+    ../../Libraries/Pix/x64
 )
 
 set_target_properties(WorldBuilder PROPERTIES

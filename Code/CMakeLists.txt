@@ -236,6 +236,7 @@ target_link_libraries(RTS PRIVATE
     DebugWindow
     ParticleEditor
     GameEngine
+    WinPixEventRuntime
 )
 
 #-----------------------------------------------------------------------------------
@@ -255,4 +256,5 @@ target_link_libraries(RTS PRIVATE
 target_link_directories(RTS PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/d3d9on12/bin/src/Release
     ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/DX90SDK/Lib/x64
+    ${CMAKE_CURRENT_SOURCE_DIR}/Libraries/Pix/x64
 )

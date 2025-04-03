@@ -497,7 +497,7 @@ void GameClient::update( void )
 {
 	USE_PERF_TIMER(GameClient_update)
 
-	ImGui_ImplDX9_NewFrame();
+	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();		
 
@@ -593,13 +593,15 @@ void GameClient::update( void )
 	
 	if(TheGlobalData->m_playIntro || TheGlobalData->m_afterIntro)
 	{
+		ImGui::Render();
+
 		// redraw all views, update the GUI
 		{
 			TheDisplay->DRAW();
 		}
 		{
 			TheDisplay->UPDATE();
-		}
+		}		
 		return;
 	}
 
@@ -698,6 +700,7 @@ void GameClient::update( void )
 	// need to draw the first frame, then don't draw again until TheGlobalData->m_noDraw
 	if (TheGlobalData->m_noDraw > TheGameLogic->getFrame() && TheGameLogic->getFrame() > 0) 
 	{
+		ImGui::Render();
 		return;
 	}
 #endif
@@ -738,7 +741,7 @@ void GameClient::update( void )
 		}
 	}
 
-	ImGui::EndFrame();
+	ImGui::Render();
 
 	{
 		USE_PERF_TIMER(GameClient_draw)

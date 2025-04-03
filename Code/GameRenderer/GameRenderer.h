@@ -217,6 +217,76 @@ private:
 	ID3D12Resource* m_pResource12;
 };
 
+inline void TransitionResource(
+	ID3D12GraphicsCommandList* cmdList,
+	ID3D12Resource* pResource,
+	D3D12_RESOURCE_STATES beforeState,
+	D3D12_RESOURCE_STATES afterState)
+{
+	if (!cmdList || !pResource || beforeState == afterState)
+		return; // No-op if states match or invalid args
+
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = pResource;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrier.Transition.StateBefore = beforeState;
+	barrier.Transition.StateAfter = afterState;
+
+	cmdList->ResourceBarrier(1, &barrier);
+}
+
+inline DXGI_FORMAT ConvertD3DFormatToDXGIFormat(D3DFORMAT d3dFormat)
+{
+	switch (d3dFormat)
+	{
+		// Common 32-bit color formats:
+	case D3DFMT_A8R8G8B8:
+		// Usually this maps to BGRA in D3D9.  
+		// If you are actually creating typical 8-bit RGBA surfaces in DX12, 
+		// you might prefer DXGI_FORMAT_R8G8B8A8_UNORM. However, many D3D9
+		// engines treat A8R8G8B8 as BGRA. Some drivers automatically handle 
+		// the swizzle. If it looks inverted, try DXGI_FORMAT_B8G8R8A8_UNORM.
+		return DXGI_FORMAT_B8G8R8A8_UNORM;
+
+	case D3DFMT_X8R8G8B8:
+		return DXGI_FORMAT_B8G8R8X8_UNORM;
+
+		// 16-bit formats:
+	case D3DFMT_R5G6B5:
+		// There's no direct DXGI R5G6B5, so we often use B5G6R5 instead.
+		return DXGI_FORMAT_B5G6R5_UNORM;
+
+	case D3DFMT_A1R5G5B5:
+		return DXGI_FORMAT_B5G5R5A1_UNORM;
+
+		// Typical 24-bit or 16-bit are less common in DX12, might need a fallback or 
+		// a custom path. 24-bit alone is rarely used directly in DX12.
+
+		// Depth-stencil formats:
+	case D3DFMT_D24S8:
+	case D3DFMT_D24X8:
+		return DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	case D3DFMT_D16:
+		// Some GPUs might not support D16 natively as a resource in DX12. 
+		// If they do, it might be mapped to DXGI_FORMAT_D16_UNORM.
+		return DXGI_FORMAT_D16_UNORM;
+
+	case D3DFMT_D32:
+		// Typically maps to DXGI_FORMAT_D32_FLOAT or similar. 
+		// But note: some older D3D9 D32 was an integer depth. 
+		// Usually you'd want to test or pick D32_FLOAT if that matches your usage.
+		return DXGI_FORMAT_D32_FLOAT;
+
+		// Fallback
+	default:
+		return DXGI_FORMAT_UNKNOWN;
+	}
+}
+
+
 #include "dx8/dx8rendertarget.h"
 #include "dx8/dx8wrapper.h"
 #include "dx8/dx8list.h"
@@ -236,6 +306,6 @@ private:
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_win32.h"
-#include "imgui/imgui_impl_dx9.h"
+#include "imgui/imgui_impl_dx12.h"
 
 extern ImFont* g_BigConsoleFont;
