@@ -41,9 +41,12 @@
 #ifndef SEGLINE_H
 #define SEGLINE_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "rendobj.h"
 #include "shader.h"
-#include "simplevec.h"
 #include "seglinerenderer.h"
 
 
@@ -173,7 +176,7 @@ class SegmentedLineClass : public RenderObjClass
 		float								NormalizedScreenArea;
 
 		// Per-point location array
-		SimpleDynVecClass<Vector3>	PointLocations;
+		std::vector<Vector3> PointLocations;
 
 		// LineRenderer, contains most of the line settings.
 		SegLineRendererClass		LineRenderer;

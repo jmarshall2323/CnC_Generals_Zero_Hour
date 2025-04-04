@@ -61,7 +61,6 @@ add_library(wwlib STATIC
     textfile.cpp
     thread.cpp
     trim.cpp
-    vector.cpp
     widestring.cpp
     win.cpp
     WWCOMUtil.cpp

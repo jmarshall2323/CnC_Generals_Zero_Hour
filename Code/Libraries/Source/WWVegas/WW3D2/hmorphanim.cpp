@@ -43,7 +43,6 @@
 #include "htree.h"
 #include "wwstring.h"
 #include "textfile.h"
-#include "simplevec.h"
 
 
 
@@ -59,7 +58,8 @@ TimeCodedMorphKeysClass::~TimeCodedMorphKeysClass(void)
 
 void TimeCodedMorphKeysClass::Free(void)
 {
-	Keys.Delete_All ();
+	Keys.clear();
+	Keys.shrink_to_fit();
 	CachedIdx = 0;
 }
 
@@ -71,7 +71,7 @@ bool TimeCodedMorphKeysClass::Load_W3D(ChunkLoadClass & cload)
 	W3dMorphAnimKeyStruct w3dkey;
 	for (uint32 i=0; i<key_count; i++) {
 		cload.Read(&w3dkey,sizeof(w3dkey));
-		Keys.Add (MorphKeyStruct (w3dkey.MorphFrame, w3dkey.PoseFrame));
+		Keys.push_back(MorphKeyStruct(w3dkey.MorphFrame, w3dkey.PoseFrame));
 	}
 	CachedIdx = 0;
 	return true;
@@ -80,9 +80,10 @@ bool TimeCodedMorphKeysClass::Load_W3D(ChunkLoadClass & cload)
 bool TimeCodedMorphKeysClass::Save_W3D(ChunkSaveClass & csave)
 {
 	W3dMorphAnimKeyStruct w3dkey;
-	for (int i=0; i<Keys.Count (); i++) {
-		w3dkey.MorphFrame = Keys[i].MorphFrame;
-		w3dkey.PoseFrame = Keys[i].PoseFrame;
+	for (auto& key : Keys)
+	{
+		w3dkey.MorphFrame = key.MorphFrame;
+		w3dkey.PoseFrame = key.PoseFrame;
 		csave.Write(&w3dkey,sizeof(w3dkey));
 	}
 	return true;
@@ -90,7 +91,7 @@ bool TimeCodedMorphKeysClass::Save_W3D(ChunkSaveClass & csave)
 
 void TimeCodedMorphKeysClass::Add_Key (uint32 morph_frame, uint32 pose_frame)
 {
-	Keys.Add (MorphKeyStruct (morph_frame, pose_frame));
+	Keys.push_back(MorphKeyStruct (morph_frame, pose_frame));
 	return ;
 }
 
@@ -102,8 +103,9 @@ void TimeCodedMorphKeysClass::Get_Morph_Info(float morph_frame,int * pose_frame0
 		return;
 	} 
 
-	if (morph_frame >= Keys[Keys.Count ()-1].MorphFrame) {
-		*pose_frame0 = *pose_frame1 = Keys[Keys.Count ()-1].PoseFrame;
+	if (morph_frame >= Keys.back().MorphFrame)
+	{
+		*pose_frame0 = *pose_frame1 = Keys.back().PoseFrame;
 		*fraction = 0.0f;
 		return;
 	}
@@ -118,7 +120,7 @@ void TimeCodedMorphKeysClass::Get_Morph_Info(float morph_frame,int * pose_frame0
 
 uint32 TimeCodedMorphKeysClass::get_index(float frame)
 {
-	assert(CachedIdx <= (uint32)Keys.Count ()-1);
+	assert(CachedIdx <= (uint32)Keys.size()-1);
 
 	float	cached_frame = Keys[CachedIdx].MorphFrame;
 
@@ -126,7 +128,7 @@ uint32 TimeCodedMorphKeysClass::get_index(float frame)
 	if (frame >= cached_frame) {
 
 		// special case for end packets
-		if (CachedIdx == (uint32)Keys.Count ()-1) return(CachedIdx);
+		if (CachedIdx == (uint32)Keys.size()-1) return(CachedIdx);
 		
 		// check if the requested time is still in the cached interval
 		if (frame < Keys[CachedIdx + 1].MorphFrame) return(CachedIdx);
@@ -135,7 +137,7 @@ uint32 TimeCodedMorphKeysClass::get_index(float frame)
 		CachedIdx++;
 	
 		// again, special case the end interval
-		if (CachedIdx == (uint32)Keys.Count ()-1) return(CachedIdx);
+		if (CachedIdx == (uint32)Keys.size()-1) return(CachedIdx);
 
 		// check if requested time is in this interval
 		if (frame < Keys[CachedIdx + 1].MorphFrame) return(CachedIdx);
@@ -151,10 +153,10 @@ uint32 TimeCodedMorphKeysClass::binary_search_index(float req_frame)
 {
 	// special case first and last packet
 	if (req_frame < Keys[0].MorphFrame) return 0;
-	if (req_frame >= Keys[Keys.Count ()-1].MorphFrame) return Keys.Count ()-1;
+	if (req_frame >= Keys.back().MorphFrame) return Keys.size() - 1;
 
 	int leftIdx = 0;
-	int rightIdx = Keys.Count ();
+	int rightIdx = Keys.size();
 	int idx,dx;
 	
 	// binary search for the desired interval

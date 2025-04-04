@@ -44,9 +44,11 @@
 #define HANIMMGR_H
 
 #include "always.h"
+
+#include <vector>
+
 #include "hash.h"
 #include "wwstring.h"
-#include "vector.h"
 
 class HAnimClass;
 class ChunkLoadClass;
@@ -87,7 +89,7 @@ public:
 	bool					Add_Anim(HAnimClass *new_anim);
 	void			 		Free_All_Anims(void);
 	void			 		Free_All_Anims_With_Exclusion_List(const W3DExclusionListClass & exclusion_list);
-	void					Create_Asset_List(DynamicVectorClass<StringClass> & exclusion_list);
+	void Create_Asset_List(std::vector<StringClass>& exclusion_list);
 
 	void					Register_Missing( const char * name );
 	bool					Is_Missing( const char * name );

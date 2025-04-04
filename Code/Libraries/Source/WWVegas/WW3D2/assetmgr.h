@@ -44,13 +44,14 @@
 #define ASSETMGR_H
 
 #include "always.h"
-#include "vector.h"
+
+#include <vector>
+
 #include "htreemgr.h"
 #include "hanimmgr.h"
 #include "slist.h"
 #include "texture.h"
 #include "hashtemplate.h"
-#include "simplevec.h"
 
 class	HAnimClass;
 class	HTreeClass;
@@ -223,8 +224,8 @@ public:
 	/*
 	** Release assets not in the given exclusion list.
 	*/
-	virtual void						Free_Assets_With_Exclusion_List(const DynamicVectorClass<StringClass> & model_exclusion_list);
-	virtual void						Create_Asset_List(DynamicVectorClass<StringClass> & model_exclusion_list);
+	virtual void Free_Assets_With_Exclusion_List(const std::vector<StringClass>& model_exclusion_list);
+	virtual void Create_Asset_List(std::vector<StringClass>& model_exclusion_list);
 
 	/*
 	** create me an instance of one of the prototype render objects
@@ -357,14 +358,14 @@ protected:
 	** These objects are responsible for importing certain W3D chunk types and turning
 	** them into prototypes.
 	*/
-	DynamicVectorClass < PrototypeLoaderClass * >			PrototypeLoaders;
+	std::vector<PrototypeLoaderClass*> PrototypeLoaders;
 	
 	/*
 	** Prototypes
 	** These objects are abstract factories for named render objects.  Prototypes is
 	** a dynamic array of pointers to the currently loaded prototypes.
 	*/
-	DynamicVectorClass < PrototypeClass * >					Prototypes;
+	std::vector<PrototypeClass*> Prototypes;
 
 	/*
 	** Prototype Hash Table
@@ -399,7 +400,7 @@ protected:
 	/*
 	** list of FontChars
 	*/
-	SimpleDynVecClass<FontCharsClass*>		FontCharsList;
+	std::vector<FontCharsClass*> FontCharsList;
 
 	/*
 	** Should .W3D be loaded if not in memory

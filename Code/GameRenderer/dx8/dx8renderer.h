@@ -45,10 +45,11 @@
 #define DX8_RENDERER_H
 
 #include "always.h"
+
+#include <vector>
+
 #include "wwstring.h"
-#include "simplevec.h"
 #include "refcount.h"
-#include "vector.h"
 #include "dx8list.h"
 #include "shader.h"
 #include "dx8wrapper.h"
@@ -330,7 +331,7 @@ protected:
 	bool													enable_lighting;
 	CameraClass *										camera;
 
-	SimpleDynVecClass<FVFCategoryList *>		texture_category_container_lists_rigid;
+	std::vector<FVFCategoryList*> texture_category_container_lists_rigid;
 	FVFCategoryList *									texture_category_container_list_skin;
 
 	DecalMeshClass *									visible_decal_meshes;

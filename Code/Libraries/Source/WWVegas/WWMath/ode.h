@@ -44,25 +44,10 @@
 #define ODE_H
 
 #include "always.h"
-#include "vector.h"
+
+#include <vector>
+
 #include "wwdebug.h"
-
-
-/*
-** StateVectorClass
-** The state vector for a system of ordinary differential equations will be 
-** stored in this form.  It is a dynamically resizeable array so that we don't
-** have to hard-code a maximum size.  If needed, in the final product, we could
-** do a slight optimization which makes this a normal fixed size array that
-** we've determined is "big enough".
-*/
-class StateVectorClass : public DynamicVectorClass<float> 
-{
-public:
-	void Reset(void) { ActiveCount = 0; }
-	void Resize(int size) { if (size > VectorMax) { DynamicVectorClass<float>::Resize(size); } }
-};
-
 
 /*
 ** ODESystemClass
@@ -78,9 +63,9 @@ public:
 	** Get_Current_State
 	** This function should fill the given state vector with the
 	** current state of this object.  Each state variable should be 
-	** inserted into the vector using its 'Add' interface.  
+	** inserted into the vector using its 'push_back' interface.
 	*/
-	virtual void	Get_State(StateVectorClass & set_state) = 0;
+	virtual void Get_State(std::vector<float>& set_state) = 0;
 
 	/*
 	** Set_Current_State
@@ -88,7 +73,7 @@ public:
 	** given index.  The return value should be the index that the next object should
 	** read from (i.e. increment the index past your state)
 	*/
-	virtual int		Set_State(const StateVectorClass & new_state,int start_index = 0) = 0;
+	virtual int Set_State(const std::vector<float>& new_state, int start_index = 0) = 0;
 
 	/*
 	** Compute_Derivatives
@@ -99,7 +84,7 @@ public:
 	** This function works similarly to the Set_State function in that it passes you
 	** the index to start reading from and you pass it back the index to continue from.
 	*/
-	virtual int		Compute_Derivatives(float t,StateVectorClass * test_state,StateVectorClass * dydt,int start_index = 0) = 0;
+	virtual int Compute_Derivatives(float t, std::vector<float>* test_state, std::vector<float>* dydt, int start_index = 0) = 0;
 
 };
 

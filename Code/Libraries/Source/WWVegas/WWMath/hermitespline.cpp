@@ -95,8 +95,9 @@ void HermiteSpline3DClass::Evaluate(float time,Vector3 * set_val)
 		return;
 	}
 
-	if (time > Keys[Keys.Count() - 1].Time) {
-		*set_val = Keys[Keys.Count() - 1].Point;
+	if (time > Keys.back().Time)
+	{
+		*set_val = Keys.back().Point;
 		return;
 	}
 
@@ -133,7 +134,7 @@ void HermiteSpline3DClass::Evaluate_Derivative(float time,Vector3 * set_val)
 {
 	// if we're outside the range, return the value for the start or end...
 	float min_time = Keys[0].Time;
-	float max_time = Keys[Keys.Count() - 1].Time;
+	float max_time = Keys.back().Time;
 	time = MAX(time, min_time);
 	time = MIN(time, max_time);
 
@@ -178,20 +179,20 @@ int HermiteSpline3DClass::Add_Key(const Vector3 & point,float t)
 	TangentsClass tan;
 	tan.InTangent.Set(0,0,0);
 	tan.OutTangent.Set(0,0,0);
-	Tangents.Insert(index,tan);
+	Tangents.insert(Tangents.begin() + index, tan);
 	return index;
 }
 
 void HermiteSpline3DClass::Remove_Key(int i)
 {
-	Tangents.Delete(i);
+	Tangents.erase(Tangents.begin() + i);
 	Curve3DClass::Remove_Key(i);
 	TangentsDirty = true;
 }
 
 void HermiteSpline3DClass::Clear_Keys(void)
 {
-	Tangents.Clear();
+	Tangents.clear();
 	Curve3DClass::Clear_Keys();
 	TangentsDirty = true;
 }
@@ -199,7 +200,7 @@ void HermiteSpline3DClass::Clear_Keys(void)
 void HermiteSpline3DClass::Set_Tangents(int i,const Vector3 & in_tan,const Vector3 & out_tan)
 {
 	assert(i>=0);
-	assert(i<Keys.Count());
+	assert(i < Keys.size());
 	Tangents[i].InTangent = in_tan;
 	Tangents[i].OutTangent = out_tan;
 }
@@ -207,7 +208,7 @@ void HermiteSpline3DClass::Set_Tangents(int i,const Vector3 & in_tan,const Vecto
 void HermiteSpline3DClass::Get_Tangents(int i,Vector3 * set_in,Vector3 * set_out)
 {
 	assert(i>=0);
-	assert(i<Keys.Count());
+	assert(i < Keys.size());
 	*set_in = Tangents[i].InTangent;
 	*set_out = Tangents[i].OutTangent;
 }
@@ -224,9 +225,10 @@ bool HermiteSpline3DClass::Save(ChunkSaveClass &csave)
 	csave.End_Chunk();
 	
 	csave.Begin_Chunk(HERMITE3D_CHUNK_TANGENTS);
-	for (int i=0; i<Tangents.Count(); i++) {
-		csave.Write(&(Tangents[i].InTangent),sizeof(Tangents[i].InTangent));
-		csave.Write(&(Tangents[i].OutTangent),sizeof(Tangents[i].OutTangent));
+	for (const auto& tangent : Tangents)
+	{
+		csave.Write(&(tangent.InTangent),sizeof(tangent.InTangent));
+		csave.Write(&(tangent.OutTangent),sizeof(tangent.OutTangent));
 	}
 	csave.End_Chunk();
 	return true;
@@ -234,11 +236,10 @@ bool HermiteSpline3DClass::Save(ChunkSaveClass &csave)
 
 bool HermiteSpline3DClass::Load(ChunkLoadClass &cload)
 {
-	int i;
 	TangentsClass newtangent;
 
 	// reset the array of tangents
-	Tangents.Delete_All();
+	Tangents.clear();
 
 	// read in the chunks
 	while (cload.Open_Chunk()) {
@@ -250,10 +251,11 @@ bool HermiteSpline3DClass::Load(ChunkLoadClass &cload)
 				break;
 
 			case HERMITE3D_CHUNK_TANGENTS:
-				for (i=0; i<Keys.Count(); i++) {
+				for (size_t i = 0; Keys.size(); i++)
+				{
 					cload.Read(&(newtangent.InTangent),sizeof(newtangent.InTangent));
 					cload.Read(&(newtangent.OutTangent),sizeof(newtangent.OutTangent));
-					Tangents.Add(newtangent);
+					Tangents.push_back(newtangent);
 				}
 				break;
 
@@ -264,7 +266,7 @@ bool HermiteSpline3DClass::Load(ChunkLoadClass &cload)
 		cload.Close_Chunk();
 	}
 
-	WWASSERT(Keys.Count() == Tangents.Count());
+	WWASSERT(Keys.size() == Tangents.size());
 	return true;
 }
 
@@ -284,7 +286,7 @@ void HermiteSpline1DClass::Set_Looping(bool onoff)
 
 void HermiteSpline1DClass::Evaluate(float time,float * set_val)
 {
-	if (Keys.Count() == 1)
+	if (Keys.size() == 1)
 	{
 		*set_val = Keys[0].Point;
 		return;
@@ -298,8 +300,9 @@ void HermiteSpline1DClass::Evaluate(float time,float * set_val)
 			return;
 		}
 
-		if (time > Keys[Keys.Count() - 1].Time) {
-			*set_val = Keys[Keys.Count() - 1].Point;
+		if (time > Keys.back().Time)
+		{
+			*set_val = Keys.back().Point;
 			return;
 		}
 	}
@@ -340,20 +343,20 @@ int HermiteSpline1DClass::Add_Key(float point,float t,unsigned int extra)
 	TangentsClass tan;
 	tan.InTangent = 0.0f;
 	tan.OutTangent = 0.0f;
-	Tangents.Insert(index,tan);
+	Tangents.insert(Tangents.begin() + index,tan);
 	return index;
 }
 
 void HermiteSpline1DClass::Remove_Key(int i)
 {
-	Tangents.Delete(i);
+	Tangents.erase(Tangents.begin() + i);
 	Curve1DClass::Remove_Key(i);
 	TangentsDirty = true;
 }
 
 void HermiteSpline1DClass::Clear_Keys(void)
 {
-	Tangents.Clear();
+	Tangents.clear();
 	Curve1DClass::Clear_Keys();
 	TangentsDirty = true;
 }
@@ -361,7 +364,7 @@ void HermiteSpline1DClass::Clear_Keys(void)
 void HermiteSpline1DClass::Set_Tangents(int i,float in_tan,float out_tan)
 {
 	assert(i>=0);
-	assert(i<Keys.Count());
+	assert(i < Keys.size());
 	Tangents[i].InTangent = in_tan;
 	Tangents[i].OutTangent = out_tan;
 }
@@ -369,7 +372,7 @@ void HermiteSpline1DClass::Set_Tangents(int i,float in_tan,float out_tan)
 void HermiteSpline1DClass::Get_Tangents(int i,float * set_in,float * set_out)
 {
 	assert(i>=0);
-	assert(i<Keys.Count());
+	assert(i < Keys.size());
 	*set_in = Tangents[i].InTangent;
 	*set_out = Tangents[i].OutTangent;
 }
@@ -390,9 +393,10 @@ bool HermiteSpline1DClass::Save(ChunkSaveClass &csave)
 	csave.End_Chunk();
 	
 	csave.Begin_Chunk(HERMITE1D_CHUNK_TANGENTS);
-	for (int i=0; i<Tangents.Count(); i++) {
-		csave.Write(&(Tangents[i].InTangent),sizeof(Tangents[i].InTangent));
-		csave.Write(&(Tangents[i].OutTangent),sizeof(Tangents[i].OutTangent));
+	for (const auto& tangent : Tangents)
+	{
+		csave.Write(&(tangent.InTangent), sizeof(tangent.InTangent));
+		csave.Write(&(tangent.OutTangent), sizeof(tangent.OutTangent));
 	}
 	csave.End_Chunk();
 	return true;
@@ -400,11 +404,10 @@ bool HermiteSpline1DClass::Save(ChunkSaveClass &csave)
 
 bool HermiteSpline1DClass::Load(ChunkLoadClass &cload)
 {
-	int i;
 	TangentsClass newtangent;
 
 	// reset the tangents array
-	Tangents.Delete_All();
+	Tangents.clear();
 
 	// read in the chunks
 	while (cload.Open_Chunk()) {
@@ -416,10 +419,11 @@ bool HermiteSpline1DClass::Load(ChunkLoadClass &cload)
 				break;
 
 			case HERMITE1D_CHUNK_TANGENTS:
-				for (i=0; i<Keys.Count(); i++) {
-					cload.Read(&(newtangent.InTangent),sizeof(newtangent.InTangent));
-					cload.Read(&(newtangent.OutTangent),sizeof(newtangent.OutTangent));
-					Tangents.Add(newtangent);
+				for (size_t i = 0; i < Keys.size(); i++)
+				{
+					cload.Read(&(newtangent.InTangent), sizeof(newtangent.InTangent));
+					cload.Read(&(newtangent.OutTangent), sizeof(newtangent.OutTangent));
+					Tangents.push_back(newtangent);
 				}
 				TangentsDirty = false;
 				break;
@@ -431,7 +435,7 @@ bool HermiteSpline1DClass::Load(ChunkLoadClass &cload)
 		cload.Close_Chunk();
 	}
 
-	WWASSERT(Keys.Count() == Tangents.Count());
+	WWASSERT(Keys.size() == Tangents.size());
 	return true;
 }
 

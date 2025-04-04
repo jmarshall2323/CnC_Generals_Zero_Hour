@@ -44,8 +44,10 @@
 #define HMORPHANIM_H
 
 #include "always.h"
+
+#include <vector>
+
 #include "hanim.h"
-#include "simplevec.h"
 
 class TimeCodedMorphKeysClass;
 class ChunkLoadClass;
@@ -174,7 +176,7 @@ private:
 		uint32	PoseFrame;				// which pose frame to use at this time
 	};
 	
-	SimpleDynVecClass<MorphKeyStruct>	Keys;	// morph key data
+	std::vector<MorphKeyStruct> Keys; // morph key data
 	uint32				CachedIdx;					// last accessed index
 
 	void 					Free(void);

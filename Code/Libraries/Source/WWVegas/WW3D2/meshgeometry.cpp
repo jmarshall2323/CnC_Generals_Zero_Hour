@@ -99,12 +99,12 @@
 
 
 #if (OPTIMIZE_PLANEEQ_RAM)
-static SimpleVecClass<Vector4> _PlaneEQArray(1024);
+static std::vector<Vector4> _PlaneEQArray(1024);
 #endif
 
 
 #if (OPTIMIZE_VNORM_RAM)
-static SimpleVecClass<Vector3> _VNormArray(1024);
+static std::vector<Vector3> _VNormArray(1024);
 #endif
 
 
@@ -436,7 +436,7 @@ void MeshGeometryClass::Get_Bounding_Sphere(SphereClass * set_sphere)
  * HISTORY:                                                                                    *
  *   5/10/2001  gth : Created.                                                                 *
  *=============================================================================================*/
-void MeshGeometryClass::Generate_Rigid_APT(const Vector3 & view_dir, SimpleDynVecClass<uint32> & apt)
+void MeshGeometryClass::Generate_Rigid_APT(const Vector3& view_dir, std::vector<uint32>& apt)
 {
 	const Vector3 * loc = Get_Vertex_Array();
 	const Vector4 * norms = Get_Plane_Array();
@@ -451,7 +451,7 @@ void MeshGeometryClass::Generate_Rigid_APT(const Vector3 & view_dir, SimpleDynVe
 		tri.N = (Vector3*)&(norms[poly_counter]);
 		
 		if (Vector3::Dot_Product(*tri.N,view_dir) < 0.0f) {
-			apt.Add(poly_counter);
+			apt.push_back(poly_counter);
 		}
 	}
 }
@@ -471,7 +471,7 @@ void MeshGeometryClass::Generate_Rigid_APT(const Vector3 & view_dir, SimpleDynVe
  * HISTORY:                                                                                    *
  *   11/9/2000  gth : Created.                                                                 *
  *=============================================================================================*/
-void MeshGeometryClass::Generate_Rigid_APT(const OBBoxClass & local_box, SimpleDynVecClass<uint32> & apt)
+void MeshGeometryClass::Generate_Rigid_APT(const OBBoxClass& local_box, std::vector<uint32>& apt)
 {
 	if (CullTree != NULL) {
 		CullTree->Generate_APT(local_box, apt);
@@ -491,7 +491,7 @@ void MeshGeometryClass::Generate_Rigid_APT(const OBBoxClass & local_box, SimpleD
 			tri.N = (Vector3*)&(norms[poly_counter]);
 				
 			if (CollisionMath::Intersection_Test(local_box, tri)) {;
-				apt.Add(poly_counter);
+				apt.push_back(poly_counter);
 			}
 		}
 	}
@@ -510,7 +510,7 @@ void MeshGeometryClass::Generate_Rigid_APT(const OBBoxClass & local_box, SimpleD
  * HISTORY:                                                                                    *
  *   5/10/2001  gth : Created.                                                                 *
  *=============================================================================================*/
-void MeshGeometryClass::Generate_Rigid_APT(const OBBoxClass & local_box,const Vector3 & viewdir,SimpleDynVecClass<uint32> & apt)
+void MeshGeometryClass::Generate_Rigid_APT(const OBBoxClass& local_box, const Vector3& viewdir, std::vector<uint32>& apt)
 {
 	if (CullTree != NULL) {
 		CullTree->Generate_APT(local_box, viewdir,apt);
@@ -531,7 +531,7 @@ void MeshGeometryClass::Generate_Rigid_APT(const OBBoxClass & local_box,const Ve
 				
 			if (Vector3::Dot_Product(*tri.N,viewdir) < 0.0f) {
 				if (CollisionMath::Intersection_Test(local_box,tri)) {
-					apt.Add(poly_counter);
+					apt.push_back(poly_counter);
 				} 
 			}
 		}
@@ -552,7 +552,7 @@ void MeshGeometryClass::Generate_Rigid_APT(const OBBoxClass & local_box,const Ve
  * HISTORY:                                                                                    *
  *   11/9/2000  gth : Created.                                                                 *
  *=============================================================================================*/
-void MeshGeometryClass::Generate_Skin_APT(const OBBoxClass & world_box, SimpleDynVecClass<uint32> & apt, const Vector3 *world_vertex_locs)
+void MeshGeometryClass::Generate_Skin_APT(const OBBoxClass& world_box, std::vector<uint32>& apt, const Vector3* world_vertex_locs)
 {
 	WWASSERT(world_vertex_locs);
 
@@ -573,7 +573,7 @@ void MeshGeometryClass::Generate_Skin_APT(const OBBoxClass & world_box, SimpleDy
 		tri.N = &dummy_vec;
 			
 		if (CollisionMath::Intersection_Test(world_box,tri)) {;
-			apt.Add(poly_counter);
+			apt.push_back(poly_counter);
 		}
 	}
 }
@@ -1456,8 +1456,8 @@ const Vector3 * MeshGeometryClass::Get_Vertex_Normal_Array(void)
 Vector4 * MeshGeometryClass::get_planes(bool create)
 {
 #if (OPTIMIZE_PLANEEQ_RAM)
-	_PlaneEQArray.Uninitialised_Grow(PolyCount);
-	return &(_PlaneEQArray[0]);
+	_PlaneEQArray.assign(PolyCount, Vector4());
+	return _PlaneEQArray.data();
 #else
 	if (create && !PlaneEq) {
 		PlaneEq = NEW_REF(ShareBufferClass<Vector4>,(PolyCount, "MeshGeometryClass::PlaneEq"));

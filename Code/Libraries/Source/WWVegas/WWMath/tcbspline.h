@@ -42,6 +42,10 @@
 #ifndef TCBSPLINE_H
 #define TCBSPLINE_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "hermitespline.h"
 
 /*
@@ -78,7 +82,7 @@ protected:
 		bool				operator != (const TCBClass & that) { return !TCBClass::operator == (that); }
 	};
 
-	DynamicVectorClass<TCBClass> Params;
+	std::vector<TCBClass> Params;
 };
 
 

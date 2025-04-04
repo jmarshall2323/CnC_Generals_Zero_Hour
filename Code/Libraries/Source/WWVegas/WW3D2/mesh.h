@@ -44,6 +44,9 @@
 #define MESH_H
 
 #include "always.h"
+
+#include <vector>
+
 #include "rendobj.h"
 #include "bittype.h"
 #include "w3derr.h"
@@ -167,7 +170,7 @@ public:
 	
 protected:
 
-	virtual void					Add_Dependencies_To_List (DynamicVectorClass<StringClass> &file_list, bool textures_only = false);
+	virtual void Add_Dependencies_To_List (std::vector<StringClass> &file_list, bool textures_only = false);
 
 	virtual void					Update_Cached_Bounding_Volumes(void) const;
 

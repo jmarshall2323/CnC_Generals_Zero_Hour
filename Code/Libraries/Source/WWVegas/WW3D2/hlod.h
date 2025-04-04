@@ -42,12 +42,12 @@
 #ifndef HLOD_H
 #define HLOD_H
 
+#include "always.h"
+
+#include <vector>
+
 #ifndef ANIMOBJ_H
 #include "animobj.h"
-#endif
-
-#ifndef VECTOR_H
-#include "vector.h"
 #endif
 
 #ifndef SNAPPTS_H
@@ -240,7 +240,7 @@ protected:
 		bool operator != (const ModelNodeClass & that) { return !operator == (that); }
 	};
 
-	class ModelArrayClass : public DynamicVectorClass<ModelNodeClass> 
+	class ModelArrayClass : public std::vector<ModelNodeClass>
 	{
 	public:
 		ModelArrayClass(void) : MaxScreenSize(NO_MAX_SCREEN_SIZE), NonPixelCost(0.0f),

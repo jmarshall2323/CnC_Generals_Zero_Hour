@@ -422,7 +422,7 @@ W3DDisplay::~W3DDisplay()
 Int W3DDisplay::getDisplayModeCount(void)
 {
 	const RenderDeviceDescClass &devDesc=WW3D::Get_Render_Device_Desc(0);
-	const DynamicVectorClass <ResolutionDescClass> &resolutions=devDesc.Enumerate_Resolutions();
+	const std::vector<ResolutionDescClass>& resolutions = devDesc.Enumerate_Resolutions();
 
 	Int numResolutions=0;
 /*	Bool needStencil=false;
@@ -438,10 +438,10 @@ Int W3DDisplay::getDisplayModeCount(void)
 	{	minBitDepth=32;
 	}
 */
-	for (int res = 0; res < resolutions.Count ();  res ++)
+	for (const auto& resolution : resolutions)
 	{
 		// Is this the resolution we are looking for?
-		if (resolutions[res].BitDepth >= 24 && resolutions[res].Width >= 1280)	//only accept 4:3 aspect ratio modes.
+		if (resolution.BitDepth >= 24 && resolution.Width >= 1280)
 		{	
 			numResolutions++;
 		}
@@ -454,18 +454,18 @@ void W3DDisplay::getDisplayModeDescription(Int modeIndex, Int *xres, Int *yres, 
 {
 	Int numResolutions=0;
 	const RenderDeviceDescClass &devDesc=WW3D::Get_Render_Device_Desc(0);
-	const DynamicVectorClass <ResolutionDescClass> &resolutions=devDesc.Enumerate_Resolutions();
+	const std::vector<ResolutionDescClass>& resolutions = devDesc.Enumerate_Resolutions();
 
-	for (int res = 0; res < resolutions.Count ();  res ++)
+	for (const auto& resolution : resolutions)
 	{
 		// Is this the resolution we are looking for?
-		if (resolutions[res].BitDepth >= 24 && resolutions[res].Width >= 1280)	//only accept 4:3 aspect ratio modes.
+		if (resolution.BitDepth >= 24 && resolution.Width >= 1280)
 		{	
 			if (numResolutions == modeIndex)
 			{	//found the mode
-				*xres=resolutions[res].Width;
-				*yres=resolutions[res].Height;
-				*bitDepth=resolutions[res].BitDepth;
+				*xres=resolution.Width;
+				*yres=resolution.Height;
+				*bitDepth=resolution.BitDepth;
 				return;
 			}
 			numResolutions++;
@@ -3105,7 +3105,7 @@ void W3DDisplay::doSmartAssetPurgeAndPreload(const char* usageFileName)
 	if (!m_assetManager || !usageFileName || !*usageFileName)
 		return;
 
-	DynamicVectorClass<StringClass> names(8000);
+	std::vector<StringClass> names;
 
 	// use TheFileSystem here so we can bigify these files
 	File* f = TheFileSystem->openFile(usageFileName, File::READ | File::TEXT);
@@ -3122,7 +3122,7 @@ void W3DDisplay::doSmartAssetPurgeAndPreload(const char* usageFileName)
 			if (tmp.str()[0] == ';')
 				continue;
 
-			names.Add(StringClass(tmp.str()));
+			names.push_back(StringClass(tmp.str()));
 		}
 		f->close();
 	}
@@ -3139,7 +3139,7 @@ void W3DDisplay::dumpAssetUsage(const char* mapname)
 	if (!m_assetManager || !mapname || !*mapname)
 		return;
 
-	DynamicVectorClass<StringClass> names(8000);
+	std::vector<StringClass> names(8000);
 	m_assetManager->Create_Asset_List(names);
 
 	const char* leafname = strrchr(mapname, '\\');
@@ -3161,10 +3161,9 @@ void W3DDisplay::dumpAssetUsage(const char* mapname)
 	FILE *fp = fopen(buf, "w");
 	if (fp)
 	{
-		for (int i=0; i<names.Count(); i++) 
+		for (const auto& name : names)
 		{
-			const char* n = names[i];
-			fprintf(fp, "%s\n", n);
+			fprintf(fp, "%s\n", static_cast<const char*>(name));
 		}
 		fclose(fp);
 	}

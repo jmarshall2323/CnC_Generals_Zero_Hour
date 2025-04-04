@@ -30,7 +30,7 @@
 //-------------------------------------------------------------------------------------------------
 void ClipPolyClass::Reset(void)
 {
-	Verts.Delete_All(false);
+	Verts.clear();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ void ClipPolyClass::Reset(void)
 //-------------------------------------------------------------------------------------------------
 void ClipPolyClass::Add_Vertex(const Vector3 & point)
 {
-	Verts.Add(point);
+	Verts.push_back(point);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ void ClipPolyClass::Clip(const PlaneClass & plane,ClipPolyClass & dest) const
 
 	// temporary variables used in clipping
 	Int i = 0;
-	Int vcount = Verts.Count();
+	Int vcount = Verts.size();
 	Int iprev = vcount - 1;
 	Bool cur_point_in_front;
 	Bool prev_point_in_front;

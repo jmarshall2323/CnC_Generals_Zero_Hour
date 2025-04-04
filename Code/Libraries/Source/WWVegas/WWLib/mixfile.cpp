@@ -141,7 +141,7 @@ MixFileFactoryClass::~MixFileFactoryClass( void )
 	FileInfo.Resize(0);
 }
 
-bool	MixFileFactoryClass::Build_Filename_List (DynamicVectorClass<StringClass> &list)
+bool MixFileFactoryClass::Build_Filename_List (std::vector<StringClass>& list)
 {
 	if (IsValid == false) {
 		return false;
@@ -189,7 +189,7 @@ bool	MixFileFactoryClass::Build_Filename_List (DynamicVectorClass<StringClass> &
 						//
 						//	Add the filename to our list
 						//
-						list.Add( filename );
+						list.push_back( filename );
 						keep_going = true;
 					}
 				}

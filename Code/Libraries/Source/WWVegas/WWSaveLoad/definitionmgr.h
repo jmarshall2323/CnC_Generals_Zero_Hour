@@ -44,13 +44,15 @@
 #define __DEFINITION_MGR_H
 
 #include "always.h"
+
+#include <vector>
+
 #include "saveload.h"
 #include "saveloadsubsystem.h"
 #include "saveloadids.h"
 #include "wwdebug.h"
 #include "wwstring.h"
 #include "hashtemplate.h"
-#include "vector.h"
 
 
 // Forward declarations
@@ -130,7 +132,7 @@ protected:
 	bool								Load_Variables (ChunkLoadClass &cload);	
 
 private:
-	static HashTemplateClass<StringClass, DynamicVectorClass<DefinitionClass*>*>* DefinitionHash;
+	static HashTemplateClass<StringClass, std::vector<DefinitionClass*>*>* DefinitionHash;
 
 	/////////////////////////////////////////////////////////////////////
 	//	Private methods

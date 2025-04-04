@@ -44,7 +44,8 @@
 #include "always.h"
 #endif
 
-#include "vector.h"
+#include <vector>
+
 #include "wwstring.h"
 #include "widestring.h"
 
@@ -87,7 +88,7 @@ public:
 	void	Set_Bin( const char * name, const void *buffer, int buffer_size );
 
 	// Value enumeration support
-	void	Get_Value_List( DynamicVectorClass<StringClass> &list );
+	void Get_Value_List(std::vector<StringClass>& list);
 
 	// Delete support
 	void	Delete_Value( const char * name);

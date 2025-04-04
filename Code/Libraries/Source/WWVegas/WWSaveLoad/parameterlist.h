@@ -46,7 +46,9 @@
 #define __PARAMETER_LIST_H
 
 #include "always.h"
-#include "vector.h"
+
+#include <vector>
+
 #include "parameter.h"
 #include "wwdebug.h"
 
@@ -55,7 +57,7 @@
 //	ParameterListClass
 //
 //////////////////////////////////////////////////////////////////////////////////
-class ParameterListClass : public DynamicVectorClass<ParameterClass *>
+class ParameterListClass
 {
 public:
 	
@@ -82,7 +84,7 @@ private:
 	/////////////////////////////////////////////////////////////////////
 	// Private member data
 	/////////////////////////////////////////////////////////////////////
-	DynamicVectorClass<ParameterClass *>		m_Parameters;
+	std::vector<ParameterClass*> m_Parameters;
 };
 
 
@@ -112,7 +114,7 @@ ParameterListClass::Add (void *data, const char *param_name, ParameterClass::Typ
 	//
 	WWASSERT (new_param != NULL);
 	if (new_param != NULL) {
-		DynamicVectorClass<ParameterClass *>::Add (new_param);
+		m_Parameters.push_back(new_param);
 	}
 
 	return ;
@@ -128,7 +130,7 @@ ParameterListClass::Add (ParameterClass *new_param)
 	//	Add the new paramter object to our list
 	//
 	if (new_param != NULL) {
-		DynamicVectorClass<ParameterClass *>::Add (new_param);
+		m_Parameters.push_back(new_param);
 	}
 
 	return ;
@@ -140,9 +142,8 @@ ParameterListClass::Add (ParameterClass *new_param)
 inline void
 ParameterListClass::Free_Parameters (void)
 {
-	for (int index = 0; index < Count (); index ++) {		
-		ParameterClass *param = Vector[index];
-		
+	for (const auto& param : m_Parameters)
+	{
 		//
 		//	Free the parameter object
 		//
@@ -151,7 +152,8 @@ ParameterListClass::Free_Parameters (void)
 		}
 	}
 
-	m_Parameters.Delete_All ();
+	m_Parameters.clear();
+	m_Parameters.shrink_to_fit();
 	return ;
 }
 

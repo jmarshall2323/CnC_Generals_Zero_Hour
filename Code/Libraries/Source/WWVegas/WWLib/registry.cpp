@@ -202,7 +202,7 @@ void	RegistryClass::Set_String( const char * name, const char *value )
 	}
 }
 
-void	RegistryClass::Get_Value_List( DynamicVectorClass<StringClass> &list )
+void RegistryClass::Get_Value_List(std::vector<StringClass>& list)
 {
 	char value_name[128];
 
@@ -219,7 +219,7 @@ void	RegistryClass::Get_Value_List( DynamicVectorClass<StringClass> &list )
 		//
 		//	Add this value name to the list
 		//
-		list.Add( value_name );
+		list.push_back(value_name);
 	}
 
 	return ;
@@ -236,14 +236,15 @@ void	RegistryClass::Deleta_All_Values( void )
 	//
 	//	Build a list of the values in this key
 	//
-	DynamicVectorClass<StringClass> value_list;
+	std::vector<StringClass> value_list;
 	Get_Value_List (value_list);
 
 	//
 	//	Loop over and delete each value
 	//
-	for (int index = 0; index < value_list.Count (); index ++) {
-		Delete_Value( value_list[index] );
+	for (const auto& value : value_list)
+	{
+		Delete_Value(value);
 	}
 
 	return ;

@@ -73,26 +73,26 @@ int TCBSpline3DClass::Add_Key(const Vector3 & point,float t)
 	params.Tension = 0.0f;
 	params.Continuity = 0.0f;
 	params.Bias = 0.0f;
-	Params.Insert(index,params);
+	Params.insert(Params.begin() + index, params);
 	return index;
 }
 
 void TCBSpline3DClass::Remove_Key(int i)
 {
 	HermiteSpline3DClass::Remove_Key(i);
-	Params.Delete(i);
+	Params.erase(Params.begin() + i);
 }
 
 void TCBSpline3DClass::Clear_Keys(void)
 {
 	HermiteSpline3DClass::Clear_Keys();
-	Params.Clear();
+	Params.clear();
 }
 
 void TCBSpline3DClass::Set_TCB_Params(int i,float tension,float continuity,float bias)
 {
 	WWASSERT(i >= 0);
-	WWASSERT(i < Params.Count());
+	WWASSERT(i < Params.size());
 	Params[i].Tension = tension;
 	Params[i].Continuity = continuity;
 	Params[i].Bias = bias;
@@ -108,8 +108,10 @@ void TCBSpline3DClass::Get_TCB_Params(int i,float *tension,float *continuity,flo
 
 void TCBSpline3DClass::Update_Tangents(void)
 {
-	if (Keys.Count() < 2) {
-		for (int i=0; i<Keys.Count(); i++) {
+	if (Keys.size() < 2)
+	{
+		for (size_t i = 0; i < Keys.size(); i++)
+		{
 			Tangents[0].InTangent.Set(0,0,0);
 			Tangents[0].OutTangent.Set(0,0,0);
 		}
@@ -117,7 +119,7 @@ void TCBSpline3DClass::Update_Tangents(void)
 
 	// First and Last Key: 
 	// Only need to compute the OutTangent for key[0] and the InTangent for key[end]
-	int end = Keys.Count() - 1;
+	const size_t end = Keys.size() - 1;
 	Tangents[0].InTangent.Set(0,0,0);
 	Tangents[end].OutTangent.Set(0,0,0);
 
@@ -164,8 +166,8 @@ void TCBSpline3DClass::Update_Tangents(void)
 
 
 	// Now compute the tangents of all of the normal keys...
-	for (int pi=1;pi<Keys.Count() - 1; pi++) {
-
+	for (size_t pi = 1; pi < Keys.size() - 1; pi++)
+	{
 		float k0 = 0.5f * ((1-Params[pi].Tension) * (1-Params[pi].Continuity) * (1-Params[pi].Bias));
 		float k1 = 0.5f * ((1-Params[pi].Tension) * (1+Params[pi].Continuity) * (1+Params[pi].Bias));
 		float k2 = 0.5f * ((1-Params[pi].Tension) * (1+Params[pi].Continuity) * (1-Params[pi].Bias));
@@ -202,7 +204,8 @@ bool TCBSpline3DClass::Save(ChunkSaveClass &csave)
 	csave.End_Chunk();
 	
 	csave.Begin_Chunk(TCB3D_CHUNK_PARAMS);
-	for (int i=0; i<Params.Count(); i++) {
+	for (size_t i = 0; i < Params.size(); i++)
+	{
 		csave.Write(&(Params[i].Tension),sizeof(Params[i].Tension));
 		csave.Write(&(Params[i].Continuity),sizeof(Params[i].Continuity));
 		csave.Write(&(Params[i].Bias),sizeof(Params[i].Bias));
@@ -213,11 +216,10 @@ bool TCBSpline3DClass::Save(ChunkSaveClass &csave)
 
 bool TCBSpline3DClass::Load(ChunkLoadClass &cload)
 {
-	int i;
 	TCBClass param;
 
 	// reset the keys
-	Params.Delete_All();
+	Params.clear();
 
 	// read in the chunks
 	while (cload.Open_Chunk()) {
@@ -229,11 +231,12 @@ bool TCBSpline3DClass::Load(ChunkLoadClass &cload)
 				break;
 
 			case TCB3D_CHUNK_PARAMS:
-				for (i=0; i<Keys.Count(); i++) {
+				for (size_t i = 0; i < Keys.size(); i++)
+				{
 					cload.Read(&(param.Tension),sizeof(param.Tension));
 					cload.Read(&(param.Continuity),sizeof(param.Continuity));
 					cload.Read(&(param.Bias),sizeof(param.Bias));
-					Params.Add(param);
+					Params.push_back(param);
 				}
 				break;
 

@@ -41,15 +41,18 @@
 #ifndef SNAPPTS_H
 #define SNAPPTS_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "refcount.h"
-#include "vector.h"
 #include "vector3.h"
 #include "w3derr.h"
 
 
 class ChunkLoadClass;
 
-class SnapPointsClass : public DynamicVectorClass<Vector3>, public RefCountClass
+class SnapPointsClass : public std::vector<Vector3>, public RefCountClass
 {
 public:
 

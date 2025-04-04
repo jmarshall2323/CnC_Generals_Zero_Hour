@@ -17,8 +17,10 @@
 */
 
 #include "statistics.h"
+
+#include <vector>
+
 #include "wwstring.h"
-#include "simplevec.h"
 #include "GameRenderer.h"
 #include "textureloader.h"
 #include "texture.h"
@@ -62,7 +64,7 @@ struct TextureStatisticsStruct
 	int change_count;
 };
 
-static SimpleDynVecClass<TextureStatisticsStruct> texture_statistics;
+static std::vector<TextureStatisticsStruct> texture_statistics;
 
 static void Record_Texture_Begin()
 {
@@ -75,7 +77,7 @@ static void Record_Texture_Begin()
 	record_count=0;
 	texture_change_count=0;
 	latest_texture=NULL;
-	texture_statistics.Resize(0);
+	texture_statistics.clear();
 }
 
 static void Record_Texture_End()
@@ -186,7 +188,7 @@ static void Add_Record_Texture(TextureClass* t)
 	tss.tex=t;
 	tss.usage_count=1;
 	tss.change_count=1;
-	texture_statistics.Add(tss);
+	texture_statistics.push_back(tss);
 
 	texture_count++;
 	if (t->Is_Lightmap()) lightmap_texture_count++;

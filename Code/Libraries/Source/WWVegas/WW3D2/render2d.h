@@ -43,7 +43,9 @@
 #define RENDER2D_H
 
 #include "always.h"
-#include "simplevec.h"
+
+#include <vector>
+
 #include "vector2.h"
 
 #include "shader.h"
@@ -146,7 +148,7 @@ public:
 	void	Move( const Vector2 & a );
 
 	// Color access
-	SimpleDynVecClass<unsigned long> &	Get_Color_Array (void)	{ return Colors; }
+	std::vector<unsigned long>& Get_Color_Array (void) { return Colors; }
 
 	// statics to access the Screen Resolution in Pixels
 	static void	Set_Screen_Resolution( const RectClass & screen )	{ ScreenResolution = screen; }
@@ -158,10 +160,10 @@ protected:
 	Vector2										BiasedCoordinateOffset;
 	TextureClass *							Texture;
 	ShaderClass									Shader;
-	SimpleDynVecClass<unsigned short>	Indices;
-	SimpleDynVecClass<Vector2>				Vertices;
-	SimpleDynVecClass<Vector2>				UVCoordinates;
-	SimpleDynVecClass<unsigned long>		Colors;
+	std::vector<unsigned short> Indices;
+	std::vector<Vector2>        Vertices;
+	std::vector<Vector2>        UVCoordinates;
+	std::vector<unsigned long>  Colors;
 	bool											IsHidden;
 	bool											IsGrayScale;
 	float											ZValue;

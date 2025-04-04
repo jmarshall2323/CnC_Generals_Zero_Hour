@@ -41,9 +41,12 @@
 #ifndef __TWIDDLER_H
 #define __TWIDDLER_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "definition.h"
 #include "definitionclassids.h"
-
 
 //////////////////////////////////////////////////////////////////////////////////
 //
@@ -101,7 +104,7 @@ private:
 	//	Private member data
 	/////////////////////////////////////////////////////////////////////
 	uint32							m_IndirectClassID;
-	DynamicVectorClass<int>		m_DefinitionList;
+	std::vector<int> m_DefinitionList;
 };
 
 

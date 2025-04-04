@@ -67,8 +67,8 @@ DX8MeshRendererClass TheDX8MeshRenderer;
 bool DX8TextureCategoryClass::m_gForceMultiply = false; // Forces opaque materials to use the multiply blend - pseudo transparent effect.  jba.
 // ----------------------------------------------------------------------------
 
-static DynamicVectorClass<Vector3>				_TempVertexBuffer;
-static DynamicVectorClass<Vector3>				_TempNormalBuffer;
+static std::vector<Vector3> _TempVertexBuffer;
+static std::vector<Vector3> _TempNormalBuffer;
 
 static MultiListClass<MeshModelClass>			_RegisteredMeshList;
 static TextureCategoryList							texture_category_delete_list;
@@ -1299,11 +1299,10 @@ void DX8SkinFVFCategoryContainer::Render(void)
 
 				DX8_RECORD_SKIN_RENDER(mesh->Get_Num_Polys(),mesh_vertex_count);
 
-				if (_TempVertexBuffer.Length() < mesh_vertex_count) _TempVertexBuffer.Resize(mesh_vertex_count); 
-				if (_TempNormalBuffer.Length() < mesh_vertex_count) _TempNormalBuffer.Resize(mesh_vertex_count);
+				// clear old data in the buffer to fill it later
+				_TempVertexBuffer.assign(mesh_vertex_count, Vector3());
+				_TempNormalBuffer.assign(mesh_vertex_count, Vector3());
 
-				Vector3* loc=&(_TempVertexBuffer[0]);
-				Vector3* norm=&(_TempNormalBuffer[0]);
 				const Vector2* uv0=mmc->Get_UV_Array_By_Index(0);
 				const Vector2* uv1=mmc->Get_UV_Array_By_Index(1);
 				const unsigned* diffuse=mmc->Get_Color_Array(0,false);
@@ -1311,15 +1310,18 @@ void DX8SkinFVFCategoryContainer::Render(void)
 				VertexFormatXYZNDUV2* verts=dest_verts+vertex_offset;
 
 	//			mesh->Compose_Deformed_Vertex_Buffer(verts,uv0,uv1,diffuse);
-				mesh->Get_Deformed_Vertices(loc,norm);
+				mesh->Get_Deformed_Vertices(_TempVertexBuffer.data(), _TempNormalBuffer.data());
 
-				for (int v=0;v<mesh_vertex_count;++v) {
-					verts[v].x=(*loc)[0];
-					verts[v].y=(*loc)[1];
-					verts[v].z=(*loc)[2];
-					verts[v].nx=(*norm)[0];
-					verts[v].ny=(*norm)[1];
-					verts[v].nz=(*norm)[2];
+				for (size_t v = 0; v < mesh_vertex_count; ++v)
+				{
+					verts[v].x = _TempVertexBuffer[v].X;
+					verts[v].y = _TempVertexBuffer[v].Y;
+					verts[v].z = _TempVertexBuffer[v].Z;
+
+					verts[v].nx = _TempNormalBuffer[v].X;
+					verts[v].ny = _TempNormalBuffer[v].Y;
+					verts[v].nz = _TempNormalBuffer[v].Z;
+
 					if (diffuse) {
 						verts[v].diffuse=*diffuse++;
 					}
@@ -1344,9 +1346,6 @@ void DX8SkinFVFCategoryContainer::Render(void)
 						verts[v].u2=0.0f;
 						verts[v].v2=0.0f;
 					}
-
-					loc++;
-					norm++;
 				}
 
 				mesh->Set_Base_Vertex_Offset(vertex_offset);
@@ -1936,8 +1935,10 @@ void DX8MeshRendererClass::Shutdown(void)
 {
 	Invalidate(true);
 	Clear_Pending_Delete_Lists();
-	_TempVertexBuffer.Clear();	//free memory
-	_TempNormalBuffer.Clear();
+	_TempVertexBuffer.clear();	//free memory
+	_TempVertexBuffer.shrink_to_fit();
+	_TempNormalBuffer.clear();
+	_TempNormalBuffer.shrink_to_fit();
 }
 
 // ----------------------------------------------------------------------------
@@ -2032,8 +2033,9 @@ void DX8MeshRendererClass::Register_Mesh_Type(MeshModelClass* mmc)
 			/*
 			** Search for an existing FVF Category Container that matches this mesh
 			*/
-			int i = 0;
-			for (i=0;i<texture_category_container_lists_rigid.Count();++i) {
+			size_t i = 0;
+			for (i = 0; i < texture_category_container_lists_rigid.size(); ++i)
+			{
 				FVFCategoryList * list=texture_category_container_lists_rigid[i];
 				WWASSERT(list);
 				DX8FVFCategoryContainer * container=list->Peek_Head();
@@ -2043,14 +2045,14 @@ void DX8MeshRendererClass::Register_Mesh_Type(MeshModelClass* mmc)
 				break;
 			}
 
-			if (i==texture_category_container_lists_rigid.Count()) {
-
+			if (i == texture_category_container_lists_rigid.size())
+			{
 				/*
 				** We couldn't find an existing FVF category container so we have to add one.  Future
 				** meshes that use this FVF will also be able to use this container.
 				*/
 				FVFCategoryList * new_fvf_category = W3DNEW FVFCategoryList();
-				texture_category_container_lists_rigid.Add(new_fvf_category);
+				texture_category_container_lists_rigid.push_back(new_fvf_category);
 				Add_Rigid_Mesh_To_Container(new_fvf_category,fvf,mmc);
 			}
 
@@ -2098,8 +2100,9 @@ void DX8MeshRendererClass::Flush(void)
 	if (!camera) return;
 	Log_Statistics_String(true);	
 
-	for (int i=0;i<texture_category_container_lists_rigid.Count();++i) {
-		Render_FVF_Category_Container_List(*texture_category_container_lists_rigid[i]);
+	for (const auto& list : texture_category_container_lists_rigid)
+	{
+		Render_FVF_Category_Container_List(*list);
 	}
 
 	Render_FVF_Category_Container_List(*texture_category_container_list_skin);
@@ -2147,8 +2150,9 @@ void DX8MeshRendererClass::Log_Statistics_String(bool only_visible)
 {
 	if (statistics_requested!=WW3D::Get_Frame_Count()) return;
 
-	for (int i=0;i<texture_category_container_lists_rigid.Count();++i) {
-		Log_Container_List(*texture_category_container_lists_rigid[i],only_visible);
+	for (const auto& list : texture_category_container_lists_rigid)
+	{
+		Log_Container_List(*list, only_visible);
 	}
 	Log_Container_List(*texture_category_container_list_skin,only_visible);
 
@@ -2165,9 +2169,10 @@ void DX8MeshRendererClass::Invalidate( bool shutdown)
 {
 	_RegisteredMeshList.Reset_List();
 
-	for (int i=0;i<texture_category_container_lists_rigid.Count();++i) {
-		Invalidate_FVF_Category_Container_List(*texture_category_container_lists_rigid[i]);
-		delete texture_category_container_lists_rigid[i];
+	for (const auto& list : texture_category_container_lists_rigid)
+	{
+		Invalidate_FVF_Category_Container_List(*list);
+		delete list;
 	}
 	if (texture_category_container_list_skin) {
 		Invalidate_FVF_Category_Container_List(*texture_category_container_list_skin);
@@ -2178,7 +2183,7 @@ void DX8MeshRendererClass::Invalidate( bool shutdown)
 	if (!shutdown)
 		texture_category_container_list_skin = W3DNEW FVFCategoryList;
 
-	texture_category_container_lists_rigid.Delete_All();
+	texture_category_container_lists_rigid.resize(0);
 }
 
 

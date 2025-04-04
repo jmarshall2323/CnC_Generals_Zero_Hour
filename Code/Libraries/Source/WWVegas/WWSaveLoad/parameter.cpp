@@ -157,7 +157,7 @@ ParameterClass::Construct (Type type, void *data, const char *name)
 			break;
 
 		case TYPE_DEFINITIONIDLIST:
-			new_param = W3DNEW DefIDListParameterClass ((DynamicVectorClass<int> *)data);
+			new_param = W3DNEW DefIDListParameterClass((std::vector<int>*) data);
 			new_param->Set_Name (name);
 			((DefIDListParameterClass *)new_param)->Set_Class_ID (CLASSID_GAME_OBJECTS);
 			break;
@@ -168,7 +168,7 @@ ParameterClass::Construct (Type type, void *data, const char *name)
 			break;
 
 		case TYPE_FILENAMELIST:
-			new_param = W3DNEW FilenameListParameterClass ((DynamicVectorClass<StringClass> *)data);
+			new_param = W3DNEW FilenameListParameterClass((std::vector<StringClass>*) data);
 			new_param->Set_Name (name);
 			break;
 
@@ -497,7 +497,7 @@ EnumParameterClass::EnumParameterClass (const EnumParameterClass &src)
 const EnumParameterClass &
 EnumParameterClass::operator= (const EnumParameterClass &src)
 {
-	m_List.Delete_All ();
+	m_List.clear();
 
 	m_Value	= src.m_Value;
 	m_List	= src.m_List;
@@ -569,7 +569,7 @@ EnumParameterClass::Copy_Value (const ParameterClass &src)
 void
 EnumParameterClass::Add_Value (const char *display_name, int value)
 {
-	m_List.Add (ENUM_VALUE(display_name, value));
+	m_List.push_back(ENUM_VALUE(display_name, value));
 	return ;
 }
 
@@ -582,7 +582,7 @@ EnumParameterClass::Add_Value (const char *display_name, int value)
 void __cdecl 
 EnumParameterClass::Add_Values (const char *first_name, int first_value, ...)
 {
-	m_List.Add (ENUM_VALUE(first_name, first_value));
+	m_List.push_back(ENUM_VALUE(first_name, first_value));
 
 	va_list arg_list;
 	va_start (arg_list, first_value);
@@ -606,7 +606,7 @@ EnumParameterClass::Add_Values (const char *first_name, int first_value, ...)
 			//	Add the string/id pair to the enum list
 			//
 			int value = va_arg (arg_list, int);
-			m_List.Add (ENUM_VALUE(name, value));
+			m_List.push_back(ENUM_VALUE(name, value));
 		}		
 	}
 	
@@ -1629,7 +1629,7 @@ ScriptParameterClass::Copy_Value (const ParameterClass &src)
 //	DefIDListParameterClass
 //
 /////////////////////////////////////////////////////////////////////
-DefIDListParameterClass::DefIDListParameterClass (DynamicVectorClass<int> *list)
+DefIDListParameterClass::DefIDListParameterClass(std::vector<int>* list)
 	:	m_IDList (list),
 		m_ClassID (0),
 		m_SelectedClassID (NULL)
@@ -1690,8 +1690,8 @@ DefIDListParameterClass::operator== (const DefIDListParameterClass &src)
 		//
 		if (m_ClassID == src.m_ClassID) {
 
-			int count1 = m_IDList->Count ();
-			int count2 = src.m_IDList->Count ();
+			const int count1 = m_IDList->size();
+			const int count2 = src.m_IDList->size();
 
 			//
 			//	Are the lists the same?
@@ -1868,7 +1868,7 @@ ZoneParameterClass::Copy_Value (const ParameterClass &src)
 //	FilenameListParameterClass
 //
 /////////////////////////////////////////////////////////////////////
-FilenameListParameterClass::FilenameListParameterClass (DynamicVectorClass<StringClass> *list)
+FilenameListParameterClass::FilenameListParameterClass(std::vector<StringClass>* list)
 	:	m_FilenameList (list)		
 {	
 	return ;
@@ -1918,8 +1918,8 @@ FilenameListParameterClass::operator== (const FilenameListParameterClass &src)
 	//
 	if ((m_FilenameList != NULL) && (src.m_FilenameList != NULL))
 	{
-		int count1 = m_FilenameList->Count ();
-		int count2 = src.m_FilenameList->Count ();
+		const int count1 = m_FilenameList->size();
+		const int count2 = src.m_FilenameList->size();
 
 		//
 		//	Are the lists the same?
@@ -1984,13 +1984,9 @@ FilenameListParameterClass::Copy_Value (const ParameterClass &src)
 //	ScriptListParameterClass
 //
 /////////////////////////////////////////////////////////////////////
-ScriptListParameterClass::ScriptListParameterClass
-(
-	DynamicVectorClass<StringClass> *name_list,
-	DynamicVectorClass<StringClass> *param_list
-)
-	:	m_NameList (name_list),
-		m_ParamList (param_list)
+ScriptListParameterClass::ScriptListParameterClass(std::vector<StringClass>* name_list, std::vector<StringClass>* param_list)
+	: m_NameList (name_list),
+	  m_ParamList (param_list)
 {	
 	return ;
 }
@@ -2056,14 +2052,10 @@ ScriptListParameterClass::operator== (const ScriptListParameterClass &src)
 //
 /////////////////////////////////////////////////////////////////////
 bool
-ScriptListParameterClass::Are_Lists_Identical
-(
-	DynamicVectorClass<StringClass> &list1,
-	DynamicVectorClass<StringClass> &list2
-)
+ScriptListParameterClass::Are_Lists_Identical(std::vector<StringClass>& list1, std::vector<StringClass>& list2)
 {
-	int count1 = list1.Count ();
-	int count2 = list2.Count ();
+	const int count1 = list1.size();
+	const int count2 = list2.size();
 
 	//
 	//	Do a string compare on every entry

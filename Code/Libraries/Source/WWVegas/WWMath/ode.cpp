@@ -42,16 +42,16 @@
 #include "ode.h"
 #include <assert.h>
 
-static StateVectorClass		Y0;
-static StateVectorClass		Y1;
-static StateVectorClass		_WorkVector0;
-static StateVectorClass		_WorkVector1;
-static StateVectorClass		_WorkVector2;
-static StateVectorClass		_WorkVector3;
-static StateVectorClass		_WorkVector4;
-static StateVectorClass		_WorkVector5;
-static StateVectorClass		_WorkVector6;
-static StateVectorClass		_WorkVector7;
+static std::vector<float> Y0;
+static std::vector<float> Y1;
+static std::vector<float> _WorkVector0;
+static std::vector<float> _WorkVector1;
+static std::vector<float> _WorkVector2;
+static std::vector<float> _WorkVector3;
+static std::vector<float> _WorkVector4;
+static std::vector<float> _WorkVector5;
+static std::vector<float> _WorkVector6;
+static std::vector<float> _WorkVector7;
 
 /*********************************************************************************************** 
  * Euler_Solve -- uses Eulers method to integrate a system of ODE's                            * 
@@ -76,15 +76,15 @@ void IntegrationSystem::Euler_Integrate(ODESystemClass * sys, float dt)
 	/*
 	** Get the current state
 	*/
-	Y0.Reset();
+	Y0.clear();
 	sys->Get_State(Y0);
-	Y1.Resize(Y0.Count());
 
 	/*
 	** make aliases to the work-vectors we need
 	*/
-	StateVectorClass & dydt = _WorkVector0;
-	dydt.Resize(Y0.Count());
+	std::vector<float>& dydt = _WorkVector0;
+	dydt.clear();
+	dydt.reserve(Y0.size());
 
 	/*
 	** Euler method, just evaluate the derivative, multiply
@@ -92,9 +92,12 @@ void IntegrationSystem::Euler_Integrate(ODESystemClass * sys, float dt)
 	*/
 	sys->Compute_Derivatives(0,NULL,&dydt);
 
-	Y1.Resize(Y0.Count());
-	for (int i = 0; i < Y0.Count(); i++) {
-		Y1[i] = Y0[i] + dydt[i] * dt;
+	Y1.clear();
+	Y1.reserve(Y0.size());
+	for (size_t i = 0; i < Y0.size(); i++)
+	{
+		const float result = Y0[i] + dydt[i] * dt;
+		Y1.push_back(result);
 	}
 
 	sys->Set_State(Y1);
@@ -118,22 +121,21 @@ void IntegrationSystem::Euler_Integrate(ODESystemClass * sys, float dt)
  *=============================================================================================*/
 void IntegrationSystem::Midpoint_Integrate(ODESystemClass * sys,float dt)
 {
-	int i;
-
 	/*
 	** Get the current state
 	*/
-	Y0.Reset();
+	Y0.clear();
 	sys->Get_State(Y0);
-	Y1.Resize(Y0.Count());
 
 	/*
 	** make aliases to the work-vectors we need
 	*/
-	StateVectorClass & dydt = _WorkVector0;
-	StateVectorClass & ymid = _WorkVector1;
-	dydt.Resize(Y0.Count());
-	ymid.Resize(Y0.Count());
+	std::vector<float>& dydt = _WorkVector0;
+	std::vector<float>& ymid = _WorkVector1;
+	dydt.clear();
+	dydt.reserve(Y0.size());
+	ymid.clear();
+	ymid.reserve(Y0.size());
 
 	/*
 	** MidPoint method, first evaluate the derivitives of the
@@ -145,8 +147,10 @@ void IntegrationSystem::Midpoint_Integrate(ODESystemClass * sys,float dt)
 	** Compute the midpoint between the Euler solution and 
 	** the input values.
 	*/
-	for (i=0; i<Y0.Count(); i++) {
-		ymid[i] = Y0[i] + dt * dydt[i] / 2.0f;
+	for (size_t i = 0; i < Y0.size(); i++)
+	{
+		const float result = Y0[i] + dt * dydt[i] / 2.0f;
+		ymid.push_back(result);
 	}
 	
 	/*
@@ -157,8 +161,12 @@ void IntegrationSystem::Midpoint_Integrate(ODESystemClass * sys,float dt)
 	/*
 	** Use these derivatives to compute the solution.
 	*/
-	for (i=0; i<Y0.Count(); i++) {
-		Y1[i] = Y0[i] + dt * dydt[i];
+	Y1.clear();
+	Y1.reserve(Y0.size());
+	for (size_t i = 0; i < Y0.size(); i++)
+	{
+		const float result = Y0[i] + dt * dydt[i];
+		Y1.push_back(result);
 	}
 
 	sys->Set_State(Y1);
@@ -182,42 +190,47 @@ void IntegrationSystem::Midpoint_Integrate(ODESystemClass * sys,float dt)
  *=============================================================================================*/
 void IntegrationSystem::Runge_Kutta_Integrate(ODESystemClass * sys,float dt)
 {
-	int i;
 	float dt2 = dt / 2.0f;
 	float dt6 = dt / 6.0f;
 
 	/*
 	** Get the current state
 	*/
-	Y0.Reset();
+	Y0.clear();
 	sys->Get_State(Y0);
-	Y1.Resize(Y0.Count());
 
 	/*
 	** make aliases to the work-vectors we need
 	*/
-	StateVectorClass & dydt =	_WorkVector0;
-	StateVectorClass & dym =	_WorkVector1;
-	StateVectorClass & dyt =	_WorkVector2;
-	StateVectorClass & yt =		_WorkVector3;
-	dydt.Resize(Y0.Count());
-	dym.Resize(Y0.Count());
-	dyt.Resize(Y0.Count());
-	yt.Resize(Y0.Count());
+	std::vector<float>& dydt = _WorkVector0;
+	std::vector<float>& dym  = _WorkVector1;
+	std::vector<float>& dyt  = _WorkVector2;
+	std::vector<float>& yt   = _WorkVector3;
+	dydt.clear();
+	dydt.reserve(Y0.size());
+	dym.clear();
+	dym.reserve(Y0.size());
+	dyt.clear();
+	dyt.reserve(Y0.size());
+	yt.clear();
+	yt.reserve(Y0.size());
 
 	/*
 	** First Step
 	*/
 	sys->Compute_Derivatives(0.0f,NULL,&dydt);
-	for (i=0; i<Y0.Count(); i++) {
-		yt[i] = Y0[i] + dt2 * dydt[i];
+	for (size_t i = 0; i < Y0.size(); i++)
+	{
+		const float result = Y0[i] + dt2 * dydt[i];
+		yt.push_back(result);
 	}
 	
 	/*
 	** Second Step
 	*/
 	sys->Compute_Derivatives(dt2, &yt, &dyt);
-	for (i=0; i<Y0.Count(); i++) {
+	for (size_t i = 0; i < Y0.size(); i++)
+	{
 		yt[i] = Y0[i] + dt2 * dyt[i];
 	}
 	
@@ -225,7 +238,8 @@ void IntegrationSystem::Runge_Kutta_Integrate(ODESystemClass * sys,float dt)
 	** Third Step
 	*/
 	sys->Compute_Derivatives(dt2, &yt, &dym);
-	for (i=0; i<Y0.Count(); i++) {
+	for (size_t i = 0; i < Y0.size(); i++)
+	{
 		yt[i] = Y0[i] + dt*dym[i];
 		dym[i] += dyt[i];
 	}
@@ -234,7 +248,11 @@ void IntegrationSystem::Runge_Kutta_Integrate(ODESystemClass * sys,float dt)
 	** Fourth Step
 	*/
 	sys->Compute_Derivatives(dt, &yt, &dyt);
-	for (i=0; i<Y0.Count(); i++) {
+
+	Y1.clear();
+	Y1.reserve(Y0.size());
+	for (size_t i = 0; i < Y0.size(); i++)
+	{
 		Y1[i] = Y0[i] + dt6 * (dydt[i] + dyt[i] + 2.0f*dym[i]);
 	}
 
@@ -259,8 +277,6 @@ void IntegrationSystem::Runge_Kutta_Integrate(ODESystemClass * sys,float dt)
  *=============================================================================================*/
 void IntegrationSystem::Runge_Kutta5_Integrate(ODESystemClass * odesys,float dt)
 {
-	int i;
-	int veclen;
 	static const float a2 =			0.2f;
 	static const float a3 =			0.3f;
 	static const float a4 =			0.6f;
@@ -294,72 +310,101 @@ void IntegrationSystem::Runge_Kutta5_Integrate(ODESystemClass * odesys,float dt)
 	/*
 	** Get the current state
 	*/
-	Y0.Reset();
+	Y0.clear();
 	odesys->Get_State(Y0);
-	veclen = Y0.Count();
-	Y1.Resize(veclen);
+	const size_t veclen = Y0.size();
 
 	/*
 	** make aliases to the work-vectors we need
 	*/
-	StateVectorClass & dydt	= _WorkVector0;
-	StateVectorClass & ak2	= _WorkVector1;
-	StateVectorClass & ak3	= _WorkVector2;
-	StateVectorClass & ak4	= _WorkVector3;
-	StateVectorClass & ak5	= _WorkVector4;
-	StateVectorClass & ak6	= _WorkVector5;
-	StateVectorClass & ytmp	= _WorkVector6;
-	StateVectorClass & yerr	= _WorkVector7;
+	std::vector<float>& dydt	= _WorkVector0;
+	std::vector<float>& ak2	= _WorkVector1;
+	std::vector<float>& ak3	= _WorkVector2;
+	std::vector<float>& ak4	= _WorkVector3;
+	std::vector<float>& ak5	= _WorkVector4;
+	std::vector<float>& ak6	= _WorkVector5;
+	std::vector<float>& ytmp	= _WorkVector6;
+	std::vector<float>& yerr	= _WorkVector7;
 
-	dydt.Resize(veclen);
-	ak2.Resize(veclen);
-	ak3.Resize(veclen);
-	ak4.Resize(veclen);
-	ak5.Resize(veclen);
-	ak6.Resize(veclen);
-	ytmp.Resize(veclen);
-	yerr.Resize(veclen);
+	dydt.clear();
+	dydt.reserve(veclen);
+	ak2.clear();
+	ak2.reserve(veclen);
+	ak3.clear();
+	ak3.reserve(veclen);
+	ak4.clear();
+	ak4.reserve(veclen);
+	ak5.clear();
+	ak5.reserve(veclen);
+	ak6.clear();
+	ak6.reserve(veclen);
+	ytmp.clear();
+	ytmp.reserve(veclen);
+	yerr.clear();
+	yerr.reserve(veclen);
 
 	// First step
 	odesys->Compute_Derivatives(0.0f,NULL,&dydt);
-	for (i=0;i<veclen;i++) {
-		ytmp[i] = Y0[i] + b21*dt*dydt[i];
+	for (size_t i = 0; i < veclen; i++)
+	{
+		const float result = Y0[i] + b21*dt*dydt[i];
+		ytmp.push_back(result);
 	}
 
 	// Second step
 	odesys->Compute_Derivatives(a2*dt, &ytmp, &ak2);
-	for (i=0; i<veclen; i++) {
-		ytmp[i] = Y0[i] + dt*(b31*dydt[i] + b32*ak2[i]);
+	ytmp.clear();
+	for (size_t i = 0; i < veclen; i++)
+	{
+		const float result = Y0[i] + dt*(b31*dydt[i] + b32*ak2[i]);
+		ytmp.push_back(result);
 	}
 	
 	// Third step
 	odesys->Compute_Derivatives(a3*dt, &ytmp, &ak3);
-	for (i=0; i<veclen; i++) {
-		ytmp[i] = Y0[i] + dt*(b41*dydt[i] + b42*ak2[i] + b43*ak3[i]);
+	ytmp.clear();
+	for (size_t i = 0; i < veclen; i++)
+	{
+		const float result = Y0[i] + dt*(b41*dydt[i] + b42*ak2[i] + b43*ak3[i]);
+		ytmp.push_back(result);
 	}
 	
 	// Fourth step
 	odesys->Compute_Derivatives(a4*dt, &ytmp, &ak4);
-	for (i=0; i<veclen; i++) {
-		ytmp[i] = Y0[i] + dt*(b51*dydt[i] + b52*ak2[i] + b53*ak3[i] + b54*ak4[i]);
+	ytmp.clear();
+	for (size_t i = 0; i < veclen; i++)
+	{
+		const float result = Y0[i] + dt*(b51*dydt[i] + b52*ak2[i] + b53*ak3[i] + b54*ak4[i]);
+		ytmp.push_back(result);
 	}
 
 	// Fifth step
 	odesys->Compute_Derivatives(a5*dt, &ytmp, &ak5);
-	for (i=0; i<veclen; i++) {
-		ytmp[i] = Y0[i] + dt*(b61*dydt[i] + b62*ak2[i] + b63*ak3[i] + b64*ak4[i] + b65*ak5[i]);
+	ytmp.clear();
+	for (size_t i = 0; i < veclen; i++)
+	{
+		const float result = Y0[i] + dt*(b61*dydt[i] + b62*ak2[i] + b63*ak3[i] + b64*ak4[i] + b65*ak5[i]);
+		ytmp.push_back(result);
 	}
 
 	// Sixth step
 	odesys->Compute_Derivatives(a6*dt, &ytmp, &ak6);
-	for (i=0; i<veclen; i++) {
-		Y1[i] = Y0[i] + dt*(c1*dydt[i] + c3*ak3[i] + c4*ak4[i] + c6*ak6[i]);
+
+	Y1.clear();
+	Y1.reserve(veclen);
+	for (size_t i = 0; i < veclen; i++)
+	{
+		const float result = Y0[i] + dt*(c1*dydt[i] + c3*ak3[i] + c4*ak4[i] + c6*ak6[i]);
+		Y1.push_back(result);
 	}
 
 	// Error approximation!  
 	// (maybe I should use this someday? nah not going to use this integrator anyway...)
-	for (i=0; i<veclen; i++) {
-		yerr[i] = dt*(dc1*dydt[i] + dc3*ak3[i] + dc4*ak4[i] + dc5*ak5[i] + dc6*ak6[i]);
+	yerr.clear();
+	for (size_t i = 0; i < veclen; i++)
+	{
+		const float result = dt*(dc1*dydt[i] + dc3*ak3[i] + dc4*ak4[i] + dc5*ak5[i] + dc6*ak6[i]);
+		yerr.push_back(result);
 	}
 
 	odesys->Set_State(Y1);

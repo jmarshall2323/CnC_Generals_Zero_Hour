@@ -40,11 +40,14 @@
 #ifndef AGGREGATE_DEF_H
 #define AGGREGATE_DEF_H
 
+#include "always.h"
+
+#include <vector>
+
 #include "proto.h"
 #include "rendobj.h"
 #include "w3d_file.h"
 #include "w3derr.h"
-#include "vector.h"
 #include "bittype.h"
 #include <string.h>
 
@@ -178,7 +181,7 @@ class AggregateDefClass
 		virtual void				Add_Subobject (const W3dAggregateSubobjectStruct &subobj_info);
 		virtual bool				Load_Assets (const char *asset_name);
 		virtual RenderObjClass *Create_Render_Object (const char *passet_name);
-		virtual bool				Is_Object_In_List (const char *passet_name, DynamicVectorClass <RenderObjClass *> &node_list);
+		virtual bool Is_Object_In_List(const char* passet_name, const std::vector<RenderObjClass*>& node_list);
 
 		virtual void				Build_Subobject_List (RenderObjClass &original_model, RenderObjClass &model);
 
@@ -190,7 +193,7 @@ class AggregateDefClass
 		//	Private member data
 		//
 		DWORD																m_Version;
-		DynamicVectorClass<W3dAggregateSubobjectStruct *>	m_SubobjectList;
+		std::vector<W3dAggregateSubobjectStruct*> m_SubobjectList;
 		W3dAggregateInfoStruct										m_Info;
 		W3dAggregateMiscInfo											m_MiscInfo;
 		char * 															m_pName;

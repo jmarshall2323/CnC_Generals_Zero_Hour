@@ -44,11 +44,13 @@
 #define VISRASTERIZER_H
 
 #include "always.h"
+
+#include <vector>
+
 #include "matrix3d.h"
 #include "matrix4.h"
 #include "vector3i.h"
 #include "vector3.h"
-#include "simplevec.h"
 #include "bittype.h"
 #include "plane.h"
 
@@ -198,7 +200,7 @@ protected:
 	
 	IDBufferClass		IDBuffer;	
 
-	SimpleVecClass<Vector3>	TempVertexBuffer;
+	std::vector<Vector3> TempVertexBuffer;
 };
 
 #endif //VISRASTERIZER_H

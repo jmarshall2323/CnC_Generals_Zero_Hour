@@ -40,7 +40,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include	"always.h"
-#include	"vector.h"
+
+#include <vector>
+
 #include	"win.h"
 
 
@@ -49,7 +51,7 @@
 **	box handles and then determining if the windows message applies to the dialog box. If it
 **	does, then the default message handling should not be performed.
 */
-static DynamicVectorClass<HWND> _ModelessDialogs;
+static std::vector<HWND> _ModelessDialogs;
 
 
 /*
@@ -64,7 +66,7 @@ struct AcceleratorTracker {
 	HACCEL Accelerator;
 	HWND Window;
 };
-static DynamicVectorClass<AcceleratorTracker> _Accelerators;
+static std::vector<AcceleratorTracker> _Accelerators;
 
 
 /*
@@ -112,8 +114,10 @@ void Windows_Message_Handler(void)
 		**	processed by the normal message handling procedure.
 		*/
 		bool processed = false;
-		for (int aindex = 0; aindex < _Accelerators.Count(); aindex++) {
-			if (TranslateAccelerator(_Accelerators[aindex].Window, _Accelerators[aindex].Accelerator, &msg)) {
+		for (const auto& accelerator : _Accelerators)
+		{
+			if (TranslateAccelerator(accelerator.Window, accelerator.Accelerator, &msg))
+			{
 				processed = true;
 			}
 			break;
@@ -125,8 +129,10 @@ void Windows_Message_Handler(void)
 		**	be active. If one of the dialogs processes the message, then
 		**	it must not be processed by the normal window message handler.
 		*/
-		for (int index = 0; index < _ModelessDialogs.Count(); index++) {
-			if (IsDialogMessage(_ModelessDialogs[index], &msg)) {
+		for (const auto& dialog : _ModelessDialogs)
+		{
+			if (IsDialogMessage(dialog, &msg))
+			{
 				processed = true;
 				break;
 			}
@@ -173,7 +179,7 @@ void Windows_Message_Handler(void)
  *=============================================================================================*/
 void Add_Modeless_Dialog(HWND dialog)
 {
-	_ModelessDialogs.Add(dialog);
+	_ModelessDialogs.push_back(dialog);
 }	
 
 
@@ -195,7 +201,7 @@ void Add_Modeless_Dialog(HWND dialog)
  *=============================================================================================*/
 void Remove_Modeless_Dialog(HWND dialog)
 {
-	_ModelessDialogs.Delete(dialog);
+	std::erase(_ModelessDialogs, dialog);
 }	
 
 
@@ -222,7 +228,7 @@ void Remove_Modeless_Dialog(HWND dialog)
  *=============================================================================================*/
 void Add_Accelerator(HWND window, HACCEL accelerator)
 {
-	_Accelerators.Add(AcceleratorTracker(window, accelerator));
+	_Accelerators.push_back(AcceleratorTracker(window, accelerator));
 }	
 
 
@@ -243,10 +249,7 @@ void Add_Accelerator(HWND window, HACCEL accelerator)
  *=============================================================================================*/
 void Remove_Accelerator(HACCEL accelerator)
 {
-	for (int index = 0; index < _Accelerators.Count(); index++) {
-		if (_Accelerators[index].Accelerator == accelerator) {
-			_Accelerators.Delete(index);
-			break;
-		}
-	}
+	std::erase_if(_Accelerators, [&](const AcceleratorTracker& at) {
+		return at.Accelerator == accelerator;
+	});
 }	

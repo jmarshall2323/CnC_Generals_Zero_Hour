@@ -44,9 +44,10 @@
 #define DECALMSH_H
 
 #include "always.h"
+
+#include <vector>
+
 #include "bittype.h"
-#include "simplevec.h"
-#include "vector.h"
 #include "vector2.h"
 #include "vector3.h"
 #include "vector3i.h"
@@ -88,10 +89,11 @@ public:
 
 	virtual void											Render(void) = 0;
 
-	virtual bool											Create_Decal(	DecalGeneratorClass * generator,
-																					const OBBoxClass & localbox,
-																					SimpleDynVecClass<uint32> & apt,
-																					const DynamicVectorClass<Vector3> * world_vertex_locs = 0) = 0;
+	virtual bool Create_Decal(DecalGeneratorClass* generator,
+	                          const OBBoxClass& localbox,
+	                          std::vector<uint32>& apt,
+	                          const std::vector<Vector3>* world_vertex_locs = 0
+	                         ) = 0;
 
 	virtual bool											Delete_Decal(uint32 id) = 0;
 
@@ -131,10 +133,11 @@ public:
 
 	virtual void											Render(void);
 
-	virtual bool											Create_Decal(	DecalGeneratorClass * generator,
-																					const OBBoxClass & localbox,
-																					SimpleDynVecClass<uint32> & apt,
-																					const DynamicVectorClass<Vector3> * world_vertex_locs = 0);
+	virtual bool Create_Decal(DecalGeneratorClass* generator,
+	                          const OBBoxClass& localbox,
+	                          std::vector<uint32>& apt,
+	                          const std::vector<Vector3>* world_vertex_locs = 0
+	                         );
 
 	virtual bool											Delete_Decal(uint32 id);
 
@@ -148,21 +151,21 @@ protected:
 	/*
 	** Connectivity
 	*/
-	SimpleDynVecClass<Vector3i>						Polys;
+	std::vector<Vector3i> Polys;
 
 	/*
 	** Geometry
 	*/
-	SimpleDynVecClass<Vector3>							Verts;
-	SimpleDynVecClass<Vector3>							VertNorms;
+	std::vector<Vector3> Verts;
+	std::vector<Vector3> VertNorms;
 
 	/*
 	** Materials
 	*/
-	SimpleDynVecClass<ShaderClass>					Shaders;
-	SimpleDynVecClass<TextureClass *>				Textures;
-	SimpleDynVecClass<VertexMaterialClass *>		VertexMaterials;
-	SimpleDynVecClass<Vector2>							TexCoords;
+	std::vector<ShaderClass>          Shaders;
+	std::vector<TextureClass*>        Textures;
+	std::vector<VertexMaterialClass*> VertexMaterials;
+	std::vector<Vector2>              TexCoords;
 
 	/*
 	** Decal Organization
@@ -176,7 +179,7 @@ protected:
 		uint16	FaceCount;
 	};
 	
-	SimpleDynVecClass<DecalStruct>					Decals;
+	std::vector<DecalStruct> Decals;
 };
 
 
@@ -196,10 +199,11 @@ public:
 
 	virtual void											Render(void);
 
-	virtual bool											Create_Decal(	DecalGeneratorClass * generator,
-																					const OBBoxClass & localbox,
-																					SimpleDynVecClass<uint32> & apt,
-																					const DynamicVectorClass<Vector3> * world_vertex_locs);
+	virtual bool Create_Decal(DecalGeneratorClass* generator,
+	                          const OBBoxClass& localbox,
+	                          std::vector<uint32>& apt,
+	                          const std::vector<Vector3>* world_vertex_locs
+	                         );
 
 	virtual bool											Delete_Decal(uint32 id);
 
@@ -213,20 +217,20 @@ protected:
 	/*
 	** Connectivity
 	*/
-	SimpleDynVecClass<Vector3i>						Polys;
+	std::vector<Vector3i> Polys;
 
 	/*
 	** Indirected vertex indices (for copying dynamically updated mesh geometry)
 	*/
-	SimpleDynVecClass<uint32> 							ParentVertexIndices;
+	std::vector<uint32> ParentVertexIndices;
 
 	/*
 	** Materials
 	*/
-	SimpleDynVecClass<ShaderClass>					Shaders;
-	SimpleDynVecClass<TextureClass *>				Textures;
-	SimpleDynVecClass<VertexMaterialClass *>		VertexMaterials;
-	SimpleDynVecClass<Vector2>							TexCoords;
+	std::vector<ShaderClass>          Shaders;
+	std::vector<TextureClass*>        Textures;
+	std::vector<VertexMaterialClass*> VertexMaterials;
+	std::vector<Vector2>              TexCoords;
 
 	/*
 	** Decal Organization
@@ -240,7 +244,7 @@ protected:
 		uint16	FaceCount;
 	};
 	
-	SimpleDynVecClass<DecalStruct>					Decals;
+	std::vector<DecalStruct> Decals;
 };
 
 
@@ -265,7 +269,7 @@ inline DecalSystemClass * DecalMeshClass::Peek_System(void)
 
 inline int RigidDecalMeshClass::Decal_Count(void)
 {
-	return Decals.Count();
+	return Decals.size();
 }
 
 inline uint32 RigidDecalMeshClass::Get_Decal_ID(int decal_index)
@@ -280,7 +284,7 @@ inline uint32 RigidDecalMeshClass::Get_Decal_ID(int decal_index)
 
 inline int SkinDecalMeshClass::Decal_Count(void)
 {
-	return Decals.Count();
+	return Decals.size();
 }
 
 inline uint32 SkinDecalMeshClass::Get_Decal_ID(int decal_index)

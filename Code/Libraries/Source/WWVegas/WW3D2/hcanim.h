@@ -48,7 +48,6 @@
 #include "refcount.h"
 #include "w3d_file.h"
 #include "slist.h"
-#include "vector.h"
 #include "hanim.h"
 
 struct NodeCompressedMotionStruct;

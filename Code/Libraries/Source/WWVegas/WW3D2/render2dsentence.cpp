@@ -119,8 +119,9 @@ Render2DSentenceClass::Set_Font (FontCharsClass *font)
 void
 Render2DSentenceClass::Reset_Polys (void)
 {
-	for (int index = 0; index < Renderers.Count (); index ++) {
-		Renderers[index].Renderer->Reset ();
+	for (auto& renderer : Renderers)
+	{
+		renderer.Renderer->Reset();
 	}
 
 	return ;
@@ -151,10 +152,9 @@ Render2DSentenceClass::Reset (void)
 	//
 	//	Free each renderer
 	//
-	while (Renderers.Count () > 0) {
-		delete Renderers[0].Renderer;
-		Renderers.Delete(0);
-	}
+	for (auto& renderer : Renderers)
+		delete renderer.Renderer;
+	Renderers.clear();
 
 	Cursor.Set (0, 0);
 	MonoSpaced = false;
@@ -197,8 +197,9 @@ Render2DSentenceClass::Set_Shader (ShaderClass shader)
 	//
 	//	Change each renderer's shader
 	//
-	for (int i = 0; i < Renderers.Count (); i ++) {
-		ShaderClass *curr_shader = Renderers[i].Renderer->Get_Shader ();
+	for (const auto& renderer : Renderers)
+	{
+		ShaderClass* curr_shader = renderer.Renderer->Get_Shader();
 		(*curr_shader) = Shader;
 	}
 
@@ -222,8 +223,9 @@ Render2DSentenceClass::Render (void)
 	//
 	//	Ask each renderer to draw its contents
 	//
-	for (int i = 0; i < Renderers.Count (); i ++) {
-		Renderers[i].Renderer->Render ();
+	for (auto& renderer : Renderers)
+	{
+		renderer.Renderer->Render();
 	}
 
 	return ;
@@ -240,8 +242,9 @@ Render2DSentenceClass::Set_Base_Location (const Vector2 &loc)
 { 
 	Vector2 dif		= loc - BaseLocation;
 	BaseLocation	= loc;
-	for (int i = 0; i < Renderers.Count (); i ++) {
-		Renderers[i].Renderer->Move (dif);
+	for (auto& renderer : Renderers)
+	{
+		renderer.Renderer->Move(dif);
 	}
 
 	return ;
@@ -306,13 +309,12 @@ Render2DSentenceClass::Reset_Sentence_Data (void)
 	//
 	//	Release our hold on each texture used in the sentence
 	//
-	for (int index = 0; index < SentenceData.Count (); index ++) {
-		REF_PTR_RELEASE (SentenceData[index].Surface);
+	for (auto& data : SentenceData)
+	{
+		REF_PTR_RELEASE(data.Surface);
 	}
 
-	if (SentenceData.Count()>0) {
-		SentenceData.Delete_All ();
-	}
+	SentenceData.clear();
 	return ;
 }
 
@@ -328,12 +330,12 @@ Render2DSentenceClass::Release_Pending_Surfaces (void)
 	//
 	//	Release our hold on each pending surface
 	//
-	for (int index = 0; index < PendingSurfaces.Count (); index ++) {		
-		SurfaceClass *curr_surface = PendingSurfaces[index].Surface;
-		REF_PTR_RELEASE (curr_surface);
+	for (auto& surface_info : PendingSurfaces)
+	{
+		REF_PTR_RELEASE(surface_info.Surface);
 	}
 
-	if (PendingSurfaces.Count()>0) PendingSurfaces.Delete_All ();
+	PendingSurfaces.clear();
 	return; 
 }
 
@@ -366,8 +368,8 @@ Render2DSentenceClass::Build_Textures (void)
 	//
 	//	Convert all pending surfaces to textures
 	//
-	for (int index = 0; index < PendingSurfaces.Count (); index ++) {		
-		PendingSurfaceStruct &surface_info = PendingSurfaces[index];
+	for (auto& surface_info : PendingSurfaces)
+	{
 		SurfaceClass *curr_surface = surface_info.Surface;
 
 		//
@@ -397,9 +399,9 @@ Render2DSentenceClass::Build_Textures (void)
 		//
 		//	Assign this texture to any renderers that need it
 		//
-		for (int renderer_index = 0; renderer_index < surface_info.Renderers.Count (); renderer_index ++) {
-			Render2DClass *renderer = surface_info.Renderers[renderer_index];
-			renderer->Set_Texture (new_texture);
+		for (auto& renderer : surface_info.Renderers)
+		{
+			renderer->Set_Texture(new_texture);
 		}
 
 		//
@@ -412,9 +414,7 @@ Render2DSentenceClass::Build_Textures (void)
 	//
 	//	Reset the list
 	//
-	if (PendingSurfaces.Count()>0) {
-		PendingSurfaces.Delete_All ();
-	}
+	PendingSurfaces.clear();
 	return ;
 }
 
@@ -436,9 +436,8 @@ Render2DSentenceClass::Draw_Sentence (uint32 color)
 	//
 	//	Loop over all the parts of the sentence
 	//
-	for (int index = 0; index < SentenceData.Count (); index ++) {
-		SentenceDataStruct &data = SentenceData[index];
-
+	for (auto& data : SentenceData)
+	{
 		//
 		//	Has the surface changed?
 		//
@@ -449,10 +448,12 @@ Render2DSentenceClass::Draw_Sentence (uint32 color)
 			//	Try to find a renderer that uses the same "texture"
 			//
 			bool found = false;
-			for (int renderer_index = 0; renderer_index < Renderers.Count (); renderer_index ++) {
-				if (Renderers[renderer_index].Surface == curr_surface) {
+			for (auto& renderer : Renderers)
+			{
+				if (renderer.Surface == curr_surface)
+				{
 					found = true;
-					curr_renderer = Renderers[renderer_index].Renderer;
+					curr_renderer = renderer.Renderer;
 					break;
 				}
 			}
@@ -476,15 +477,15 @@ Render2DSentenceClass::Draw_Sentence (uint32 color)
 				RendererDataStruct render_info;
 				render_info.Renderer	= curr_renderer;
 				render_info.Surface	= curr_surface;
-				Renderers.Add (render_info);
+				Renderers.push_back(render_info);
 
 				//
 				//	Now, add this renderer to the surface pending list
 				//
-				for (int surface_index = 0; surface_index < PendingSurfaces.Count (); surface_index ++) {
-					PendingSurfaceStruct &surface_info = PendingSurfaces[surface_index];
+				for (auto& surface_info : PendingSurfaces)
+				{
 					if (surface_info.Surface == curr_surface) {
-						surface_info.Renderers.Add (curr_renderer);
+						surface_info.Renderers.push_back(curr_renderer);
 					}
 				}
 			}
@@ -616,7 +617,7 @@ Render2DSentenceClass::Record_Sentence_Chunk (void)
 		//
 		//	Add this information to our list
 		//
-		SentenceData.Add (sentence_data);
+		SentenceData.push_back(sentence_data);
 	}
 
 	return ;
@@ -710,7 +711,7 @@ Render2DSentenceClass::Allocate_New_Surface (const WCHAR *text, bool justCalcExt
 		//
 		PendingSurfaceStruct surface_info;
 		surface_info.Surface = CurSurface;
-		PendingSurfaces.Add (surface_info);
+		PendingSurfaces.push_back(surface_info);
 	}
 
 	//
@@ -1219,10 +1220,9 @@ FontCharsClass::FontCharsClass (void) :
 ////////////////////////////////////////////////////////////////////////////////////
 FontCharsClass::~FontCharsClass (void) 
 {
-	while ( BufferList.Count() ) {
-		delete BufferList[0];
-		BufferList.Delete(0);
-	}
+	for (const auto& buffer : BufferList)
+		delete buffer;
+	BufferList.clear();
 
 	Free_GDI_Font();
 	Free_Character_Arrays();
@@ -1371,7 +1371,7 @@ FontCharsClass::Store_GDI_Char (WCHAR ch)
 	//	Get a pointer to the surface that this character should use
 	//
 	Update_Current_Buffer( char_size.cx );
-	uint16* curr_buffer_p = BufferList[BufferList.Count () - 1]->Buffer;
+	uint16* curr_buffer_p = BufferList.back()->Buffer;
 	curr_buffer_p += CurrPixelOffset;
 	
 	//
@@ -1445,7 +1445,7 @@ FontCharsClass::Store_GDI_Char (WCHAR ch)
 	FontCharsClassCharDataStruct *char_data	= W3DNEW FontCharsClassCharDataStruct;
 	char_data->Value				= ch;
 	char_data->Width				= char_size.cx;
-	char_data->Buffer				= BufferList[BufferList.Count () - 1]->Buffer + CurrPixelOffset;
+	char_data->Buffer				= BufferList.back()->Buffer + CurrPixelOffset;
 
 	//
 	//	Insert this character into our array
@@ -1479,7 +1479,7 @@ FontCharsClass::Update_Current_Buffer (int char_width)
 	//
 	//	Check to see if we need to allocate a new buffer
 	//
-	bool needs_new_buffer = (BufferList.Count () == 0);
+	bool needs_new_buffer = (BufferList.size() == 0);
 	if (needs_new_buffer == false) {
 		
 		//
@@ -1496,7 +1496,7 @@ FontCharsClass::Update_Current_Buffer (int char_width)
 	if (needs_new_buffer) 
 	{
 		FontCharsBuffer* new_buffer = W3DNEW FontCharsBuffer;
-		BufferList.Add( new_buffer );
+		BufferList.push_back( new_buffer );
 		CurrPixelOffset = 0;
 	}
 

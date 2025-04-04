@@ -315,7 +315,7 @@ void AABTreeClass::Set_Mesh(MeshGeometryClass * mesh)
  *                                                                                             *
  * HISTORY:                                                                                    *
  *=============================================================================================*/
-void AABTreeClass::Generate_APT(const OBBoxClass & box,SimpleDynVecClass<uint32> & apt)
+void AABTreeClass::Generate_APT(const OBBoxClass& box, std::vector<uint32>& apt)
 {
 	OBBoxAPTContextStruct context(box,apt);
 	Generate_OBBox_APT_Recursive(&(Nodes[0]),context);
@@ -380,7 +380,7 @@ void AABTreeClass::Generate_OBBox_APT_Recursive(CullNodeStruct * node,OBBoxAPTCo
 				tri.Compute_Normal();
 #endif
 				if (CollisionMath::Intersection_Test(context.Box,tri)) {;
-					context.APT.Add(poly_index);
+					context.APT.push_back(poly_index);
 				} 
 			}
 		}
@@ -412,7 +412,7 @@ void AABTreeClass::Generate_APT
 (
 	const OBBoxClass & box,
 	const Vector3 & viewdir,
-	SimpleDynVecClass<uint32> & apt
+	std::vector<uint32>& apt
 )
 {
 	OBBoxRayAPTContextStruct context(box,viewdir,apt);
@@ -477,7 +477,7 @@ void AABTreeClass::Generate_OBBox_APT_Recursive(CullNodeStruct * node, OBBoxRayA
 #endif
 				if (Vector3::Dot_Product(*tri.N,context.ViewVector) < 0.0f) {
 					if (CollisionMath::Intersection_Test(context.Box,tri)) {
-						context.APT.Add(poly_index);
+						context.APT.push_back(poly_index);
 					} 
 				}
 			}

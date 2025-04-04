@@ -42,16 +42,14 @@
 #include "always.h"
 #endif
 
+#include <vector>
+
 #ifndef BITTYPE_H
 #include "bittype.h"
 #endif
 
 #ifndef CHUNKIO_H
 #include "chunkio.h"
-#endif
-
-#ifndef VECTOR_H
-#include "vector.h"
 #endif
 
 #ifndef W3D_FILE_H
@@ -68,7 +66,7 @@ public:
 	~BitChannelClass(void);
 
 	void		Set_Bit(int framenumber,bool bit);
-	void		Set_Bits(BooleanVectorClass & bits);
+	void Set_Bits(std::vector<bool> & bits);
 	bool		Get_Bit(int frameidx);
 	bool		Is_Empty(void) { return IsEmpty; }
 	bool		Save(ChunkSaveClass & csave, bool compress);
@@ -81,7 +79,7 @@ private:
 	bool						IsEmpty;
 
 	bool						DefaultVal;
-	BooleanVectorClass	Data;
+	std::vector<bool> Data;
 	int						Begin;
 	int						End;
 

@@ -45,7 +45,6 @@
 #include "GameRenderer.h"
 #include "light.h"
 #include "D3dx9math.h"
-#include "simplevec.h"
 #include "mesh.h"
 #include "matinfo.h"
 
@@ -1732,14 +1731,14 @@ Bool WaterRenderObjClass::getClippedWaterPlane(CameraClass *cam, AABoxClass *box
 	ClippedPoly0.Clip(frustum.Planes[4],ClippedPoly1);
 	ClippedPoly1.Clip(frustum.Planes[5],ClippedPoly0);
 
-	Int final_vcount = ClippedPoly0.Verts.Count();
+	Int final_vcount = ClippedPoly0.Verts.size();
 
 	//make sure the polygon is visible
 	if (final_vcount >= 3)
 	{	
 		//find axis aligned bounding box around visible polygon
 		if (box)
-  			box->Init(&(ClippedPoly0.Verts[0]),final_vcount);
+			box->Init(ClippedPoly0.Verts.data(), final_vcount);
 		return TRUE;
 	}
 

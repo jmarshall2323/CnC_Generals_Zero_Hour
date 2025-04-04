@@ -42,7 +42,10 @@
 #define __PRIM_ANIM_H
 
 
-#include "simplevec.h"
+#include "always.h"
+
+#include <vector>
+
 #include "chunkio.h"
 
 
@@ -144,7 +147,7 @@ protected:
 	/////////////////////////////////////////////////////////
 	//	Protected  member data
 	/////////////////////////////////////////////////////////
-	SimpleDynVecClass< KeyClass >	m_Data;
+	std::vector<KeyClass> m_Data;
 	int									m_LastIndex;
 };
 
@@ -175,7 +178,7 @@ public:
 template<class T>
 int PrimitiveAnimationChannelClass<T>::Get_Key_Count (void) const
 {
-	return m_Data.Count ();
+	return m_Data.size();
 }
 
 /////////////////////////////////////////////////////////
@@ -244,7 +247,7 @@ void PrimitiveAnimationChannelClass<T>::Delete_Key (int index)
 template<class T>
 void PrimitiveAnimationChannelClass<T>::Reset (void)
 {
-	m_Data.Delete_All ();
+	m_Data.clear();
 	m_LastIndex = 0;
 	return ;
 }
@@ -261,7 +264,7 @@ PrimitiveAnimationChannelClass<T>::operator= (const PrimitiveAnimationChannelCla
 	//	Copy the data array
 	//
 	for (int index = 0; index < src.Get_Key_Count (); index ++) {		
-		m_Data.Add (src.Get_Key (index));
+		m_Data.push_back(src.Get_Key(index));
 	}
 
 	m_LastIndex = src.m_LastIndex;
@@ -279,9 +282,9 @@ PrimitiveAnimationChannelClass<T>::Save (ChunkSaveClass &csave)
 		//
 		//	Save each key
 		//
-		for (int index = 0; index < m_Data.Count (); index ++) {
-			KeyClass &value = m_Data[index];
-			WRITE_MICRO_CHUNK (csave, VARID_KEY, value);
+		for (const auto& key : m_Data)
+		{
+			WRITE_MICRO_CHUNK (csave, VARID_KEY, key);
 		}
 
 	csave.End_Chunk ();
@@ -327,7 +330,7 @@ PrimitiveAnimationChannelClass<T>::Load_Variables (ChunkLoadClass &cload)
 			{
 				KeyClass value;
 				cload.Read (&value, sizeof (value));
-				m_Data.Add (value);
+				m_Data.push_back(value);
 			}
 			break;
 		}
@@ -347,7 +350,7 @@ LERPAnimationChannelClass<T>::Evaluate (float time)
 	auto m_Data = this->m_Data;
 	auto m_LastIndex = this->m_LastIndex;
 
-	int key_count	= m_Data.Count ();
+	const size_t key_count = m_Data.size();
 	T value			= m_Data[key_count - 1].Get_Value ();
 
 	//
